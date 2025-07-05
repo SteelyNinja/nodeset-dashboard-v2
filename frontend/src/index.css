@@ -25,32 +25,58 @@ code {
   display: none;  /* Safari and Chrome */
 }
 
-/* Subtle bar chart hover effects */
+/* Subtle bar chart hover effects - no visual changes, tooltips only */
 .subtle-bar-hover .recharts-bar-rectangle {
-  transition: all 0.2s ease-in-out !important;
+  transition: none !important;
 }
 
 .subtle-bar-hover .recharts-bar-rectangle:hover {
-  opacity: 0.85 !important;
-  filter: brightness(1.05) !important;
+  opacity: 1 !important;
+  filter: none !important;
 }
 
-/* Override default Recharts active class with more subtle effect */
+/* Override default Recharts active class with no visual changes */
 .subtle-bar-hover .recharts-active-bar {
-  opacity: 0.9 !important;
-  filter: brightness(1.03) !important;
+  opacity: 1 !important;
+  filter: none !important;
 }
 
-/* Dark mode adjustments for better visibility */
+/* Disable the default active bar overlay completely */
+.subtle-bar-hover .recharts-active-bar::before,
+.subtle-bar-hover .recharts-active-bar::after {
+  display: none !important;
+}
+
+/* Remove any background overlays from active bars */
+.subtle-bar-hover .recharts-active-bar > * {
+  background: none !important;
+}
+
+/* Disable any cursor/reference line overlays */
+.subtle-bar-hover .recharts-cursor {
+  display: none !important;
+}
+
+.subtle-bar-hover .recharts-reference-line {
+  display: none !important;
+}
+
+/* Disable any overlay rectangles */
+.subtle-bar-hover .recharts-tooltip-cursor {
+  display: none !important;
+}
+
+
+/* Dark mode adjustments - no visual changes */
 @media (prefers-color-scheme: dark) {
   .subtle-bar-hover .recharts-bar-rectangle:hover {
-    opacity: 0.9 !important;
-    filter: brightness(1.15) saturate(1.1) !important;
+    opacity: 1 !important;
+    filter: none !important;
   }
   
   .subtle-bar-hover .recharts-active-bar {
-    opacity: 0.95 !important;
-    filter: brightness(1.08) saturate(1.05) !important;
+    opacity: 1 !important;
+    filter: none !important;
   }
 }
 
