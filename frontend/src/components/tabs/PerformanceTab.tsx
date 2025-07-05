@@ -474,7 +474,7 @@ const PerformanceTab: React.FC = () => {
         op.attestation_validators,
         op.excluded_validators,
         op.total_validators,
-        op.relative_score.toFixed(1)
+        op.relative_score.toFixed(2)
       ].join(','))
     ].join('\n');
 
@@ -1064,7 +1064,7 @@ const PerformanceTab: React.FC = () => {
                               {operator.total_validators}
                             </GlassTableCell>
                             <GlassTableCell className="font-mono">
-                              {operator.relative_score.toFixed(1)}%
+                              {operator.relative_score.toFixed(2)}%
                             </GlassTableCell>
                           </GlassTableRow>
                           );
@@ -1154,7 +1154,7 @@ const PerformanceTab: React.FC = () => {
                               {operator.total_validators}
                             </GlassTableCell>
                             <GlassTableCell className="font-mono">
-                              {operator.relative_score.toFixed(1)}%
+                              {operator.relative_score.toFixed(2)}%
                             </GlassTableCell>
                           </GlassTableRow>
                           );
