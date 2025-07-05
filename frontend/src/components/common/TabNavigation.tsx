@@ -104,21 +104,21 @@ const TabNavigation: React.FC<TabNavigationProps> = ({ activeTab, onTabChange, c
                   : `
                     bg-white/10 dark:bg-white/5 border-white/20 dark:border-white/10
                     text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400
-                    hover:bg-white/20 dark:hover:bg-white/10 hover:border-primary-300/40
-                    shadow-[0_4px_16px_-4px_rgba(0,0,0,0.1)] hover:shadow-[0_8px_32px_-8px_rgba(59,130,246,0.3)]
+                    hover:bg-gray-100/60 dark:hover:bg-white/10 hover:border-primary-300/70
+                    shadow-[0_4px_16px_-4px_rgba(0,0,0,0.1)] hover:shadow-[0_8px_32px_-8px_rgba(59,130,246,0.5)]
                   `
                 }
               `}
             >
               {/* Glass overlay */}
-              <div className="absolute inset-0 bg-white/10 dark:bg-white/5 rounded-2xl backdrop-blur-sm" />
+              <div className="absolute inset-0 bg-white/20 dark:bg-white/5 rounded-2xl backdrop-blur-sm" />
               
               {/* Inner glass border */}
-              <div className="absolute inset-0 rounded-2xl border border-white/20 dark:border-white/10" />
+              <div className="absolute inset-0 rounded-2xl border border-white/40 dark:border-white/10" />
               
               {/* Shimmer effect */}
               <div className="absolute inset-0 overflow-hidden rounded-2xl">
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -skew-x-12 transform -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out" />
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/50 dark:via-white/30 to-transparent -skew-x-12 transform -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out" />
               </div>
               
               {/* Top glass highlight */}
