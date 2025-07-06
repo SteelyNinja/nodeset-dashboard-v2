@@ -4,6 +4,7 @@ import { apiService } from '../../services/api';
 import LoadingSpinner from '../common/LoadingSpinner';
 import ErrorMessage from '../common/ErrorMessage';
 import GlassButton from '../common/GlassButton';
+import Icon from '../common/Icon';
 import { GlassTable, GlassTableHeader, GlassTableBody, GlassTableRow, GlassTableCell } from '../common/GlassTable';
 
 interface OperatorData {
@@ -122,8 +123,9 @@ const OperatorsTab: React.FC = () => {
   return (
     <div className="p-6">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-          🏆 Top Operators by Active Validators
+        <h1 className="text-headline-large font-semibold text-neutral-900 dark:text-neutral-100 mb-2 flex items-center gap-3">
+          <Icon name="trophy" size="lg" color="primary" />
+          Top Operators by Active Validators
         </h1>
       </div>
 
@@ -139,8 +141,9 @@ const OperatorsTab: React.FC = () => {
                 </span>
               )}
             </h2>
-            <GlassButton onClick={downloadCSV} variant="primary" size="sm">
-              💾 Download CSV
+            <GlassButton onClick={downloadCSV} variant="primary" size="sm" className="flex items-center gap-2">
+              <Icon name="download" size="sm" color="current" />
+              Download CSV
             </GlassButton>
           </div>
 
@@ -148,7 +151,7 @@ const OperatorsTab: React.FC = () => {
           <div className="mb-4">
             <input
               type="text"
-              placeholder="🔍 Search by operator address or ENS name"
+              placeholder="Search by operator address or ENS name"
               className="w-full px-4 py-2 border border-white/30 rounded-lg bg-white/20 dark:bg-white/10 backdrop-blur-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}

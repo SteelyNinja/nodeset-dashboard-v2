@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { TabId } from './types/api';
 import { apiService } from './services/api';
+import Icon from './components/common/Icon';
 import { analyticsService } from './services/analytics';
 import AnalyticsPage from './components/AnalyticsPage';
 import TabNavigation from './components/common/TabNavigation';
@@ -99,6 +100,7 @@ function App() {
     analyticsService.trackTabSwitch(newTab);
   };
 
+
   const renderActiveTab = () => {
     switch (activeTab) {
       case 'information':
@@ -169,7 +171,7 @@ function App() {
                 p-4
               ">
                 <div className="flex items-start space-x-3">
-                  <span className="text-blue-500 text-xl flex-shrink-0">📊</span>
+                  <Icon name="metrics" size="lg" color="primary" className="flex-shrink-0" />
                   <div className="text-gray-900 dark:text-white text-center flex-1">
                     <div className="text-lg font-bold leading-relaxed">
                       <strong>Monitoring and analysis</strong> of NodeSet protocol validators on Stakewise
@@ -265,7 +267,7 @@ function App() {
                       max-w-3xl
                     ">
                       <div className="flex items-start space-x-3">
-                        <span className="text-blue-500 text-2xl flex-shrink-0">📊</span>
+                        <Icon name="metrics" size="xl" color="primary" className="flex-shrink-0" />
                         <div className="text-gray-900 dark:text-white text-center">
                           <div className="text-xl font-bold leading-relaxed">
                             <strong>Monitoring and analysis</strong> of NodeSet protocol validators on Stakewise
@@ -341,6 +343,7 @@ function App() {
         onTabChange={handleTabChange}
       />
 
+
       {/* Main Content */}
       <main className="flex-1 main-content">
         {backendConnected === false ? (
@@ -348,7 +351,7 @@ function App() {
             <div className="bg-red-50 border border-red-200 rounded-md p-4">
               <div className="flex">
                 <div className="flex-shrink-0">
-                  <span className="text-red-400 text-xl">⚠️</span>
+                  <Icon name="warning" size="lg" color="danger" />
                 </div>
                 <div className="ml-3">
                   <h3 className="text-sm font-medium text-red-800">Backend Connection Error</h3>

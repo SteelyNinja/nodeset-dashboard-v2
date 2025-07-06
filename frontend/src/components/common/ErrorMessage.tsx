@@ -1,4 +1,5 @@
 import React from 'react';
+import Icon from './Icon';
 
 interface ErrorMessageProps {
   message: string;
@@ -11,7 +12,7 @@ const ErrorMessage: React.FC<ErrorMessageProps> = ({ message, onRetry, className
     <div className={`bg-red-50 border border-red-200 rounded-md p-4 ${className}`}>
       <div className="flex">
         <div className="flex-shrink-0">
-          <span className="text-red-400 text-xl">⚠️</span>
+          <Icon name="warning" size="lg" color="danger" />
         </div>
         <div className="ml-3">
           <h3 className="text-sm font-medium text-red-800">Error</h3>

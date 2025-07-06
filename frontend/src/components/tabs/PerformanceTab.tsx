@@ -3,6 +3,7 @@ import { ValidatorPerformanceData, ExitData } from '../../types/api';
 import { apiService } from '../../services/api';
 import LoadingSpinner from '../common/LoadingSpinner';
 import GlassButton from '../common/GlassButton';
+import Icon from '../common/Icon';
 import { GlassTable, GlassTableHeader, GlassTableBody, GlassTableRow, GlassTableCell } from '../common/GlassTable';
 import ScatterChartComponent from '../charts/ScatterChart';
 import BarChartComponent from '../charts/BarChart';
@@ -521,8 +522,9 @@ const PerformanceTab: React.FC = () => {
   return (
     <div className="p-6">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-          ⚡ Operator Performance Analysis (24 hours)
+        <h1 className="text-headline-large font-semibold text-neutral-900 dark:text-neutral-100 mb-2 flex items-center gap-3">
+          <Icon name="performance" size="lg" color="primary" />
+          Operator Performance Analysis (24 hours)
         </h1>
         <div className="
           bg-glass-light dark:bg-glass-dark 
@@ -535,7 +537,7 @@ const PerformanceTab: React.FC = () => {
         ">
           <div className="flex">
             <div className="flex-shrink-0">
-              <span className="text-blue-400 text-xl">ℹ️</span>
+              <Icon name="info" size="lg" color="primary" />
             </div>
             <div className="ml-3">
               <p className="text-sm text-blue-700 dark:text-blue-200">
@@ -613,7 +615,7 @@ const PerformanceTab: React.FC = () => {
             {/* Enhanced Performance Summary Cards */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                📊 Performance Statistics
+                <Icon name="metrics" size="lg" color="primary" className="inline mr-2" />Performance Statistics
               </h3>
               
               {performanceSummary && (
@@ -632,11 +634,15 @@ const PerformanceTab: React.FC = () => {
                     }
                   `}>
                     <div className="flex items-center justify-between mb-2">
-                      <span className={`text-xl ${
-                        performanceSummary.average >= 99 ? 'text-green-600 dark:text-green-400' :
-                        performanceSummary.average >= 98 ? 'text-yellow-600 dark:text-yellow-400' :
-                        'text-red-600 dark:text-red-400'
-                      }`}>📊</span>
+                      <Icon 
+                        name="metrics" 
+                        size="lg" 
+                        color={
+                          performanceSummary.average >= 99 ? 'success' :
+                          performanceSummary.average >= 98 ? 'warning' :
+                          'danger'
+                        }
+                      />
                       <div className={`px-2 py-1 rounded-full text-xs font-medium ${
                         performanceSummary.average >= 99 ? 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300' :
                         performanceSummary.average >= 98 ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/50 dark:text-yellow-300' :
@@ -689,11 +695,15 @@ const PerformanceTab: React.FC = () => {
                     }
                   `}>
                     <div className="flex items-center justify-between mb-2">
-                      <span className={`text-xl ${
-                        performanceSummary.median >= 99 ? 'text-green-600 dark:text-green-400' :
-                        performanceSummary.median >= 98 ? 'text-yellow-600 dark:text-yellow-400' :
-                        'text-red-600 dark:text-red-400'
-                      }`}>📈</span>
+                      <Icon 
+                        name="metrics" 
+                        size="lg" 
+                        color={
+                          performanceSummary.median >= 99 ? 'success' :
+                          performanceSummary.median >= 98 ? 'warning' :
+                          'danger'
+                        }
+                      />
                       <div className={`px-2 py-1 rounded-full text-xs font-medium ${
                         performanceSummary.median >= 99 ? 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300' :
                         performanceSummary.median >= 98 ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/50 dark:text-yellow-300' :
@@ -750,7 +760,7 @@ const PerformanceTab: React.FC = () => {
                         performanceSummary.best >= 99 ? 'text-green-600 dark:text-green-400' :
                         performanceSummary.best >= 98 ? 'text-yellow-600 dark:text-yellow-400' :
                         'text-red-600 dark:text-red-400'
-                      }`}>🏆</span>
+                      }`}><Icon name="trophy" size="lg" color="warning" /></span>
                       <div className={`px-2 py-1 rounded-full text-xs font-medium ${
                         performanceSummary.best >= 99 ? 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300' :
                         performanceSummary.best >= 98 ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/50 dark:text-yellow-300' :
@@ -807,7 +817,7 @@ const PerformanceTab: React.FC = () => {
                         performanceSummary.worst >= 98 ? 'text-green-600 dark:text-green-400' :
                         performanceSummary.worst >= 95 ? 'text-yellow-600 dark:text-yellow-400' :
                         'text-red-600 dark:text-red-400'
-                      }`}>⚠️</span>
+                      }`}><Icon name="warning" size="lg" color="warning" /></span>
                       <div className={`px-2 py-1 rounded-full text-xs font-medium ${
                         performanceSummary.worst >= 98 ? 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300' :
                         performanceSummary.worst >= 95 ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/50 dark:text-yellow-300' :
@@ -917,11 +927,15 @@ const PerformanceTab: React.FC = () => {
                     }
                   `}>
                     <div className="flex items-center justify-between mb-2">
-                      <span className={`text-xl ${
-                        (performanceSummary.best - performanceSummary.worst) <= 5 ? 'text-green-600 dark:text-green-400' :
-                        (performanceSummary.best - performanceSummary.worst) <= 10 ? 'text-yellow-600 dark:text-yellow-400' :
-                        'text-red-600 dark:text-red-400'
-                      }`}>🎯</span>
+                      <Icon 
+                        name="chart" 
+                        size="lg" 
+                        color={
+                          (performanceSummary.best - performanceSummary.worst) <= 5 ? 'success' :
+                          (performanceSummary.best - performanceSummary.worst) <= 10 ? 'warning' :
+                          'danger'
+                        }
+                      />
                       <div className={`px-2 py-1 rounded-full text-xs font-medium ${
                         (performanceSummary.best - performanceSummary.worst) <= 5 ? 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300' :
                         (performanceSummary.best - performanceSummary.worst) <= 10 ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/50 dark:text-yellow-300' :
@@ -975,14 +989,14 @@ const PerformanceTab: React.FC = () => {
                 { name: 'Average', value: performanceData.filter(d => d.category === 'Average').length, color: '#f59e0b' },
                 { name: 'Poor', value: performanceData.filter(d => d.category === 'Poor').length, color: '#ef4444' }
               ]}
-              title="📊 Performance Categories"
+              title="Performance Categories"
               showLegend={true}
             />
 
             {/* Performance Trend Line Chart */}
             <LineChartComponent
               data={performanceData.slice().sort((a, b) => a.validator_count - b.validator_count).slice(0, 20)}
-              title="📈 Performance by Operator Size"
+              title="Performance by Operator Size"
               lines={[{
                 dataKey: 'performance',
                 stroke: '#8884d8',
@@ -1005,7 +1019,7 @@ const PerformanceTab: React.FC = () => {
           <div className="space-y-4">
             <div className="flex justify-between items-center">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                🏆 Operators by Performance
+                <Icon name="trophy" size="lg" color="primary" className="inline mr-2" />Operators by Performance
               </h3>
               <div className="w-72">
                 <input
@@ -1066,10 +1080,10 @@ const PerformanceTab: React.FC = () => {
                           operator.category === 'Average' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
                           'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
                         }`}>
-                          {operator.category === 'Excellent' ? '🌟 Excellent' :
-                           operator.category === 'Good' ? '✅ Good' :
-                           operator.category === 'Average' ? '⚠️ Average' :
-                           '🔴 Poor'}
+                          {operator.category === 'Excellent' ? 'Excellent' :
+                           operator.category === 'Good' ? 'Good' :
+                           operator.category === 'Average' ? 'Average' :
+                           'Poor'}
                         </span>
                       </GlassTableCell>
                       <GlassTableCell>
@@ -1091,7 +1105,7 @@ const PerformanceTab: React.FC = () => {
             {/* Download CSV Button */}
             <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700">
               <GlassButton onClick={downloadCSV} variant="primary" size="sm">
-                <span className="mr-2">📥</span>
+                <Icon name="download" size="sm" color="current" className="mr-2" />
                 Download Performance Data
               </GlassButton>
             </div>
@@ -1101,7 +1115,7 @@ const PerformanceTab: React.FC = () => {
           <div className="border-t border-gray-200 dark:border-gray-700 pt-8">
             <div className="mb-6">
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-                📊 Attestation-Only Performance Analysis
+                <Icon name="metrics" size="lg" color="primary" className="inline mr-2" />Attestation-Only Performance Analysis
               </h2>
               <div className="
                 bg-glass-light dark:bg-glass-dark 
@@ -1138,7 +1152,7 @@ const PerformanceTab: React.FC = () => {
                   <div className="flex justify-between items-center">
                     <div>
                       <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                        📅 7-Day Attestation Performance
+                        7-Day Attestation Performance
                       </h3>
                       <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                         Validators active for 7+ days, excluding those with proposals/sync duties in the last 10 days
@@ -1149,7 +1163,7 @@ const PerformanceTab: React.FC = () => {
                       variant="primary" 
                       size="sm"
                     >
-                      <span className="mr-2">📥</span>
+                      <Icon name="download" size="sm" color="current" className="mr-2" />
                       Download 7-Day CSV
                     </GlassButton>
                   </div>
@@ -1228,7 +1242,7 @@ const PerformanceTab: React.FC = () => {
                   <div className="flex justify-between items-center">
                     <div>
                       <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                        📅 31-Day Attestation Performance
+                        31-Day Attestation Performance
                       </h3>
                       <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                         Validators active for 32+ days, excluding those with proposals/sync duties in the last 34 days
@@ -1239,7 +1253,7 @@ const PerformanceTab: React.FC = () => {
                       variant="primary" 
                       size="sm"
                     >
-                      <span className="mr-2">📥</span>
+                      <Icon name="download" size="sm" color="current" className="mr-2" />
                       Download 31-Day CSV
                     </GlassButton>
                   </div>

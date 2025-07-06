@@ -5,6 +5,7 @@ import LoadingSpinner from '../common/LoadingSpinner';
 import ErrorMessage from '../common/ErrorMessage';
 import GlassCard from '../common/GlassCard';
 import GlassButton from '../common/GlassButton';
+import Icon from '../common/Icon';
 import { GlassTable, GlassTableHeader, GlassTableBody, GlassTableRow, GlassTableCell } from '../common/GlassTable';
 
 interface SyncCommitteeMetrics {
@@ -249,7 +250,7 @@ const SyncCommitteeTab: React.FC = () => {
     <div className="p-6">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-          📡 Sync Committee Participation Analysis
+          <Icon name="syncCommittee" size="lg" color="primary" className="inline mr-2" />Sync Committee Participation Analysis
         </h1>
         <p className="text-gray-600 dark:text-gray-400">
           Analysis of validator participation in Ethereum sync committees
@@ -260,22 +261,22 @@ const SyncCommitteeTab: React.FC = () => {
 
       {/* Summary Metrics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <GlassCard>
+        <GlassCard elevation="raised" className="p-4">
           <div className="text-sm font-medium text-gray-500 mb-1">Overall Participation</div>
           <div className="text-2xl font-bold text-black dark:text-white">{metrics.overallParticipation.toFixed(2)}%</div>
           <div className="text-xs text-gray-400">Average participation rate</div>
         </GlassCard>
-        <GlassCard>
+        <GlassCard elevation="raised" className="p-4">
           <div className="text-sm font-medium text-gray-500 mb-1">Total Periods Tracked</div>
           <div className="text-2xl font-bold text-black dark:text-white">{metrics.totalPeriodsTracked.toLocaleString()}</div>
           <div className="text-xs text-gray-400">Sync committee periods</div>
         </GlassCard>
-        <GlassCard>
+        <GlassCard elevation="raised" className="p-4">
           <div className="text-sm font-medium text-gray-500 mb-1">Total Attestations</div>
           <div className="text-2xl font-bold text-black dark:text-white">{metrics.totalAttestations.toLocaleString()}</div>
           <div className="text-xs text-gray-400">Sync committee attestations</div>
         </GlassCard>
-        <GlassCard>
+        <GlassCard elevation="raised" className="p-4">
           <div className="text-sm font-medium text-gray-500 mb-1">Success Rate</div>
           <div className="text-2xl font-bold text-black dark:text-white">{metrics.successRate.toFixed(2)}%</div>
           <div className="text-xs text-gray-400">Successful attestations</div>
@@ -286,7 +287,7 @@ const SyncCommitteeTab: React.FC = () => {
       <GlassCard size="large" hoverable={false}>
         <div className="flex justify-between items-center mb-4">
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">🏆 Operator Participation Rankings</h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white"><Icon name="trophy" size="lg" color="primary" className="inline mr-2" />Operator Participation Rankings</h3>
             <p className="text-sm text-gray-600 dark:text-gray-400">Operators ranked by sync committee participation rate</p>
           </div>
           <GlassButton
@@ -294,14 +295,14 @@ const SyncCommitteeTab: React.FC = () => {
             variant="primary"
             size="sm"
           >
-            📥 Download CSV
+            <Icon name="download" size="sm" color="current" className="inline mr-2" />Download CSV
           </GlassButton>
         </div>
         
         <div className="mb-4">
           <input
             type="text"
-            placeholder="🔍 Search operators by address or ENS name"
+            placeholder="Search operators by address or ENS name"
             className="w-full px-4 py-2 border border-white/30 rounded-lg bg-white/20 dark:bg-white/10 backdrop-blur-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
             value={operatorSearchTerm}
             onChange={(e) => setOperatorSearchTerm(e.target.value)}
@@ -351,7 +352,7 @@ const SyncCommitteeTab: React.FC = () => {
       <GlassCard size="large" hoverable={false}>
         <div className="flex justify-between items-center mb-4">
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">📊 Period-by-Period Analysis</h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white"><Icon name="metrics" size="lg" color="primary" className="inline mr-2" />Period-by-Period Analysis</h3>
             <p className="text-sm text-gray-600 dark:text-gray-400">Sync committee performance across different periods</p>
           </div>
           <GlassButton
@@ -359,14 +360,14 @@ const SyncCommitteeTab: React.FC = () => {
             variant="primary"
             size="sm"
           >
-            📥 Download CSV
+            <Icon name="download" size="sm" color="current" className="inline mr-2" />Download CSV
           </GlassButton>
         </div>
         
         <div className="mb-4">
           <input
             type="text"
-            placeholder="🔍 Search periods by period number"
+            placeholder="Search periods by period number"
             className="w-full px-4 py-2 border border-white/30 rounded-lg bg-white/20 dark:bg-white/10 backdrop-blur-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
             value={periodSearchTerm}
             onChange={(e) => setPeriodSearchTerm(e.target.value)}
@@ -412,7 +413,7 @@ const SyncCommitteeTab: React.FC = () => {
       <GlassCard size="large" hoverable={false}>
         <div className="flex justify-between items-center mb-4">
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">🔍 Detailed Validator Analysis</h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white"><Icon name="search" size="lg" color="primary" className="inline mr-2" />Detailed Validator Analysis</h3>
             <p className="text-sm text-gray-600 dark:text-gray-400">Individual validator performance in sync committees</p>
           </div>
           <GlassButton
@@ -420,14 +421,14 @@ const SyncCommitteeTab: React.FC = () => {
             variant="primary"
             size="sm"
           >
-            📥 Download CSV
+            <Icon name="download" size="sm" color="current" className="inline mr-2" />Download CSV
           </GlassButton>
         </div>
         
         <div className="mb-4">
           <input
             type="text"
-            placeholder="🔍 Search by operator address or ENS name"
+            placeholder="Search by operator address or ENS name"
             className="w-full px-4 py-2 border border-white/30 rounded-lg bg-white/20 dark:bg-white/10 backdrop-blur-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { apiService } from '../../services/api';
 import LoadingSpinner from '../common/LoadingSpinner';
 import GlassCard from '../common/GlassCard';
+import Icon from '../common/Icon';
 import { ValidatorData, ConcentrationMetrics, PerformanceAnalysis, ClientDiversity } from '../../types/api';
 
 const InformationTab: React.FC = () => {
@@ -60,31 +61,31 @@ const InformationTab: React.FC = () => {
 
   const getGiniCoefficientColor = (gini: number): string => {
     if (gini < 0.03) {
-      return 'text-green-600 dark:text-green-400'; // Green for good decentralization
+      return 'text-success-600 dark:text-success-400'; // Green for good decentralization
     } else if (gini >= 0.03 && gini <= 0.05) {
-      return 'text-yellow-600 dark:text-yellow-400'; // Yellow for moderate decentralization
+      return 'text-warning-600 dark:text-warning-400'; // Amber for moderate decentralization
     } else {
-      return 'text-red-600 dark:text-red-400'; // Red for poor decentralization
+      return 'text-danger-600 dark:text-danger-400'; // Red for poor decentralization
     }
   };
 
   const getTop1PercentColor = (percentage: number): string => {
     if (percentage < 1) {
-      return 'text-green-600 dark:text-green-400'; // Green for good decentralization
+      return 'text-success-600 dark:text-success-400'; // Green for good decentralization
     } else if (percentage >= 1 && percentage <= 2) {
-      return 'text-yellow-600 dark:text-yellow-400'; // Yellow for moderate concentration
+      return 'text-warning-600 dark:text-warning-400'; // Amber for moderate concentration
     } else {
-      return 'text-red-600 dark:text-red-400'; // Red for high concentration
+      return 'text-danger-600 dark:text-danger-400'; // Red for high concentration
     }
   };
 
   const getTop10PercentColor = (percentage: number): string => {
     if (percentage < 10) {
-      return 'text-green-600 dark:text-green-400'; // Green for good decentralization
+      return 'text-success-600 dark:text-success-400'; // Green for good decentralization
     } else if (percentage >= 10 && percentage <= 20) {
-      return 'text-yellow-600 dark:text-yellow-400'; // Yellow for moderate concentration
+      return 'text-warning-600 dark:text-warning-400'; // Amber for moderate concentration
     } else {
-      return 'text-red-600 dark:text-red-400'; // Red for high concentration
+      return 'text-danger-600 dark:text-danger-400'; // Red for high concentration
     }
   };
 
@@ -97,7 +98,7 @@ const InformationTab: React.FC = () => {
       <div className="p-6">
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-            ℹ️ Network Information
+            <Icon name="info" size="lg" color="primary" className="inline mr-2" />Network Information
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
             Comprehensive network overview and statistics
@@ -106,7 +107,7 @@ const InformationTab: React.FC = () => {
         <div className="bg-red-50 border border-red-200 rounded-md p-4">
           <div className="flex">
             <div className="flex-shrink-0">
-              <span className="text-red-400 text-xl">⚠️</span>
+              <Icon name="warning" size="lg" color="danger" />
             </div>
             <div className="ml-3">
               <h3 className="text-sm font-medium text-red-800">Error Loading Network Data</h3>
@@ -124,7 +125,7 @@ const InformationTab: React.FC = () => {
 
   // Calculate health status indicators
   const networkHealthStatus = () => {
-    if (!concentrationData || !validatorData) return { status: '🟡', text: 'Loading...' };
+    if (!concentrationData || !validatorData) return { status: 'warning', text: 'Loading...' };
     
     const gini = concentrationData.gini_coefficient;
     const exitRate = (validatorData.total_exited || 0) / validatorData.total_validators;
@@ -140,19 +141,19 @@ const InformationTab: React.FC = () => {
       lowExitRate,
       smallOperators,
       mostlyActivated,
-      overallStatus: wellDecentralized && lowExitRate && smallOperators ? '🟢' : '🟡'
+      overallStatus: wellDecentralized && lowExitRate && smallOperators ? 'success' : 'warning'
     };
   };
 
   const performanceHealthStatus = () => {
     if (!performanceData) return { 
-      status: '🟡', 
+      status: 'warning', 
       text: 'Loading...',
       excellentPerformance: false,
       lowPoorRate: false,
       excellentPercent: 0,
       poorPercent: 0,
-      overallStatus: '🟡'
+      overallStatus: 'warning'
     };
     
     const total = performanceData.excellent_count + performanceData.good_count + 
@@ -168,13 +169,13 @@ const InformationTab: React.FC = () => {
       lowPoorRate,
       excellentPercent,
       poorPercent,
-      overallStatus: excellentPerformance && lowPoorRate ? '🟢' : excellentPerformance ? '🟡' : '🟡'
+      overallStatus: excellentPerformance && lowPoorRate ? 'success' : excellentPerformance ? 'warning' : 'warning'
     };
   };
 
   const ensResolutionStatus = () => {
     if (!validatorData || !concentrationData) return { 
-      status: '🟡', 
+      status: 'warning', 
       text: 'Loading...',
       ensCount: 0,
       operatorCoverage: 0,
@@ -195,7 +196,7 @@ const InformationTab: React.FC = () => {
       ensCount,
       operatorCoverage,
       validatorCoverage,
-      status: operatorCoverage > 30 ? '🟢' : operatorCoverage > 20 ? '🟡' : '🟡'
+      status: operatorCoverage > 30 ? 'success' : operatorCoverage > 20 ? 'warning' : 'warning'
     };
   };
 
@@ -206,10 +207,10 @@ const InformationTab: React.FC = () => {
   return (
     <div className="p-6">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-          ℹ️ Network Information
+        <h1 className="text-display-small font-bold text-neutral-900 dark:text-white mb-2">
+          <Icon name="info" size="lg" color="primary" className="inline mr-3" />Network Information
         </h1>
-        <p className="text-gray-600 dark:text-gray-400">
+        <p className="text-body-large text-neutral-600 dark:text-neutral-400">
           Comprehensive NodeSet validator network overview and key statistics
         </p>
       </div>
@@ -218,32 +219,32 @@ const InformationTab: React.FC = () => {
         {/* Health Status Cards */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {/* Network Health */}
-          <GlassCard>
+          <GlassCard elevation="elevated" className="p-4">
             <div className="flex items-center mb-3">
-              <span className="text-xl mr-2">🌐</span>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Network Health</h3>
+              <Icon name="dashboard" size="lg" color="primary" className="mr-3" />
+              <h3 className="text-headline-small font-semibold text-neutral-900 dark:text-white">Network Health</h3>
             </div>
             <div className="space-y-2">
               <div className="flex items-center text-sm">
-                <span className="mr-2">{networkHealth.wellDecentralized ? '🟢' : '🟡'}</span>
+                <Icon name="success" size="sm" color={networkHealth.wellDecentralized ? 'success' : 'warning'} className="mr-2" />
                 <span className="text-gray-700 dark:text-gray-300">
                   {networkHealth.wellDecentralized ? 'Well Decentralized' : 'Moderately Decentralized'}
                 </span>
               </div>
               <div className="flex items-center text-sm">
-                <span className="mr-2">{networkHealth.lowExitRate ? '🟢' : '🟡'}</span>
+                <Icon name="success" size="sm" color={networkHealth.lowExitRate ? 'success' : 'warning'} className="mr-2" />
                 <span className="text-gray-700 dark:text-gray-300">
                   {networkHealth.lowExitRate ? 'Low Exit Rate' : 'Moderate Exit Rate'}
                 </span>
               </div>
               <div className="flex items-center text-sm">
-                <span className="mr-2">{networkHealth.smallOperators ? '🟢' : '🟡'}</span>
+                <Icon name="success" size="sm" color={networkHealth.smallOperators ? 'success' : 'warning'} className="mr-2" />
                 <span className="text-gray-700 dark:text-gray-300">
                   {networkHealth.smallOperators ? 'Small Operators' : 'Medium Operators'}
                 </span>
               </div>
               <div className="flex items-center text-sm">
-                <span className="mr-2">{networkHealth.mostlyActivated ? '🟢' : '🟡'}</span>
+                <Icon name="success" size="sm" color={networkHealth.mostlyActivated ? 'success' : 'warning'} className="mr-2" />
                 <span className="text-gray-700 dark:text-gray-300">
                   {networkHealth.mostlyActivated ? 'Mostly Activated' : 'Some Inactive'}
                 </span>
@@ -257,26 +258,26 @@ const InformationTab: React.FC = () => {
           </GlassCard>
 
           {/* Performance Health */}
-          <GlassCard>
+          <GlassCard elevation="elevated" className="p-4">
             <div className="flex items-center mb-3">
-              <span className="text-xl mr-2">⚡</span>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Performance Health</h3>
+              <Icon name="performance" size="lg" color="primary" className="mr-3" />
+              <h3 className="text-headline-small font-semibold text-neutral-900 dark:text-white">Performance Health</h3>
             </div>
             <div className="space-y-2">
               <div className="flex items-center text-sm">
-                <span className="mr-2">{performanceHealth.excellentPerformance ? '🟢' : '🟡'}</span>
+                <Icon name="success" size="sm" color={performanceHealth.excellentPerformance ? 'success' : 'warning'} className="mr-2" />
                 <span className="text-gray-700 dark:text-gray-300">
                   {performanceHealth.excellentPerformance ? 'Excellent Performance' : 'Good Performance'}
                 </span>
               </div>
               <div className="flex items-center text-sm">
-                <span className="mr-2">📊</span>
+                <Icon name="metrics" size="sm" color="primary" className="mr-2" />
                 <span className="text-gray-700 dark:text-gray-300">
                   {performanceHealth.excellentPercent.toFixed(1)}% Excellent
                 </span>
               </div>
               <div className="flex items-center text-sm">
-                <span className="mr-2">📉</span>
+                <Icon name="trendingDown" size="sm" color="warning" className="mr-2" />
                 <span className="text-gray-700 dark:text-gray-300">
                   {performanceHealth.poorPercent.toFixed(1)}% Poor
                 </span>
@@ -290,26 +291,26 @@ const InformationTab: React.FC = () => {
           </GlassCard>
 
           {/* ENS Resolution */}
-          <GlassCard>
+          <GlassCard elevation="elevated" className="p-4">
             <div className="flex items-center mb-3">
-              <span className="text-xl mr-2">🏷️</span>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">ENS Resolution</h3>
+              <Icon name="info" size="lg" color="primary" className="mr-3" />
+              <h3 className="text-headline-small font-semibold text-neutral-900 dark:text-white">ENS Resolution</h3>
             </div>
             <div className="space-y-2">
               <div className="flex items-center text-sm">
-                <span className="mr-2">📝</span>
+                <Icon name="info" size="sm" color="primary" className="mr-2" />
                 <span className="text-gray-700 dark:text-gray-300">
                   {ensResolution.ensCount} names found
                 </span>
               </div>
               <div className="flex items-center text-sm">
-                <span className="mr-2">👥</span>
+                <Icon name="operators" size="sm" color="primary" className="mr-2" />
                 <span className="text-gray-700 dark:text-gray-300">
                   {ensResolution.operatorCoverage.toFixed(1)}% operator coverage
                 </span>
               </div>
               <div className="flex items-center text-sm">
-                <span className="mr-2">🏛️</span>
+                <Icon name="building" size="sm" color="primary" className="mr-2" />
                 <span className="text-gray-700 dark:text-gray-300">
                   {ensResolution.validatorCoverage.toFixed(1)}% validator coverage
                 </span>
@@ -324,22 +325,22 @@ const InformationTab: React.FC = () => {
         </div>
         {/* Network Overview Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          <GlassCard>
+          <GlassCard elevation="raised" className="p-4">
             <div className="flex items-center mb-2">
-              <span className="text-xl mr-2">🏛️</span>
-              <div className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Total Validators</div>
+              <Icon name="building" size="md" color="primary" className="mr-2" />
+              <div className="text-label-medium font-semibold text-neutral-700 dark:text-neutral-300 uppercase tracking-wider">Total Validators</div>
             </div>
-            <div className="text-3xl font-extrabold text-gray-900 dark:text-white mb-1 tracking-tight">
+            <div className="text-display-small font-bold text-neutral-900 dark:text-white mb-1 tracking-tight">
               {validatorData ? formatNumber(validatorData.total_validators) : 'Loading...'}
             </div>
-            <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
+            <p className="text-label-small font-medium text-neutral-500 dark:text-neutral-400">
               NodeSet network size
             </p>
           </GlassCard>
 
-          <GlassCard>
+          <GlassCard elevation="raised" className="p-4">
             <div className="flex items-center mb-2">
-              <span className="text-xl mr-2">✅</span>
+              <Icon name="success" size="md" color="success" className="mr-2" />
               <div className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Active Validators</div>
             </div>
             <div className="text-3xl font-extrabold text-gray-900 dark:text-white mb-1 tracking-tight">
@@ -350,9 +351,9 @@ const InformationTab: React.FC = () => {
             </p>
           </GlassCard>
 
-          <GlassCard>
+          <GlassCard elevation="raised" className="p-4">
             <div className="flex items-center mb-2">
-              <span className="text-xl mr-2">👥</span>
+              <Icon name="operators" size="md" color="primary" className="mr-2" />
               <div className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Operators</div>
             </div>
             <div className="text-3xl font-extrabold text-gray-900 dark:text-white mb-1 tracking-tight">
@@ -363,9 +364,9 @@ const InformationTab: React.FC = () => {
             </p>
           </GlassCard>
 
-          <GlassCard>
+          <GlassCard elevation="raised" className="p-4">
             <div className="flex items-center mb-2">
-              <span className="text-xl mr-2">🚪</span>
+              <Icon name="exitAnalysis" size="md" color="warning" className="mr-2" />
               <div className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Exited Validators</div>
             </div>
             <div className="text-3xl font-extrabold text-gray-900 dark:text-white mb-1 tracking-tight">
@@ -378,15 +379,15 @@ const InformationTab: React.FC = () => {
         </div>
 
         {/* Activation Queue Metrics */}
-        <GlassCard size="large">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
-            ⏳ Validator Activation Queue
+        <GlassCard size="large" elevation="floating">
+          <h3 className="text-headline-large font-semibold text-neutral-900 dark:text-white mb-6">
+            <Icon name="info" size="lg" color="primary" className="inline mr-3" />Validator Activation Queue
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="bg-white/30 dark:bg-white/5 rounded-lg p-4 border border-white/20">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">Validators in Queue</span>
-                <span className="text-xl">⏸️</span>
+                <Icon name="warning" size="lg" color="warning" />
               </div>
               <div className="text-3xl font-bold text-black dark:text-white mb-1">
                 {validatorData?.pending_pubkeys ? validatorData.pending_pubkeys.length.toLocaleString() : 'Loading...'}
@@ -399,7 +400,7 @@ const InformationTab: React.FC = () => {
             <div className="bg-white/30 dark:bg-white/5 rounded-lg p-4 border border-white/20">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">Activation Rate</span>
-                <span className="text-xl">✅</span>
+                <Icon name="success" size="lg" color="success" />
               </div>
               <div className="text-3xl font-bold text-black dark:text-white mb-1">
                 {validatorData ? 
@@ -417,7 +418,7 @@ const InformationTab: React.FC = () => {
             <div className="bg-white/30 dark:bg-white/5 rounded-lg p-4 border border-white/20">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">Queue Rate</span>
-                <span className="text-xl">⏳</span>
+                <Icon name="info" size="lg" color="warning" />
               </div>
               <div className="text-3xl font-bold text-black dark:text-white mb-1">
                 {validatorData ? 
@@ -436,7 +437,7 @@ const InformationTab: React.FC = () => {
           {validatorData?.pending_pubkeys && validatorData.pending_pubkeys.length > 0 && (
             <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700/50 rounded-lg">
               <div className="flex items-start">
-                <span className="text-blue-500 text-lg mr-2 flex-shrink-0">ℹ️</span>
+                <Icon name="info" size="lg" color="primary" className="mr-2 flex-shrink-0" />
                 <div className="text-sm text-blue-800 dark:text-blue-200">
                   <strong>Queue Status:</strong> {validatorData.pending_pubkeys.length} validators are waiting for activation on the Ethereum beacon chain. 
                   These validators have made their deposits but are awaiting their turn in the activation queue.
@@ -447,9 +448,9 @@ const InformationTab: React.FC = () => {
         </GlassCard>
 
         {/* Decentralization Metrics */}
-        <GlassCard size="large">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
-            📊 Network Decentralization
+        <GlassCard size="large" elevation="floating">
+          <h3 className="text-headline-large font-semibold text-neutral-900 dark:text-white mb-6">
+            <Icon name="metrics" size="lg" color="primary" className="inline mr-3" />Network Decentralization
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <div className="bg-white/30 dark:bg-white/5 rounded-lg p-4 border border-white/20">
@@ -492,55 +493,55 @@ const InformationTab: React.FC = () => {
         </GlassCard>
 
         {/* Performance Overview */}
-        <GlassCard size="large">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
-            ⚡ Network Performance
+        <GlassCard size="large" elevation="floating">
+          <h3 className="text-headline-large font-semibold text-neutral-900 dark:text-white mb-6">
+            <Icon name="performance" size="lg" color="primary" className="inline mr-3" />Network Performance
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="bg-success-light/30 dark:bg-success-dark/20 rounded-lg p-4 border border-success/30">
+            <div className="bg-success-100/30 dark:bg-success-900/20 rounded-lg p-4 border border-success-200/30 dark:border-success-700/30">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-green-800 dark:text-green-300">Excellent</span>
-                <span className="text-lg font-bold text-green-600">
+                <span className="text-sm font-medium text-success-800 dark:text-success-300">Excellent</span>
+                <span className="text-lg font-bold text-success-600 dark:text-success-400">
                   {performanceData ? formatNumber(performanceData.excellent_count) : 'Loading...'}
                 </span>
               </div>
-              <p className="text-xs text-green-600 dark:text-green-400 mt-1">
+              <p className="text-xs text-success-600 dark:text-success-400 mt-1">
                 ≥99.5% performance
               </p>
             </div>
 
-            <div className="bg-info-light/30 dark:bg-info-dark/20 rounded-lg p-4 border border-info/30">
+            <div className="bg-info-100/30 dark:bg-info-900/20 rounded-lg p-4 border border-info-200/30 dark:border-info-700/30">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-blue-800 dark:text-blue-300">Good</span>
-                <span className="text-lg font-bold text-blue-600">
+                <span className="text-sm font-medium text-info-800 dark:text-info-300">Good</span>
+                <span className="text-lg font-bold text-info-600 dark:text-info-400">
                   {performanceData ? formatNumber(performanceData.good_count) : 'Loading...'}
                 </span>
               </div>
-              <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+              <p className="text-xs text-info-600 dark:text-info-400 mt-1">
                 ≥98.5% performance
               </p>
             </div>
 
-            <div className="bg-warning-light/30 dark:bg-warning-dark/20 rounded-lg p-4 border border-warning/30">
+            <div className="bg-warning-100/30 dark:bg-warning-900/20 rounded-lg p-4 border border-warning-200/30 dark:border-warning-700/30">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-yellow-800 dark:text-yellow-300">Average</span>
-                <span className="text-lg font-bold text-yellow-600">
+                <span className="text-sm font-medium text-warning-800 dark:text-warning-300">Average</span>
+                <span className="text-lg font-bold text-warning-600 dark:text-warning-400">
                   {performanceData ? formatNumber(performanceData.average_count) : 'Loading...'}
                 </span>
               </div>
-              <p className="text-xs text-yellow-600 dark:text-yellow-400 mt-1">
+              <p className="text-xs text-warning-600 dark:text-warning-400 mt-1">
                 ≥95% performance
               </p>
             </div>
 
-            <div className="bg-danger-light/30 dark:bg-danger-dark/20 rounded-lg p-4 border border-danger/30">
+            <div className="bg-danger-100/30 dark:bg-danger-900/20 rounded-lg p-4 border border-danger-200/30 dark:border-danger-700/30">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-red-800 dark:text-red-300">Poor</span>
-                <span className="text-lg font-bold text-red-600">
+                <span className="text-sm font-medium text-danger-800 dark:text-danger-300">Poor</span>
+                <span className="text-lg font-bold text-danger-600 dark:text-danger-400">
                   {performanceData ? formatNumber(performanceData.poor_count) : 'Loading...'}
                 </span>
               </div>
-              <p className="text-xs text-red-600 dark:text-red-400 mt-1">
+              <p className="text-xs text-danger-600 dark:text-danger-400 mt-1">
                 &lt;95% performance
               </p>
             </div>
@@ -548,9 +549,9 @@ const InformationTab: React.FC = () => {
         </GlassCard>
 
         {/* Client Diversity */}
-        <GlassCard size="large">
+        <GlassCard size="large" elevation="floating">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
-            🔧 Client Diversity
+            <Icon name="clientDiversity" size="lg" color="primary" className="inline mr-3" />Client Diversity
           </h3>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div>
@@ -599,9 +600,9 @@ const InformationTab: React.FC = () => {
         </GlassCard>
 
         {/* Network Status */}
-        <GlassCard size="large">
+        <GlassCard size="large" elevation="floating">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
-            🌐 Network Status
+            <Icon name="cloud" size="lg" color="primary" className="inline mr-3" />Network Status
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div className="space-y-3">

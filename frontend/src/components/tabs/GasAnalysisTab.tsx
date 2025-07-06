@@ -3,6 +3,7 @@ import { apiService } from '../../services/api';
 import LoadingSpinner from '../common/LoadingSpinner';
 import GlassCard from '../common/GlassCard';
 import GlassButton from '../common/GlassButton';
+import Icon from '../common/Icon';
 import { GlassTable, GlassTableHeader, GlassTableBody, GlassTableRow, GlassTableCell } from '../common/GlassTable';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 import { GasAnalysis } from '../../types/api';
@@ -135,7 +136,7 @@ const GasAnalysisTab: React.FC = () => {
       <div className="p-6">
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-            ⛽ Gas Analysis
+            <Icon name="gasAnalysis" size="lg" color="primary" className="inline mr-2" />Gas Analysis
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
             Gas limit strategies and distribution analysis
@@ -144,7 +145,7 @@ const GasAnalysisTab: React.FC = () => {
         <div className="bg-red-50 border border-red-200 rounded-md p-4">
           <div className="flex">
             <div className="flex-shrink-0">
-              <span className="text-red-400 text-xl">⚠️</span>
+              <Icon name="warning" size="lg" color="danger" />
             </div>
             <div className="ml-3">
               <h3 className="text-sm font-medium text-red-800">Error Loading Gas Data</h3>
@@ -212,7 +213,7 @@ const GasAnalysisTab: React.FC = () => {
     <div className="p-6">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-          ⛽ Gas Analysis
+          <Icon name="gasAnalysis" size="lg" color="primary" className="inline mr-2" />Gas Analysis
         </h1>
         <p className="text-gray-600 dark:text-gray-400">
           Gas limit strategies and distribution analysis
@@ -224,7 +225,7 @@ const GasAnalysisTab: React.FC = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           <GlassCard>
             <div className="flex items-center">
-              <span className="text-xl mr-2">📊</span>
+              <Icon name="metrics" size="lg" color="primary" className="mr-2" />
               <div className="text-sm font-medium text-black dark:text-white">Average Gas Limit</div>
             </div>
             <div className="text-2xl font-bold text-black dark:text-white mt-2">
@@ -237,7 +238,7 @@ const GasAnalysisTab: React.FC = () => {
 
           <GlassCard>
             <div className="flex items-center">
-              <span className="text-xl mr-2">🎯</span>
+              <Icon name="chart" size="lg" color="primary" className="mr-2" />
               <div className="text-sm font-medium text-black dark:text-white">Median Gas Limit</div>
             </div>
             <div className="text-2xl font-bold text-black dark:text-white mt-2">
@@ -250,7 +251,7 @@ const GasAnalysisTab: React.FC = () => {
 
           <GlassCard>
             <div className="flex items-center">
-              <span className="text-xl mr-2">⬆️</span>
+              <Icon name="trendingUp" size="lg" color="primary" className="mr-2" />
               <div className="text-sm font-medium text-black dark:text-white">Max Gas Limit</div>
             </div>
             <div className="text-2xl font-bold text-black dark:text-white mt-2">
@@ -263,7 +264,7 @@ const GasAnalysisTab: React.FC = () => {
 
           <GlassCard>
             <div className="flex items-center">
-              <span className="text-xl mr-2">⬇️</span>
+              <Icon name="trendingDown" size="lg" color="primary" className="mr-2" />
               <div className="text-sm font-medium text-black dark:text-white">Min Gas Limit</div>
             </div>
             <div className="text-2xl font-bold text-black dark:text-white mt-2">
@@ -279,10 +280,11 @@ const GasAnalysisTab: React.FC = () => {
         <GlassCard hoverable={false}>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-              🎯 Gas Strategy Distribution
+              <Icon name="chart" size="lg" color="primary" className="inline mr-2" />Gas Strategy Distribution
             </h3>
             <GlassButton onClick={handleDownloadStrategies} variant="success" size="sm">
-              💾 Download CSV
+              <Icon name="download" size="sm" color="current" className="mr-2" />
+              Download CSV
             </GlassButton>
           </div>
 
@@ -353,7 +355,7 @@ const GasAnalysisTab: React.FC = () => {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
             <div>
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                📋 All Operator Gas Strategies
+                <Icon name="chart" size="lg" color="primary" className="inline mr-2" />All Operator Gas Strategies
               </h3>
               <p className="text-sm text-gray-600 dark:text-gray-400">
                 Sorted by max gas limit (high to low)
@@ -364,14 +366,14 @@ const GasAnalysisTab: React.FC = () => {
               variant="primary"
               size="sm"
             >
-              📥 Download CSV
+              <Icon name="download" size="sm" color="current" className="inline mr-2" />Download CSV
             </GlassButton>
           </div>
           
           <div className="mb-4">
             <input
               type="text"
-              placeholder="🔍 Search operators by address or strategy"
+              placeholder="Search operators by address or strategy"
               className="w-full px-4 py-2 border border-white/30 rounded-lg bg-white/20 dark:bg-white/10 backdrop-blur-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}

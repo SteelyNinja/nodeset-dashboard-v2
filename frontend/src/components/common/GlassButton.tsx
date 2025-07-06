@@ -1,148 +1,196 @@
-import React from 'react';
+// Enhanced GlassButton with variants, sizes, and loading states
+import React, { useState } from 'react';
 
 interface GlassButtonProps {
   children: React.ReactNode;
-  onClick?: () => void;
-  variant?: 'primary' | 'secondary' | 'success' | 'warning' | 'danger' | 'info';
-  size?: 'sm' | 'md' | 'lg';
-  disabled?: boolean;
   className?: string;
+  variant?: 'primary' | 'secondary' | 'tertiary' | 'danger' | 'success' | 'warning';
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+  state?: 'default' | 'loading' | 'disabled';
+  onClick?: () => void;
   type?: 'button' | 'submit' | 'reset';
+  disabled?: boolean;
+  loading?: boolean;
+  loadingText?: string;
+  icon?: React.ReactNode;
+  iconPosition?: 'left' | 'right';
+  fullWidth?: boolean;
 }
 
 const GlassButton: React.FC<GlassButtonProps> = ({
   children,
-  onClick,
+  className = '',
   variant = 'primary',
   size = 'md',
+  state = 'default',
+  onClick,
+  type = 'button',
   disabled = false,
-  className = '',
-  type = 'button'
+  loading = false,
+  loadingText,
+  icon,
+  iconPosition = 'left',
+  fullWidth = false
 }) => {
-  const baseClasses = `
-    relative overflow-hidden group
-    backdrop-blur-md backdrop-saturate-150 border-2 rounded-2xl
-    font-semibold transition-all duration-300 ease-glass
-    focus:outline-none focus:ring-2 focus:ring-offset-2
-    shadow-2xl hover:shadow-3xl
-    transform hover:scale-105 active:scale-95
-    ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:shadow-[0_35px_60px_-15px_rgba(0,0,0,0.3)]'}
-  `;
+  const [isPressed, setIsPressed] = useState(false);
 
-  const variantClasses = {
-    primary: `
-      bg-gradient-to-br from-primary-500/80 via-primary-600/70 to-primary-700/80
-      dark:from-primary-400/60 dark:via-primary-500/50 dark:to-primary-600/60
-      border-primary-200/50 dark:border-primary-300/30
-      text-white dark:text-white drop-shadow-lg
-      hover:from-primary-400/90 hover:via-primary-500/80 hover:to-primary-600/90
-      dark:hover:from-primary-300/70 dark:hover:via-primary-400/60 dark:hover:to-primary-500/70
-      hover:border-primary-100/60 dark:hover:border-primary-200/40
-      hover:-translate-y-2 hover:shadow-[0_20px_40px_-10px_rgba(59,130,246,0.6)]
-      focus:ring-primary-300/50 focus:ring-offset-2
-      shadow-[0_8px_32px_-8px_rgba(59,130,246,0.4)]
-    `,
-    secondary: `
-      bg-gradient-to-br from-secondary-500/80 via-secondary-600/70 to-secondary-700/80
-      dark:from-secondary-400/60 dark:via-secondary-500/50 dark:to-secondary-600/60
-      border-secondary-200/50 dark:border-secondary-300/30
-      text-white dark:text-white drop-shadow-lg
-      hover:from-secondary-400/90 hover:via-secondary-500/80 hover:to-secondary-600/90
-      dark:hover:from-secondary-300/70 dark:hover:via-secondary-400/60 dark:hover:to-secondary-500/70
-      hover:border-secondary-100/60 dark:hover:border-secondary-200/40
-      hover:-translate-y-2 hover:shadow-[0_20px_40px_-10px_rgba(168,85,247,0.6)]
-      focus:ring-secondary-300/50 focus:ring-offset-2
-      shadow-[0_8px_32px_-8px_rgba(168,85,247,0.4)]
-    `,
-    success: `
-      bg-gradient-to-br from-success/80 via-green-600/70 to-green-700/80
-      dark:from-green-400/60 dark:via-green-500/50 dark:to-green-600/60
-      border-green-200/50 dark:border-green-300/30
-      text-white dark:text-white drop-shadow-lg
-      hover:from-green-400/90 hover:via-success/80 hover:to-green-600/90
-      dark:hover:from-green-300/70 dark:hover:via-green-400/60 dark:hover:to-green-500/70
-      hover:border-green-100/60 dark:hover:border-green-200/40
-      hover:-translate-y-2 hover:shadow-[0_20px_40px_-10px_rgba(34,197,94,0.6)]
-      focus:ring-green-300/50 focus:ring-offset-2
-      shadow-[0_8px_32px_-8px_rgba(34,197,94,0.4)]
-    `,
-    warning: `
-      bg-gradient-to-br from-warning/80 via-orange-600/70 to-orange-700/80
-      dark:from-orange-400/60 dark:via-orange-500/50 dark:to-orange-600/60
-      border-orange-200/50 dark:border-orange-300/30
-      text-white dark:text-white drop-shadow-lg
-      hover:from-orange-400/90 hover:via-warning/80 hover:to-orange-600/90
-      dark:hover:from-orange-300/70 dark:hover:via-orange-400/60 dark:hover:to-orange-500/70
-      hover:border-orange-100/60 dark:hover:border-orange-200/40
-      hover:-translate-y-2 hover:shadow-[0_20px_40px_-10px_rgba(245,158,11,0.6)]
-      focus:ring-orange-300/50 focus:ring-offset-2
-      shadow-[0_8px_32px_-8px_rgba(245,158,11,0.4)]
-    `,
-    danger: `
-      bg-gradient-to-br from-danger/80 via-red-600/70 to-red-700/80
-      dark:from-red-400/60 dark:via-red-500/50 dark:to-red-600/60
-      border-red-200/50 dark:border-red-300/30
-      text-white dark:text-white drop-shadow-lg
-      hover:from-red-400/90 hover:via-danger/80 hover:to-red-600/90
-      dark:hover:from-red-300/70 dark:hover:via-red-400/60 dark:hover:to-red-500/70
-      hover:border-red-100/60 dark:hover:border-red-200/40
-      hover:-translate-y-2 hover:shadow-[0_20px_40px_-10px_rgba(239,68,68,0.6)]
-      focus:ring-red-300/50 focus:ring-offset-2
-      shadow-[0_8px_32px_-8px_rgba(239,68,68,0.4)]
-    `,
-    info: `
-      bg-gradient-to-br from-info/80 via-blue-600/70 to-blue-700/80
-      dark:from-blue-400/60 dark:via-blue-500/50 dark:to-blue-600/60
-      border-blue-200/50 dark:border-blue-300/30
-      text-white dark:text-white drop-shadow-lg
-      hover:from-blue-400/90 hover:via-info/80 hover:to-blue-600/90
-      dark:hover:from-blue-300/70 dark:hover:via-blue-400/60 dark:hover:to-blue-500/70
-      hover:border-blue-100/60 dark:hover:border-blue-200/40
-      hover:-translate-y-2 hover:shadow-[0_20px_40px_-10px_rgba(59,130,246,0.6)]
-      focus:ring-blue-300/50 focus:ring-offset-2
-      shadow-[0_8px_32px_-8px_rgba(59,130,246,0.4)]
-    `
+  const isDisabled = disabled || loading || state === 'disabled';
+  const isLoading = loading || state === 'loading';
+
+  // Variant styles
+  const variantStyles = {
+    primary: {
+      base: 'bg-gradient-to-br from-primary-500 to-primary-600 text-white border-primary-400/50',
+      hover: 'hover:from-primary-400 hover:to-primary-500 hover:border-primary-300/60 hover:shadow-lg hover:shadow-primary-500/25',
+      focus: 'focus:ring-primary-500/50',
+      disabled: 'disabled:from-primary-500/50 disabled:to-primary-600/50 disabled:border-primary-400/25'
+    },
+    secondary: {
+      base: 'bg-gradient-to-br from-white/10 to-white/5 dark:from-white/5 dark:to-white/2 text-neutral-700 dark:text-neutral-200 border-white/20 dark:border-white/15',
+      hover: 'hover:from-white/15 hover:to-white/8 dark:hover:from-white/8 dark:hover:to-white/4 hover:border-white/30 dark:hover:border-white/25 hover:shadow-md',
+      focus: 'focus:ring-neutral-500/50',
+      disabled: 'disabled:from-white/5 disabled:to-white/2 disabled:border-white/10'
+    },
+    tertiary: {
+      base: 'bg-transparent text-neutral-600 dark:text-neutral-300 border-transparent',
+      hover: 'hover:bg-white/10 dark:hover:bg-white/5 hover:text-neutral-800 dark:hover:text-neutral-100',
+      focus: 'focus:ring-neutral-500/50',
+      disabled: 'disabled:text-neutral-400 dark:disabled:text-neutral-600'
+    },
+    danger: {
+      base: 'bg-gradient-to-br from-danger-500 to-danger-600 text-white border-danger-400/50',
+      hover: 'hover:from-danger-400 hover:to-danger-500 hover:border-danger-300/60 hover:shadow-lg hover:shadow-danger-500/25',
+      focus: 'focus:ring-danger-500/50',
+      disabled: 'disabled:from-danger-500/50 disabled:to-danger-600/50 disabled:border-danger-400/25'
+    },
+    success: {
+      base: 'bg-gradient-to-br from-success-500 to-success-600 text-white border-success-400/50',
+      hover: 'hover:from-success-400 hover:to-success-500 hover:border-success-300/60 hover:shadow-lg hover:shadow-success-500/25',
+      focus: 'focus:ring-success-500/50',
+      disabled: 'disabled:from-success-500/50 disabled:to-success-600/50 disabled:border-success-400/25'
+    },
+    warning: {
+      base: 'bg-gradient-to-br from-warning-500 to-warning-600 text-white border-warning-400/50',
+      hover: 'hover:from-warning-400 hover:to-warning-500 hover:border-warning-300/60 hover:shadow-lg hover:shadow-warning-500/25',
+      focus: 'focus:ring-warning-500/50',
+      disabled: 'disabled:from-warning-500/50 disabled:to-warning-600/50 disabled:border-warning-400/25'
+    }
   };
 
-  const sizeClasses = {
-    sm: 'px-4 py-2.5 text-sm min-w-[80px]',
-    md: 'px-6 py-3 text-base min-w-[120px]',
-    lg: 'px-8 py-4 text-lg min-w-[160px]'
+  // Size styles
+  const sizeStyles = {
+    xs: 'px-2 py-1 text-label-small h-6 gap-1',
+    sm: 'px-3 py-2 text-label-medium h-8 gap-1.5',
+    md: 'px-4 py-2.5 text-body-medium h-10 gap-2',
+    lg: 'px-6 py-3 text-body-large h-12 gap-2.5',
+    xl: 'px-8 py-4 text-headline-small h-14 gap-3'
   };
+
+  // Loading spinner component
+  const LoadingSpinner = ({ size: spinnerSize }: { size: string }) => {
+    const spinnerSizes = {
+      xs: 'w-3 h-3',
+      sm: 'w-3 h-3',
+      md: 'w-4 h-4',
+      lg: 'w-5 h-5',
+      xl: 'w-6 h-6'
+    };
+
+    return (
+      <div className={`border-2 border-current border-t-transparent rounded-full animate-spin ${spinnerSizes[spinnerSize as keyof typeof spinnerSizes]}`} />
+    );
+  };
+
+  // Interactive styles
+  const getInteractiveStyles = () => {
+    if (isDisabled) return 'cursor-not-allowed';
+    
+    return `
+      cursor-pointer select-none
+      active:scale-[0.96] active:translate-y-0
+      ${isPressed ? 'scale-[0.96] translate-y-0' : ''}
+      transform transition-all duration-150 ease-out
+    `;
+  };
+
+  const handleMouseDown = () => {
+    if (!isDisabled) setIsPressed(true);
+  };
+  
+  const handleMouseUp = () => setIsPressed(false);
+  const handleMouseLeave = () => setIsPressed(false);
+
+  const handleClick = () => {
+    if (!isDisabled && onClick) {
+      onClick();
+    }
+  };
+
+  const currentVariant = variantStyles[variant];
+  const currentSize = sizeStyles[size];
 
   return (
     <button
       type={type}
-      onClick={disabled ? undefined : onClick}
-      disabled={disabled}
+      disabled={isDisabled}
+      onClick={handleClick}
+      onMouseDown={handleMouseDown}
+      onMouseUp={handleMouseUp}
+      onMouseLeave={handleMouseLeave}
       className={`
-        ${baseClasses}
-        ${variantClasses[variant]}
-        ${sizeClasses[size]}
+        relative inline-flex items-center justify-center
+        rounded-lg border backdrop-blur-sm
+        font-medium leading-none
+        ${fullWidth ? 'w-full' : ''}
+        ${currentSize}
+        ${currentVariant.base}
+        ${!isDisabled ? currentVariant.hover : ''}
+        ${currentVariant.disabled}
+        ${getInteractiveStyles()}
+        focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-transparent
+        ${currentVariant.focus}
         ${className}
       `}
     >
-      {/* Glass overlay for glassmorphism */}
-      <div className="absolute inset-0 bg-white/10 dark:bg-white/5 rounded-2xl backdrop-blur-sm" />
-      
-      {/* Inner glass border */}
-      <div className="absolute inset-0 rounded-2xl border border-white/20 dark:border-white/10" />
-      
-      {/* Shimmer effect */}
-      <div className="absolute inset-0 overflow-hidden rounded-2xl">
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -skew-x-12 transform -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out" />
-      </div>
-      
-      {/* Top glass highlight */}
-      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/50 to-transparent rounded-t-2xl" />
-      
-      {/* Bottom glass shadow */}
-      <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-black/20 to-transparent rounded-b-2xl" />
-      
-      {/* Content */}
-      <span className="relative z-10 flex items-center justify-center gap-2 font-semibold tracking-wide">
-        {children}
+      {/* Content container */}
+      <span className={`flex items-center justify-center gap-inherit ${isLoading ? 'opacity-0' : 'opacity-100'} transition-opacity duration-200`}>
+        {icon && iconPosition === 'left' && (
+          <span className="flex-shrink-0">
+            {icon}
+          </span>
+        )}
+        
+        <span className="truncate">
+          {children}
+        </span>
+        
+        {icon && iconPosition === 'right' && (
+          <span className="flex-shrink-0">
+            {icon}
+          </span>
+        )}
       </span>
+
+      {/* Loading overlay */}
+      {isLoading && (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="flex items-center gap-2">
+            <LoadingSpinner size={size} />
+            {loadingText && (
+              <span className="truncate">
+                {loadingText}
+              </span>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Shimmer effect for primary variant */}
+      {variant === 'primary' && !isDisabled && (
+        <div className="absolute inset-0 overflow-hidden rounded-lg pointer-events-none">
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 transform -translate-x-full hover:translate-x-full transition-transform duration-1000 ease-out" />
+        </div>
+      )}
     </button>
   );
 };

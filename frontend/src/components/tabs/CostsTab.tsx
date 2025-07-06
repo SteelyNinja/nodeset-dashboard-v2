@@ -3,6 +3,7 @@ import { apiService } from '../../services/api';
 import LoadingSpinner from '../common/LoadingSpinner';
 import GlassCard from '../common/GlassCard';
 import GlassButton from '../common/GlassButton';
+import Icon from '../common/Icon';
 import { GlassTable, GlassTableHeader, GlassTableBody, GlassTableRow, GlassTableCell } from '../common/GlassTable';
 
 interface Transaction {
@@ -213,7 +214,7 @@ const CostsTab: React.FC = () => {
       <div className="p-6">
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-            💰 Costs Analysis
+            <Icon name="costs" size="lg" color="primary" className="inline mr-2" />Costs Analysis
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
             Operational costs and economics analysis
@@ -222,7 +223,7 @@ const CostsTab: React.FC = () => {
         <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4">
           <div className="flex">
             <div className="flex-shrink-0">
-              <span className="text-yellow-400 text-xl">⚠️</span>
+              <Icon name="warning" size="lg" color="warning" />
             </div>
             <div className="ml-3">
               <h3 className="text-sm font-medium text-yellow-800">Cost Tracking Not Available</h3>
@@ -252,7 +253,7 @@ const CostsTab: React.FC = () => {
     <div className="p-6">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-          💰 Costs Analysis
+          <Icon name="costs" size="lg" color="primary" className="inline mr-2" />Costs Analysis
         </h1>
         <p className="text-gray-600 dark:text-gray-400">
           Operational costs and economics analysis
@@ -265,7 +266,7 @@ const CostsTab: React.FC = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <GlassCard>
               <div className="flex items-center">
-                <span className="text-xl mr-2">💎</span>
+                <Icon name="star" size="lg" color="primary" className="mr-2" />
                 <div className="text-sm font-medium text-gray-700 dark:text-gray-300">Total Gas Spent</div>
               </div>
               <div className="text-2xl font-bold text-gray-900 dark:text-white mt-2">
@@ -278,7 +279,7 @@ const CostsTab: React.FC = () => {
 
             <GlassCard>
               <div className="flex items-center">
-                <span className="text-xl mr-2">📊</span>
+                <Icon name="metrics" size="lg" color="primary" className="mr-2" />
                 <div className="text-sm font-medium text-gray-700 dark:text-gray-300">Total Transactions</div>
               </div>
               <div className="text-2xl font-bold text-gray-900 dark:text-white mt-2">
@@ -291,7 +292,7 @@ const CostsTab: React.FC = () => {
 
             <GlassCard>
               <div className="flex items-center">
-                <span className="text-xl mr-2">✅</span>
+                <Icon name="success" size="lg" color="success" className="mr-2" />
                 <div className="text-sm font-medium text-gray-700 dark:text-gray-300">Success Rate</div>
               </div>
               <div className="text-2xl font-bold text-gray-900 dark:text-white mt-2">
@@ -317,7 +318,7 @@ const CostsTab: React.FC = () => {
 
             <GlassCard>
               <div className="flex items-center">
-                <span className="text-xl mr-2">👥</span>
+                <Icon name="operators" size="lg" color="primary" className="mr-2" />
                 <div className="text-sm font-medium text-gray-700 dark:text-gray-300">Operators Tracked</div>
               </div>
               <div className="text-2xl font-bold text-gray-900 dark:text-white mt-2">
@@ -343,7 +344,7 @@ const CostsTab: React.FC = () => {
 
             <GlassCard>
               <div className="flex items-center">
-                <span className="text-xl mr-2">🏷️</span>
+                <Icon name="info" size="lg" color="primary" className="mr-2" />
                 <div className="text-sm font-medium text-gray-700 dark:text-gray-300">Cost/Validator</div>
               </div>
               <div className="text-2xl font-bold text-gray-900 dark:text-white mt-2">
@@ -372,12 +373,12 @@ const CostsTab: React.FC = () => {
           <GlassCard size="large" hoverable={false}>
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                💰 Operator Cost Rankings ({operators.length})
+                <Icon name="costs" size="lg" color="primary" className="inline mr-2" />Operator Cost Rankings ({operators.length})
               </h3>
               <div className="flex gap-2">
                 <input
                   type="text"
-                  placeholder="🔍 Search operators..."
+                  placeholder="Search operators..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full px-4 py-2 border border-white/30 rounded-lg bg-white/20 dark:bg-white/10 backdrop-blur-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
@@ -387,7 +388,7 @@ const CostsTab: React.FC = () => {
                   variant="primary"
                   size="sm"
                 >
-                  📥 Download CSV
+                  <Icon name="download" size="sm" color="current" className="inline mr-2" />Download CSV
                 </GlassButton>
               </div>
             </div>
@@ -479,7 +480,7 @@ const CostsTab: React.FC = () => {
                                   variant="success"
                                   size="sm"
                                 >
-                                  📥 CSV
+                                  <Icon name="download" size="sm" color="current" className="inline mr-1" />CSV
                                 </GlassButton>
                               </div>
                               <div className="overflow-x-auto">

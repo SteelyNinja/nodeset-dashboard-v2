@@ -3,6 +3,7 @@ import { apiService } from '../../services/api';
 import LoadingSpinner from '../common/LoadingSpinner';
 import GlassCard from '../common/GlassCard';
 import GlassButton from '../common/GlassButton';
+import Icon from '../common/Icon';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { ClientDiversity } from '../../types/api';
 
@@ -180,7 +181,7 @@ const ClientDiversityTab: React.FC = () => {
       <div className="p-6">
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-            🔧 Client Diversity
+            <Icon name="clientDiversity" size="lg" color="primary" className="inline mr-2" />Client Diversity
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
             Consensus and execution client distribution
@@ -189,7 +190,7 @@ const ClientDiversityTab: React.FC = () => {
         <div className="bg-red-50 border border-red-200 rounded-md p-4">
           <div className="flex">
             <div className="flex-shrink-0">
-              <span className="text-red-400 text-xl">⚠️</span>
+              <Icon name="warning" size="lg" color="danger" />
             </div>
             <div className="ml-3">
               <h3 className="text-sm font-medium text-red-800">Error Loading Client Data</h3>
@@ -231,7 +232,7 @@ const ClientDiversityTab: React.FC = () => {
     <div className="p-6">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-          🔧 Client Diversity
+          <Icon name="clientDiversity" size="lg" color="primary" className="inline mr-2" />Client Diversity
         </h1>
         <p className="text-gray-600 dark:text-gray-400">
           Consensus and execution client distribution analysis
@@ -243,7 +244,7 @@ const ClientDiversityTab: React.FC = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <GlassCard>
             <div className="flex items-center">
-              <span className="text-xl mr-2">⚙️</span>
+              <Icon name="settings" size="lg" color="primary" className="mr-2" />
               <div className="text-sm font-medium text-black dark:text-white">Execution Clients</div>
             </div>
             <div className="text-2xl font-bold text-black dark:text-white mt-2">
@@ -256,7 +257,7 @@ const ClientDiversityTab: React.FC = () => {
 
           <GlassCard>
             <div className="flex items-center">
-              <span className="text-xl mr-2">🏛️</span>
+              <Icon name="building" size="lg" color="primary" className="mr-2" />
               <div className="text-sm font-medium text-black dark:text-white">Consensus Clients</div>
             </div>
             <div className="text-2xl font-bold text-black dark:text-white mt-2">
@@ -269,7 +270,7 @@ const ClientDiversityTab: React.FC = () => {
 
           <GlassCard>
             <div className="flex items-center">
-              <span className="text-xl mr-2">📊</span>
+              <Icon name="metrics" size="lg" color="primary" className="mr-2" />
               <div className="text-sm font-medium text-black dark:text-white">Diversity Score</div>
             </div>
             <div className="text-2xl font-bold text-black dark:text-white mt-2">
@@ -282,7 +283,7 @@ const ClientDiversityTab: React.FC = () => {
 
           <GlassCard>
             <div className="flex items-center">
-              <span className="text-xl mr-2">📡</span>
+              <Icon name="signal" size="lg" color="primary" className="mr-2" />
               <div className="text-sm font-medium text-black dark:text-white">Graffiti Coverage</div>
             </div>
             <div className="text-2xl font-bold text-black dark:text-white mt-2">
@@ -298,7 +299,7 @@ const ClientDiversityTab: React.FC = () => {
         <GlassCard className="bg-warning-light/30 dark:bg-warning-dark/20 border border-warning/30" hoverable={false}>
           <div className="flex">
             <div className="flex-shrink-0">
-              <span className="text-yellow-400 text-xl">ℹ️</span>
+              <Icon name="info" size="lg" color="warning" />
             </div>
             <div className="ml-3">
               <h3 className="text-sm font-medium text-yellow-800">Analysis Note</h3>
@@ -313,7 +314,7 @@ const ClientDiversityTab: React.FC = () => {
         <GlassCard hoverable={false}>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-              📊 Client Distribution Charts
+              <Icon name="metrics" size="lg" color="primary" className="inline mr-2" />Client Distribution Charts
             </h3>
             <GlassButton
               onClick={handleDownloadClientData}
@@ -329,7 +330,7 @@ const ClientDiversityTab: React.FC = () => {
             {/* Execution Clients Pie Chart */}
             <div className="bg-white/30 dark:bg-white/5 backdrop-blur-sm rounded-lg p-4 border border-white/20">
               <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 text-center">
-                ⚙️ Execution Clients
+                <Icon name="settings" size="lg" color="primary" className="inline mr-2" />Execution Clients
               </h4>
               <ResponsiveContainer width="100%" height={300}>
                 <PieChart>
@@ -374,7 +375,7 @@ const ClientDiversityTab: React.FC = () => {
             {/* Consensus Clients Pie Chart */}
             <div className="bg-white/30 dark:bg-white/5 backdrop-blur-sm rounded-lg p-4 border border-white/20">
               <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 text-center">
-                🏛️ Consensus Clients
+                <Icon name="building" size="lg" color="primary" className="inline mr-2" />Consensus Clients
               </h4>
               <ResponsiveContainer width="100%" height={300}>
                 <PieChart>
@@ -466,7 +467,7 @@ const ClientDiversityTab: React.FC = () => {
         {/* Client Combinations Bar Chart */}
         <GlassCard hoverable={false}>
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
-            🔧 Client Combinations (Execution + Consensus)
+            <Icon name="clientDiversity" size="lg" color="primary" className="inline mr-2" />Client Combinations (Execution + Consensus)
           </h3>
           <ResponsiveContainer width="100%" height={500}>
             <BarChart data={combinationChartData} margin={{ top: 20, right: 30, left: 20, bottom: 120 }}>

@@ -1,14 +1,100 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+@layer base {
+  html {
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  }
+  
+  body {
+    margin: 0;
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+    font-size: 0.875rem; /* 14px base */
+    line-height: 1.25rem;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: 'cv01', 'cv03', 'cv04', 'cv11';
+  }
+  
+  /* Typography hierarchy */
+  h1 {
+    @apply font-heading font-bold text-2xl;
+  }
+  
+  h2 {
+    @apply font-heading font-semibold text-xl;
+  }
+  
+  h3 {
+    @apply font-heading font-semibold text-lg;
+  }
+  
+  h4 {
+    @apply font-heading font-medium text-md;
+  }
+  
+  h5 {
+    @apply font-heading font-medium text-base;
+  }
+  
+  h6 {
+    @apply font-heading font-medium text-sm;
+  }
+  
+  p {
+    @apply font-body text-base;
+  }
+  
+  .text-display-large {
+    @apply font-heading font-bold text-5xl;
+  }
+  
+  .text-display-medium {
+    @apply font-heading font-bold text-4xl;
+  }
+  
+  .text-display-small {
+    @apply font-heading font-semibold text-3xl;
+  }
+  
+  .text-headline-large {
+    @apply font-heading font-semibold text-2xl;
+  }
+  
+  .text-headline-medium {
+    @apply font-heading font-medium text-xl;
+  }
+  
+  .text-headline-small {
+    @apply font-heading font-medium text-lg;
+  }
+  
+  .text-body-large {
+    @apply font-body font-normal text-md;
+  }
+  
+  .text-body-medium {
+    @apply font-body font-normal text-base;
+  }
+  
+  .text-body-small {
+    @apply font-body font-normal text-sm;
+  }
+  
+  .text-label-large {
+    @apply font-body font-medium text-base;
+  }
+  
+  .text-label-medium {
+    @apply font-body font-medium text-sm;
+  }
+  
+  .text-label-small {
+    @apply font-body font-medium text-xs;
+  }
 }
 
 code {
@@ -39,6 +125,15 @@ code {
 .subtle-bar-hover .recharts-active-bar {
   opacity: 1 !important;
   filter: none !important;
+}
+
+/* Glass Table Zebra Striping */
+.glass-table-zebra tr:nth-child(even) {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.dark .glass-table-zebra tr:nth-child(even) {
+  background-color: rgba(255, 255, 255, 0.05);
 }
 
 /* Disable the default active bar overlay completely */

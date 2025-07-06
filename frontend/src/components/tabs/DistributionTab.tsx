@@ -5,6 +5,7 @@ import LoadingSpinner from '../common/LoadingSpinner';
 import ErrorMessage from '../common/ErrorMessage';
 import BarChartComponent from '../charts/BarChart';
 import GlassCard from '../common/GlassCard';
+import Icon from '../common/Icon';
 
 interface DistributionStats {
   maxValidators: number;
@@ -178,8 +179,9 @@ const DistributionTab: React.FC = () => {
   return (
     <div className="p-6">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-          📈 Distribution Analysis
+        <h1 className="text-headline-large font-semibold text-neutral-900 dark:text-neutral-100 mb-2 flex items-center gap-3">
+          <Icon name="distribution" size="lg" color="primary" />
+          Distribution Analysis
         </h1>
         <p className="text-gray-600 dark:text-gray-400">
           Validator distribution across all operators
@@ -202,30 +204,30 @@ const DistributionTab: React.FC = () => {
       {/* Key Insights Section */}
       <div className="mb-8">
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-          📊 Key Insights
+          <Icon name="metrics" size="lg" color="primary" className="inline mr-2" />Key Insights
         </h2>
         
         {/* Basic Statistics */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
-          <GlassCard>
+          <GlassCard elevation="raised" className="p-4">
             <div className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-wider">Largest Operator</div>
             <div className="text-3xl font-extrabold text-gray-900 dark:text-white mb-1 tracking-tight">{distributionStats.maxValidators.toLocaleString()}</div>
             <div className="text-xs font-medium text-gray-500 dark:text-gray-400">validators</div>
           </GlassCard>
           
-          <GlassCard>
+          <GlassCard elevation="raised" className="p-4">
             <div className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-wider">Average per Operator</div>
             <div className="text-3xl font-extrabold text-gray-900 dark:text-white mb-1 tracking-tight">{distributionStats.avgValidators.toFixed(1)}</div>
             <div className="text-xs font-medium text-gray-500 dark:text-gray-400">validators</div>
           </GlassCard>
           
-          <GlassCard>
+          <GlassCard elevation="raised" className="p-4">
             <div className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-wider">Median per Operator</div>
             <div className="text-3xl font-extrabold text-gray-900 dark:text-white mb-1 tracking-tight">{distributionStats.medianValidators.toFixed(1)}</div>
             <div className="text-xs font-medium text-gray-500 dark:text-gray-400">validators</div>
           </GlassCard>
           
-          <GlassCard>
+          <GlassCard elevation="raised" className="p-4">
             <div className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-wider">Smallest Operator</div>
             <div className="text-3xl font-extrabold text-gray-900 dark:text-white mb-1 tracking-tight">{distributionStats.minValidators.toLocaleString()}</div>
             <div className="text-xs font-medium text-gray-500 dark:text-gray-400">validators</div>
@@ -234,25 +236,25 @@ const DistributionTab: React.FC = () => {
 
         {/* Concentration Analysis */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
-          <GlassCard>
+          <GlassCard elevation="elevated" className="p-4">
             <div className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-wider">Top 3 Operators Control</div>
             <div className="text-3xl font-extrabold text-gray-900 dark:text-white mb-1 tracking-tight">{distributionStats.top3Percentage.toFixed(1)}%</div>
             <div className="text-xs font-medium text-gray-500 dark:text-gray-400">of all validators</div>
           </GlassCard>
           
-          <GlassCard>
+          <GlassCard elevation="elevated" className="p-4">
             <div className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-wider">Top 5 Operators Control</div>
             <div className="text-3xl font-extrabold text-gray-900 dark:text-white mb-1 tracking-tight">{distributionStats.top5Percentage.toFixed(1)}%</div>
             <div className="text-xs font-medium text-gray-500 dark:text-gray-400">of all validators</div>
           </GlassCard>
           
-          <GlassCard>
+          <GlassCard elevation="elevated" className="p-4">
             <div className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-wider">Top 10 Operators Control</div>
             <div className="text-3xl font-extrabold text-gray-900 dark:text-white mb-1 tracking-tight">{distributionStats.top10Percentage.toFixed(1)}%</div>
             <div className="text-xs font-medium text-gray-500 dark:text-gray-400">of all validators</div>
           </GlassCard>
           
-          <GlassCard>
+          <GlassCard elevation="elevated" className="p-4">
             <div className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-wider">Below Average Operators</div>
             <div className="text-3xl font-extrabold text-gray-900 dark:text-white mb-1 tracking-tight">{distributionStats.belowAvgPercentage.toFixed(1)}%</div>
             <div className="text-xs font-medium text-gray-500 dark:text-gray-400">of all operators</div>
@@ -261,25 +263,25 @@ const DistributionTab: React.FC = () => {
 
         {/* Cap Analysis */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-          <GlassCard>
+          <GlassCard elevation="floating" className="p-4">
             <div className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-wider">Validators to Cap</div>
             <div className="text-3xl font-extrabold text-gray-900 dark:text-white mb-1 tracking-tight">{distributionStats.validatorsToCapLevel.toLocaleString()}</div>
             <div className="text-xs font-medium text-gray-500 dark:text-gray-400">Total needed to reach cap level</div>
           </GlassCard>
           
-          <GlassCard>
+          <GlassCard elevation="floating" className="p-4">
             <div className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-wider">ETH to Cap</div>
             <div className="text-3xl font-extrabold text-gray-900 dark:text-white mb-1 tracking-tight">{distributionStats.ethToCapLevel.toLocaleString()}</div>
             <div className="text-xs font-medium text-gray-500 dark:text-gray-400">@ 32 ETH per validator</div>
           </GlassCard>
           
-          <GlassCard>
+          <GlassCard elevation="floating" className="p-4">
             <div className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-wider">Operators at Cap</div>
             <div className="text-3xl font-extrabold text-gray-900 dark:text-white mb-1 tracking-tight">{distributionStats.operatorsAtCapPercentage.toFixed(1)}%</div>
             <div className="text-xs font-medium text-gray-500 dark:text-gray-400">{distributionStats.operatorsAtCapCount} operators</div>
           </GlassCard>
           
-          <GlassCard>
+          <GlassCard elevation="floating" className="p-4">
             <div className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-wider">Operators at 75%+ of Cap</div>
             <div className="text-3xl font-extrabold text-gray-900 dark:text-white mb-1 tracking-tight">{distributionStats.operatorsNearCapPercentage.toFixed(1)}%</div>
             <div className="text-xs font-medium text-gray-500 dark:text-gray-400">{distributionStats.operatorsNearCapCount} ops (≥75% of cap)</div>

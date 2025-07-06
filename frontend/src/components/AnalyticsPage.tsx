@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import GlassCard from './common/GlassCard';
+import Icon from './common/Icon';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
 interface AnalyticsSummary {
@@ -109,7 +110,7 @@ const AnalyticsPage: React.FC = () => {
         <div className="px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">📊 Analytics Dashboard</h1>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white"><Icon name="analytics" size="lg" color="primary" className="inline mr-2" />Analytics Dashboard</h1>
               <p className="text-sm text-gray-600 dark:text-gray-400">Privacy-first visitor analytics</p>
             </div>
             <button
@@ -235,7 +236,7 @@ const AnalyticsPage: React.FC = () => {
 
         {/* Daily Activity */}
         <GlassCard size="large">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">📈 Daily Activity (Last 14 Days)</h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4"><Icon name="trendingUp" size="lg" color="primary" className="inline mr-2" />Daily Activity (Last 14 Days)</h3>
           <ResponsiveContainer width="100%" height={400}>
             <BarChart data={dailyData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />

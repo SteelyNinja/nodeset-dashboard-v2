@@ -3,6 +3,8 @@ import { ConcentrationMetrics } from '../../types/api';
 import { apiService } from '../../services/api';
 import LoadingSpinner from '../common/LoadingSpinner';
 import ErrorMessage from '../common/ErrorMessage';
+import GlassCard from '../common/GlassCard';
+import Icon from '../common/Icon';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 interface LorenzCurveData {
@@ -79,8 +81,9 @@ const ConcentrationTab: React.FC = () => {
   return (
     <div className="p-6">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-          🎯 Concentration Analysis
+        <h1 className="text-headline-large font-semibold text-neutral-900 dark:text-neutral-100 mb-2 flex items-center gap-3">
+          <Icon name="concentration" size="lg" color="primary" />
+          Concentration Analysis
         </h1>
         <p className="text-gray-600 dark:text-gray-400">
           Lorenz curve and concentration metrics
@@ -91,23 +94,37 @@ const ConcentrationTab: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left: Lorenz Curve (2/3 width) */}
           <div className="lg:col-span-2">
-            <div className="bg-glass-light dark:bg-glass-dark backdrop-blur-glass dark:backdrop-blur-glass-dark dark:backdrop-saturate-140 border border-gray-200 dark:border-white/15 rounded-2xl shadow-glass-light dark:shadow-glass-dark p-6">
+            <GlassCard elevation="elevated" className="p-6">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                 Validator Concentration Curve (Lorenz Curve)
               </h3>
-              <ResponsiveContainer width="100%" height={400}>
-                <LineChart data={lorenzData}>
+              <ResponsiveContainer width="100%" height={450}>
+                <LineChart 
+                  data={lorenzData}
+                  margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+                >
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis 
                     dataKey="x"
                     type="number"
                     domain={[0, 100]}
-                    label={{ value: 'Cumulative % of Operators', position: 'insideBottom', offset: -5 }}
+                    label={{ 
+                      value: 'Cumulative % of Operators', 
+                      position: 'insideBottom', 
+                      offset: -10,
+                      textAnchor: 'middle'
+                    }}
                   />
                   <YAxis 
                     type="number"
                     domain={[0, 100]}
-                    label={{ value: 'Cumulative % of Validators', angle: -90, position: 'insideLeft' }}
+                    label={{ 
+                      value: 'Cumulative % of Validators', 
+                      angle: -90, 
+                      position: 'insideLeft',
+                      textAnchor: 'middle',
+                      offset: 10
+                    }}
                   />
                   <Tooltip 
                     formatter={(value: number, name: string) => [
@@ -116,7 +133,11 @@ const ConcentrationTab: React.FC = () => {
                     ]}
                     labelFormatter={(value: number) => `${value.toFixed(1)}% of Operators`}
                   />
-                  <Legend />
+                  <Legend 
+                    verticalAlign="top" 
+                    height={36}
+                    wrapperStyle={{ paddingBottom: '20px' }}
+                  />
                   <Line 
                     type="monotone" 
                     dataKey="actual" 
@@ -136,14 +157,14 @@ const ConcentrationTab: React.FC = () => {
                   />
                 </LineChart>
               </ResponsiveContainer>
-            </div>
+            </GlassCard>
           </div>
 
           {/* Right: Concentration Metrics Table (1/3 width) */}
           <div className="lg:col-span-1">
-            <div className="bg-glass-light dark:bg-glass-dark backdrop-blur-glass dark:backdrop-blur-glass-dark dark:backdrop-saturate-140 border border-gray-200 dark:border-white/15 rounded-2xl shadow-glass-light dark:shadow-glass-dark p-6">
+            <GlassCard elevation="floating" className="p-6">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                🔍 Concentration Metrics
+                Concentration Metrics
               </h3>
               <div className="space-y-4">
                 <div className="flex justify-between items-center border-b border-gray-200 dark:border-gray-700 pb-2">
@@ -179,7 +200,7 @@ const ConcentrationTab: React.FC = () => {
                   </span>
                 </div>
               </div>
-            </div>
+            </GlassCard>
           </div>
         </div>
       )}

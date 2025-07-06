@@ -5,6 +5,7 @@ import LoadingSpinner from '../common/LoadingSpinner';
 import ErrorMessage from '../common/ErrorMessage';
 import GlassCard from '../common/GlassCard';
 import GlassButton from '../common/GlassButton';
+import Icon from '../common/Icon';
 import { GlassTable, GlassTableHeader, GlassTableBody, GlassTableRow, GlassTableCell } from '../common/GlassTable';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 
@@ -369,7 +370,8 @@ const ProposalsTab: React.FC = () => {
     <div className="p-6">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-          🤲 Proposal Analysis
+          <Icon name="proposals" size="lg" color="primary" className="mr-3" />
+          Proposal Analysis
         </h1>
         <p className="text-gray-600 dark:text-gray-400">
           Comprehensive analysis of Ethereum block proposals from NodeSet validators
@@ -380,22 +382,22 @@ const ProposalsTab: React.FC = () => {
 
       {/* Metrics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <GlassCard>
+        <GlassCard elevation="raised" className="p-4">
           <div className="text-sm font-medium text-gray-500 mb-1">Total Proposals</div>
           <div className="text-2xl font-bold text-black dark:text-white">{metrics.totalProposals.toLocaleString()}</div>
           <div className="text-xs text-gray-400">Block proposals tracked</div>
         </GlassCard>
-        <GlassCard>
+        <GlassCard elevation="raised" className="p-4">
           <div className="text-sm font-medium text-gray-500 mb-1">Total ETH Value</div>
           <div className="text-2xl font-bold text-black dark:text-white">{metrics.totalValue.toFixed(3)}</div>
           <div className="text-xs text-gray-400">ETH total value</div>
         </GlassCard>
-        <GlassCard>
+        <GlassCard elevation="raised" className="p-4">
           <div className="text-sm font-medium text-gray-500 mb-1">Operators with Proposals</div>
           <div className="text-2xl font-bold text-black dark:text-white">{metrics.operatorsWithProposals.toLocaleString()}</div>
           <div className="text-xs text-gray-400">Active proposing operators</div>
         </GlassCard>
-        <GlassCard>
+        <GlassCard elevation="raised" className="p-4">
           <div className="text-sm font-medium text-gray-500 mb-1">Avg Value/Proposal</div>
           <div className="text-2xl font-bold text-black dark:text-white">{metrics.avgValuePerProposal.toFixed(4)}</div>
           <div className="text-xs text-gray-400">ETH average per proposal</div>
@@ -403,10 +405,10 @@ const ProposalsTab: React.FC = () => {
       </div>
 
       {/* Largest Proposals Table */}
-      <GlassCard size="large">
+      <GlassCard size="large" elevation="floating">
         <div className="flex justify-between items-center mb-4">
           <div>
-            <h3 className="text-lg font-semibold text-gray-900">💎 Largest Proposals by Value</h3>
+            <h3 className="text-lg font-semibold text-gray-900"><Icon name="star" size="lg" color="primary" className="inline mr-2" />Largest Proposals by Value</h3>
             <p className="text-sm text-gray-600">Showing the 5 highest value proposals across all operators</p>
           </div>
           <GlassButton
@@ -414,7 +416,8 @@ const ProposalsTab: React.FC = () => {
             variant="primary"
             size="sm"
           >
-            📥 Download CSV
+            <Icon name="download" size="sm" color="current" className="mr-2" />
+            Download CSV
           </GlassButton>
         </div>
         
@@ -447,7 +450,7 @@ const ProposalsTab: React.FC = () => {
       </GlassCard>
 
       {/* Latest Proposals Table */}
-      <GlassCard size="large">
+      <GlassCard size="large" elevation="floating">
         <div className="flex justify-between items-center mb-4">
           <div>
             <h3 className="text-lg font-semibold text-gray-900">🕘 Latest Proposals</h3>
@@ -458,7 +461,8 @@ const ProposalsTab: React.FC = () => {
             variant="primary"
             size="sm"
           >
-            📥 Download CSV
+            <Icon name="download" size="sm" color="current" className="mr-2" />
+            Download CSV
           </GlassButton>
         </div>
         
@@ -494,7 +498,7 @@ const ProposalsTab: React.FC = () => {
       <GlassCard hoverable={false}>
         <div className="flex justify-between items-center mb-4">
           <div>
-            <h3 className="text-lg font-semibold text-gray-900">🔗 MEV Relay Usage Breakdown</h3>
+            <h3 className="text-lg font-semibold text-gray-900"><Icon name="analytics" size="lg" color="primary" className="inline mr-2" />MEV Relay Usage Breakdown</h3>
             <p className="text-sm text-gray-600">Breakdown of MEV relays used in proposals, sorted by usage count</p>
           </div>
           <GlassButton
@@ -502,7 +506,8 @@ const ProposalsTab: React.FC = () => {
             variant="primary"
             size="sm"
           >
-            📥 Download CSV
+            <Icon name="download" size="sm" color="current" className="mr-2" />
+            Download CSV
           </GlassButton>
         </div>
         
@@ -556,7 +561,7 @@ const ProposalsTab: React.FC = () => {
 
       {/* Missed Proposals Analysis */}
       {(missedSummary || missedProposalsTable.length > 0) && (
-        <GlassCard size="large">
+        <GlassCard size="large" elevation="floating">
           <div className="flex justify-between items-center mb-4">
             <div>
               <h3 className="text-lg font-semibold text-gray-900">❌ Missed Proposals Analysis</h3>
@@ -570,7 +575,8 @@ const ProposalsTab: React.FC = () => {
                 variant="primary"
                 size="sm"
               >
-                📥 Download CSV
+                <Icon name="download" size="sm" color="current" className="mr-2" />
+            Download CSV
               </GlassButton>
             )}
           </div>
@@ -579,7 +585,7 @@ const ProposalsTab: React.FC = () => {
             <div className="mb-4">
               <input
                 type="text"
-                placeholder="🔍 Search missed proposals by operator name, slot, date, or address"
+                placeholder="Search missed proposals by operator name, slot, date, or address"
                 className="w-full px-4 py-2 border border-white/30 rounded-lg bg-white/20 dark:bg-white/10 backdrop-blur-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                 value={missedProposalsSearchTerm}
                 onChange={(e) => setMissedProposalsSearchTerm(e.target.value)}
@@ -626,11 +632,11 @@ const ProposalsTab: React.FC = () => {
             </div>
           ) : missedProposalsTable.length > 0 ? (
             <div className="text-center py-8">
-              <p className="text-gray-500">🔍 No missed proposals found matching your search criteria</p>
+              <p className="text-gray-500">No missed proposals found matching your search criteria</p>
             </div>
           ) : (
             <div className="text-center py-8">
-              <p className="text-gray-500">🎉 No missed proposals found!</p>
+              <p className="text-gray-500">No missed proposals found!</p>
             </div>
           )}
         </GlassCard>
@@ -640,7 +646,7 @@ const ProposalsTab: React.FC = () => {
       <GlassCard hoverable={false}>
         <div className="flex justify-between items-center mb-4">
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">🏆 Operators by Proposal Count</h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white"><Icon name="trophy" size="lg" color="primary" className="inline mr-2" />Operators by Proposal Count</h3>
             <p className="text-sm text-gray-600 dark:text-gray-400">Showing {filteredOperators.length} operators with proposals</p>
           </div>
         </div>
@@ -648,7 +654,7 @@ const ProposalsTab: React.FC = () => {
         <div className="mb-4">
           <input
             type="text"
-            placeholder="🔍 Search proposal operators by address or ENS name"
+            placeholder="Search proposal operators by address or ENS name"
             className="w-full px-4 py-2 border border-white/30 rounded-lg bg-white/20 dark:bg-white/10 backdrop-blur-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -660,7 +666,7 @@ const ProposalsTab: React.FC = () => {
             <details key={operator.operator} className="border border-white/20 rounded-lg bg-white/30 dark:bg-white/5">
               <summary className="cursor-pointer p-4 hover:bg-white/40 dark:hover:bg-white/10 transition-colors duration-200">
                 <span className="font-medium text-gray-900 dark:text-white">
-                  #{index + 1} {operator.ensName ? `🏷️ ${operator.ensName} (${operator.operator})` : operator.operator} - {operator.proposalCount} proposals ({operator.totalValueEth.toFixed(4)} ETH)
+                  #{index + 1} {operator.ensName ? `${operator.ensName} (${operator.operator})` : operator.operator} - {operator.proposalCount} proposals ({operator.totalValueEth.toFixed(4)} ETH)
                 </span>
               </summary>
               
@@ -672,7 +678,7 @@ const ProposalsTab: React.FC = () => {
                 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                   <div>
-                    <h4 className="font-medium text-gray-900 dark:text-white mb-2">💰 Proposal Performance</h4>
+                    <h4 className="font-medium text-gray-900 dark:text-white mb-2">Proposal Performance</h4>
                     <ul className="text-sm text-gray-600 dark:text-gray-300 space-y-1">
                       <li>• Proposals: <strong>{operator.proposalCount}</strong></li>
                       <li>• Total Value: <strong>{operator.totalValueEth.toFixed(4)} ETH</strong></li>
@@ -692,7 +698,7 @@ const ProposalsTab: React.FC = () => {
                   </div>
                   
                   <div>
-                    <h4 className="font-medium text-gray-900 dark:text-white mb-2">📅 Activity</h4>
+                    <h4 className="font-medium text-gray-900 dark:text-white mb-2">Activity</h4>
                     <ul className="text-sm text-gray-600 dark:text-gray-300 space-y-1">
                       <li>• First: <strong>{new Date(operator.firstProposal).toLocaleDateString()}</strong></li>
                       <li>• Latest: <strong>{new Date(operator.lastProposal).toLocaleDateString()}</strong></li>
@@ -702,7 +708,7 @@ const ProposalsTab: React.FC = () => {
                 </div>
                 
                 <div>
-                  <h4 className="font-medium text-gray-900 dark:text-white mb-2">📋 Proposal History</h4>
+                  <h4 className="font-medium text-gray-900 dark:text-white mb-2">Proposal History</h4>
                   <div className="overflow-x-auto">
                     <GlassTable>
                       <GlassTableHeader>

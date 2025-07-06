@@ -6,6 +6,7 @@ import LoadingSpinner from '../common/LoadingSpinner';
 import ErrorMessage from '../common/ErrorMessage';
 import GlassCard from '../common/GlassCard';
 import GlassButton from '../common/GlassButton';
+import Icon from '../common/Icon';
 import { GlassTable, GlassTableHeader, GlassTableBody, GlassTableRow, GlassTableCell } from '../common/GlassTable';
 
 const ExitAnalysisTab: React.FC = () => {
@@ -138,7 +139,7 @@ const ExitAnalysisTab: React.FC = () => {
         <GlassCard size="large" hoverable={false}>
           <div className="flex justify-between items-center mb-4">
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">🏆 Operators with Exits</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white"><Icon name="trophy" size="lg" color="primary" className="inline mr-2" />Operators with Exits</h3>
               <p className="text-sm text-gray-600 dark:text-gray-400">Operators that have validator exits</p>
             </div>
             <GlassButton
@@ -146,14 +147,14 @@ const ExitAnalysisTab: React.FC = () => {
               variant="primary"
               size="sm"
             >
-              📥 Download CSV
+              <Icon name="download" size="sm" color="current" className="inline mr-2" />Download CSV
             </GlassButton>
           </div>
           
           <div className="mb-4">
             <input
               type="text"
-              placeholder="🔍 Search operators by address or ENS name"
+              placeholder="Search operators by address or ENS name"
               className="w-full px-4 py-2 border border-white/30 rounded-lg bg-white/20 dark:bg-white/10 backdrop-blur-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
               value={operatorSearchTerm}
               onChange={(e) => setOperatorSearchTerm(e.target.value)}
@@ -201,7 +202,7 @@ const ExitAnalysisTab: React.FC = () => {
         <GlassCard size="large" hoverable={false}>
           <div className="flex justify-between items-center mb-4">
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">🔍 Validator Exits</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white"><Icon name="search" size="lg" color="primary" className="inline mr-2" />Validator Exits</h3>
               <p className="text-sm text-gray-600 dark:text-gray-400">All validator exits with detailed information</p>
             </div>
             <GlassButton
@@ -209,14 +210,14 @@ const ExitAnalysisTab: React.FC = () => {
               variant="primary"
               size="sm"
             >
-              📥 Download CSV
+              <Icon name="download" size="sm" color="current" className="inline mr-2" />Download CSV
             </GlassButton>
           </div>
           
           <div className="mb-4">
             <input
               type="text"
-              placeholder="🔍 Search exits by operator, name, or validator index"
+              placeholder="Search exits by operator, name, or validator index"
               className="w-full px-4 py-2 border border-white/30 rounded-lg bg-white/20 dark:bg-white/10 backdrop-blur-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
               value={exitSearchTerm}
               onChange={(e) => setExitSearchTerm(e.target.value)}
