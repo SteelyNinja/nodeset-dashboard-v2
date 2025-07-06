@@ -173,9 +173,6 @@ function App() {
                 <div className="flex items-start space-x-3">
                   <Icon name="metrics" size="lg" color="primary" className="flex-shrink-0" />
                   <div className="text-gray-900 dark:text-white text-center flex-1">
-                    <div className="text-lg font-bold leading-relaxed">
-                      <strong>Monitoring and analysis</strong> of NodeSet protocol validators on Stakewise
-                    </div>
                     <div className="text-sm text-gray-600 dark:text-gray-400 mt-1 opacity-90">
                       Data cache updated every 15 minutes
                       {cacheTimestamp && (
@@ -269,9 +266,6 @@ function App() {
                       <div className="flex items-start space-x-3">
                         <Icon name="metrics" size="xl" color="primary" className="flex-shrink-0" />
                         <div className="text-gray-900 dark:text-white text-center">
-                          <div className="text-xl font-bold leading-relaxed">
-                            <strong>Monitoring and analysis</strong> of NodeSet protocol validators on Stakewise
-                          </div>
                           <div className="text-base text-gray-600 dark:text-gray-400 mt-1 opacity-90">
                             Data cache updated every 15 minutes
                             {cacheTimestamp && (
