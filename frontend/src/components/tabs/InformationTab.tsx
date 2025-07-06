@@ -421,7 +421,7 @@ const InformationTab: React.FC = () => {
           
           {validatorData?.pending_pubkeys && validatorData.pending_pubkeys.length > 0 && (
             <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700/50 rounded-lg">
-              <div className="flex items-start">
+              <div className="flex items-center">
                 <Icon name="info" size="lg" color="primary" className="mr-2 flex-shrink-0" />
                 <div className="text-sm text-blue-800 dark:text-blue-200">
                   <strong>Queue Status:</strong> {validatorData.pending_pubkeys.length} validators are waiting for activation on the Ethereum beacon chain. 
