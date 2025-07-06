@@ -92,7 +92,7 @@ const TabNavigation: React.FC<TabNavigationProps> = ({ activeTab, onTabChange, c
               key={tab.id}
               onClick={() => onTabChange(tab.id)}
               className={`
-                group relative whitespace-nowrap py-3 px-4 mx-1 my-2 rounded-2xl font-semibold text-sm 
+                group relative whitespace-nowrap py-3 px-3 sm:px-4 mx-1 my-2 rounded-2xl font-semibold text-sm 
                 transition-all duration-300 ease-glass backdrop-blur-md border-2 overflow-hidden
                 transform hover:scale-[1.02] hover:-translate-y-0.5 active:scale-95
                 ${activeTab === tab.id
@@ -125,9 +125,15 @@ const TabNavigation: React.FC<TabNavigationProps> = ({ activeTab, onTabChange, c
               <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/50 to-transparent rounded-t-2xl" />
               
               {/* Content */}
-              <span className="relative z-10 flex items-center space-x-2">
-                <span className="text-base">{tab.icon}</span>
-                <span className="tracking-wide">{tab.label}</span>
+              <span className="relative z-10 flex items-center justify-center">
+                {/* Icon only on very small screens */}
+                <span className="text-base sm:hidden">{tab.icon}</span>
+                
+                {/* Icon + text on sm screens and up */}
+                <span className="hidden sm:flex items-center space-x-2">
+                  <span className="text-base">{tab.icon}</span>
+                  <span className="tracking-wide">{tab.label}</span>
+                </span>
               </span>
             </button>
           ))}
