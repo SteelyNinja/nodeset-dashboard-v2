@@ -28,8 +28,7 @@ const AnalyticsPage: React.FC = () => {
   useEffect(() => {
     const fetchAnalytics = async () => {
       try {
-        const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:8000';
-        const response = await fetch(`${apiUrl}/api/analytics/summary`);
+        const response = await fetch(`/api/analytics/summary`);
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}`);
         }
