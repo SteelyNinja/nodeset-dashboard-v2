@@ -58,6 +58,36 @@ const InformationTab: React.FC = () => {
     return (num * 100).toFixed(2) + '%';
   };
 
+  const getGiniCoefficientColor = (gini: number): string => {
+    if (gini < 0.03) {
+      return 'text-green-600 dark:text-green-400'; // Green for good decentralization
+    } else if (gini >= 0.03 && gini <= 0.05) {
+      return 'text-yellow-600 dark:text-yellow-400'; // Yellow for moderate decentralization
+    } else {
+      return 'text-red-600 dark:text-red-400'; // Red for poor decentralization
+    }
+  };
+
+  const getTop1PercentColor = (percentage: number): string => {
+    if (percentage < 1) {
+      return 'text-green-600 dark:text-green-400'; // Green for good decentralization
+    } else if (percentage >= 1 && percentage <= 2) {
+      return 'text-yellow-600 dark:text-yellow-400'; // Yellow for moderate concentration
+    } else {
+      return 'text-red-600 dark:text-red-400'; // Red for high concentration
+    }
+  };
+
+  const getTop10PercentColor = (percentage: number): string => {
+    if (percentage < 10) {
+      return 'text-green-600 dark:text-green-400'; // Green for good decentralization
+    } else if (percentage >= 10 && percentage <= 20) {
+      return 'text-yellow-600 dark:text-yellow-400'; // Yellow for moderate concentration
+    } else {
+      return 'text-red-600 dark:text-red-400'; // Red for high concentration
+    }
+  };
+
   if (loading) {
     return <LoadingSpinner />;
   }
@@ -356,7 +386,7 @@ const InformationTab: React.FC = () => {
             <div className="bg-white/30 dark:bg-white/5 rounded-lg p-4 border border-white/20">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">Gini Coefficient</span>
-                <span className="text-lg font-bold text-primary-600 dark:text-primary-400">
+                <span className={`text-lg font-bold ${concentrationData ? getGiniCoefficientColor(concentrationData.gini_coefficient) : 'text-gray-600 dark:text-gray-400'}`}>
                   {concentrationData ? concentrationData.gini_coefficient.toFixed(4) : 'Loading...'}
                 </span>
               </div>
@@ -369,7 +399,7 @@ const InformationTab: React.FC = () => {
             <div className="bg-white/30 dark:bg-white/5 rounded-lg p-4 border border-white/20">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">Top 1% Share</span>
-                <span className="text-lg font-bold text-danger-dark dark:text-danger">
+                <span className={`text-lg font-bold ${concentrationData ? getTop1PercentColor(concentrationData.top_1_percent) : 'text-gray-600 dark:text-gray-400'}`}>
                   {concentrationData ? formatPercentage(concentrationData.top_1_percent / 100) : 'Loading...'}
                 </span>
               </div>
@@ -381,7 +411,7 @@ const InformationTab: React.FC = () => {
             <div className="bg-white/30 dark:bg-white/5 rounded-lg p-4 border border-white/20">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">Top 10% Share</span>
-                <span className="text-lg font-bold text-warning-dark dark:text-warning">
+                <span className={`text-lg font-bold ${concentrationData ? getTop10PercentColor(concentrationData.top_10_percent) : 'text-gray-600 dark:text-gray-400'}`}>
                   {concentrationData ? formatPercentage(concentrationData.top_10_percent / 100) : 'Loading...'}
                 </span>
               </div>
@@ -467,7 +497,7 @@ const InformationTab: React.FC = () => {
                       <span className="text-sm font-medium text-gray-900 dark:text-white capitalize">
                         {client}
                       </span>
-                      <span className="text-sm font-bold text-blue-600">
+                      <span className="text-sm font-bold text-black dark:text-white">
                         {(percentage || 0).toFixed(1)}%
                       </span>
                     </div>
@@ -488,7 +518,7 @@ const InformationTab: React.FC = () => {
                       <span className="text-sm font-medium text-gray-900 dark:text-white capitalize">
                         {client}
                       </span>
-                      <span className="text-sm font-bold text-purple-600">
+                      <span className="text-sm font-bold text-black dark:text-white">
                         {(percentage || 0).toFixed(1)}%
                       </span>
                     </div>

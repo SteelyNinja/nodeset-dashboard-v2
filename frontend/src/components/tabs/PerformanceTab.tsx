@@ -619,16 +619,24 @@ const PerformanceTab: React.FC = () => {
               {performanceSummary && (
                 <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
                   {/* Average Performance */}
-                  <div className="
-                    bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-blue-900/30 dark:via-indigo-900/20 dark:to-purple-900/30
+                  <div className={`
                     backdrop-blur-glass dark:backdrop-blur-glass-dark dark:backdrop-saturate-140
-                    border border-blue-200 dark:border-blue-700/50
                     rounded-xl 
                     shadow-glass-light dark:shadow-glass-dark
                     p-4 transform hover:scale-105 transition-all duration-300
-                  ">
+                    ${performanceSummary.average >= 99 ? 
+                      'bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/30 dark:to-green-900/20 border border-green-200 dark:border-green-700/50' :
+                      performanceSummary.average >= 98 ? 
+                      'bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-900/30 dark:to-yellow-900/20 border border-yellow-200 dark:border-yellow-700/50' :
+                      'bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/30 dark:to-red-900/20 border border-red-200 dark:border-red-700/50'
+                    }
+                  `}>
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-blue-600 dark:text-blue-400 text-xl">📊</span>
+                      <span className={`text-xl ${
+                        performanceSummary.average >= 99 ? 'text-green-600 dark:text-green-400' :
+                        performanceSummary.average >= 98 ? 'text-yellow-600 dark:text-yellow-400' :
+                        'text-red-600 dark:text-red-400'
+                      }`}>📊</span>
                       <div className={`px-2 py-1 rounded-full text-xs font-medium ${
                         performanceSummary.average >= 99 ? 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300' :
                         performanceSummary.average >= 98 ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/50 dark:text-yellow-300' :
@@ -637,31 +645,55 @@ const PerformanceTab: React.FC = () => {
                         {performanceSummary.average >= 99 ? 'Excellent' : performanceSummary.average >= 98 ? 'Good' : 'Needs Attention'}
                       </div>
                     </div>
-                    <div className="text-2xl font-bold text-blue-700 dark:text-blue-300 mb-1">
+                    <div className={`text-2xl font-bold mb-1 ${
+                      performanceSummary.average >= 99 ? 'text-green-700 dark:text-green-300' :
+                      performanceSummary.average >= 98 ? 'text-yellow-700 dark:text-yellow-300' :
+                      'text-red-700 dark:text-red-300'
+                    }`}>
                       {performanceSummary.average.toFixed(2)}%
                     </div>
-                    <div className="text-xs text-blue-600 dark:text-blue-400 uppercase tracking-wider">
+                    <div className={`text-xs uppercase tracking-wider ${
+                      performanceSummary.average >= 99 ? 'text-green-600 dark:text-green-400' :
+                      performanceSummary.average >= 98 ? 'text-yellow-600 dark:text-yellow-400' :
+                      'text-red-600 dark:text-red-400'
+                    }`}>
                       Average Performance
                     </div>
-                    <div className="mt-2 bg-blue-200 dark:bg-blue-800 rounded-full h-2">
+                    <div className={`mt-2 rounded-full h-2 ${
+                      performanceSummary.average >= 99 ? 'bg-green-200 dark:bg-green-800' :
+                      performanceSummary.average >= 98 ? 'bg-yellow-200 dark:bg-yellow-800' :
+                      'bg-red-200 dark:bg-red-800'
+                    }`}>
                       <div 
-                        className="bg-blue-500 h-2 rounded-full transition-all duration-500"
+                        className={`h-2 rounded-full transition-all duration-500 ${
+                          performanceSummary.average >= 99 ? 'bg-green-500' :
+                          performanceSummary.average >= 98 ? 'bg-yellow-500' :
+                          'bg-red-500'
+                        }`}
                         style={{ width: `${Math.min(performanceSummary.average, 100)}%` }}
                       ></div>
                     </div>
                   </div>
 
                   {/* Median Performance */}
-                  <div className="
-                    bg-gradient-to-br from-teal-50 via-cyan-50 to-sky-50 dark:from-teal-900/30 dark:via-cyan-900/20 dark:to-sky-900/30
+                  <div className={`
                     backdrop-blur-glass dark:backdrop-blur-glass-dark dark:backdrop-saturate-140
-                    border border-teal-200 dark:border-teal-700/50
                     rounded-xl 
                     shadow-glass-light dark:shadow-glass-dark
                     p-4 transform hover:scale-105 transition-all duration-300
-                  ">
+                    ${performanceSummary.median >= 99 ? 
+                      'bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/30 dark:to-green-900/20 border border-green-200 dark:border-green-700/50' :
+                      performanceSummary.median >= 98 ? 
+                      'bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-900/30 dark:to-yellow-900/20 border border-yellow-200 dark:border-yellow-700/50' :
+                      'bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/30 dark:to-red-900/20 border border-red-200 dark:border-red-700/50'
+                    }
+                  `}>
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-teal-600 dark:text-teal-400 text-xl">📈</span>
+                      <span className={`text-xl ${
+                        performanceSummary.median >= 99 ? 'text-green-600 dark:text-green-400' :
+                        performanceSummary.median >= 98 ? 'text-yellow-600 dark:text-yellow-400' :
+                        'text-red-600 dark:text-red-400'
+                      }`}>📈</span>
                       <div className={`px-2 py-1 rounded-full text-xs font-medium ${
                         performanceSummary.median >= 99 ? 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300' :
                         performanceSummary.median >= 98 ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/50 dark:text-yellow-300' :
@@ -670,92 +702,169 @@ const PerformanceTab: React.FC = () => {
                         {performanceSummary.median >= 99 ? 'Excellent' : performanceSummary.median >= 98 ? 'Good' : 'Needs Attention'}
                       </div>
                     </div>
-                    <div className="text-2xl font-bold text-teal-700 dark:text-teal-300 mb-1">
+                    <div className={`text-2xl font-bold mb-1 ${
+                      performanceSummary.median >= 99 ? 'text-green-700 dark:text-green-300' :
+                      performanceSummary.median >= 98 ? 'text-yellow-700 dark:text-yellow-300' :
+                      'text-red-700 dark:text-red-300'
+                    }`}>
                       {performanceSummary.median.toFixed(2)}%
                     </div>
-                    <div className="text-xs text-teal-600 dark:text-teal-400 uppercase tracking-wider">
+                    <div className={`text-xs uppercase tracking-wider ${
+                      performanceSummary.median >= 99 ? 'text-green-600 dark:text-green-400' :
+                      performanceSummary.median >= 98 ? 'text-yellow-600 dark:text-yellow-400' :
+                      'text-red-600 dark:text-red-400'
+                    }`}>
                       Median Performance
                     </div>
-                    <div className="mt-2 bg-teal-200 dark:bg-teal-800 rounded-full h-2">
+                    <div className={`mt-2 rounded-full h-2 ${
+                      performanceSummary.median >= 99 ? 'bg-green-200 dark:bg-green-800' :
+                      performanceSummary.median >= 98 ? 'bg-yellow-200 dark:bg-yellow-800' :
+                      'bg-red-200 dark:bg-red-800'
+                    }`}>
                       <div 
-                        className="bg-teal-500 h-2 rounded-full transition-all duration-500"
+                        className={`h-2 rounded-full transition-all duration-500 ${
+                          performanceSummary.median >= 99 ? 'bg-green-500' :
+                          performanceSummary.median >= 98 ? 'bg-yellow-500' :
+                          'bg-red-500'
+                        }`}
                         style={{ width: `${Math.min(performanceSummary.median, 100)}%` }}
                       ></div>
                     </div>
                   </div>
 
                   {/* Best Performance */}
-                  <div className="
-                    bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 dark:from-green-900/30 dark:via-emerald-900/20 dark:to-teal-900/30
+                  <div className={`
                     backdrop-blur-glass dark:backdrop-blur-glass-dark dark:backdrop-saturate-140
-                    border border-green-200 dark:border-green-700/50
                     rounded-xl 
                     shadow-glass-light dark:shadow-glass-dark
                     p-4 transform hover:scale-105 transition-all duration-300
-                  ">
+                    ${performanceSummary.best >= 99 ? 
+                      'bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/30 dark:to-green-900/20 border border-green-200 dark:border-green-700/50' :
+                      performanceSummary.best >= 98 ? 
+                      'bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-900/30 dark:to-yellow-900/20 border border-yellow-200 dark:border-yellow-700/50' :
+                      'bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/30 dark:to-red-900/20 border border-red-200 dark:border-red-700/50'
+                    }
+                  `}>
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-green-600 dark:text-green-400 text-xl">🏆</span>
-                      <div className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300">
+                      <span className={`text-xl ${
+                        performanceSummary.best >= 99 ? 'text-green-600 dark:text-green-400' :
+                        performanceSummary.best >= 98 ? 'text-yellow-600 dark:text-yellow-400' :
+                        'text-red-600 dark:text-red-400'
+                      }`}>🏆</span>
+                      <div className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        performanceSummary.best >= 99 ? 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300' :
+                        performanceSummary.best >= 98 ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/50 dark:text-yellow-300' :
+                        'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300'
+                      }`}>
                         Best
                       </div>
                     </div>
-                    <div className="text-2xl font-bold text-green-700 dark:text-green-300 mb-1">
+                    <div className={`text-2xl font-bold mb-1 ${
+                      performanceSummary.best >= 99 ? 'text-green-700 dark:text-green-300' :
+                      performanceSummary.best >= 98 ? 'text-yellow-700 dark:text-yellow-300' :
+                      'text-red-700 dark:text-red-300'
+                    }`}>
                       {performanceSummary.best.toFixed(2)}%
                     </div>
-                    <div className="text-xs text-green-600 dark:text-green-400 uppercase tracking-wider">
+                    <div className={`text-xs uppercase tracking-wider ${
+                      performanceSummary.best >= 99 ? 'text-green-600 dark:text-green-400' :
+                      performanceSummary.best >= 98 ? 'text-yellow-600 dark:text-yellow-400' :
+                      'text-red-600 dark:text-red-400'
+                    }`}>
                       Best Performance
                     </div>
-                    <div className="mt-2 bg-green-200 dark:bg-green-800 rounded-full h-2">
+                    <div className={`mt-2 rounded-full h-2 ${
+                      performanceSummary.best >= 99 ? 'bg-green-200 dark:bg-green-800' :
+                      performanceSummary.best >= 98 ? 'bg-yellow-200 dark:bg-yellow-800' :
+                      'bg-red-200 dark:bg-red-800'
+                    }`}>
                       <div 
-                        className="bg-green-500 h-2 rounded-full transition-all duration-500"
+                        className={`h-2 rounded-full transition-all duration-500 ${
+                          performanceSummary.best >= 99 ? 'bg-green-500' :
+                          performanceSummary.best >= 98 ? 'bg-yellow-500' :
+                          'bg-red-500'
+                        }`}
                         style={{ width: `${Math.min(performanceSummary.best, 100)}%` }}
                       ></div>
                     </div>
                   </div>
 
                   {/* Worst Performance */}
-                  <div className="
-                    bg-gradient-to-br from-red-50 via-rose-50 to-pink-50 dark:from-red-900/30 dark:via-rose-900/20 dark:to-pink-900/30
+                  <div className={`
                     backdrop-blur-glass dark:backdrop-blur-glass-dark dark:backdrop-saturate-140
-                    border border-red-200 dark:border-red-700/50
                     rounded-xl 
                     shadow-glass-light dark:shadow-glass-dark
                     p-4 transform hover:scale-105 transition-all duration-300
-                  ">
+                    ${performanceSummary.worst >= 98 ? 
+                      'bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/30 dark:to-green-900/20 border border-green-200 dark:border-green-700/50' :
+                      performanceSummary.worst >= 95 ? 
+                      'bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-900/30 dark:to-yellow-900/20 border border-yellow-200 dark:border-yellow-700/50' :
+                      'bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/30 dark:to-red-900/20 border border-red-200 dark:border-red-700/50'
+                    }
+                  `}>
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-red-600 dark:text-red-400 text-xl">⚠️</span>
+                      <span className={`text-xl ${
+                        performanceSummary.worst >= 98 ? 'text-green-600 dark:text-green-400' :
+                        performanceSummary.worst >= 95 ? 'text-yellow-600 dark:text-yellow-400' :
+                        'text-red-600 dark:text-red-400'
+                      }`}>⚠️</span>
                       <div className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        performanceSummary.worst >= 98 ? 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300' :
                         performanceSummary.worst >= 95 ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/50 dark:text-yellow-300' :
                         'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300'
                       }`}>
-                        {performanceSummary.worst >= 95 ? 'Concerning' : 'Critical'}
+                        {performanceSummary.worst >= 98 ? 'Good' : performanceSummary.worst >= 95 ? 'Concerning' : 'Critical'}
                       </div>
                     </div>
-                    <div className="text-2xl font-bold text-red-700 dark:text-red-300 mb-1">
+                    <div className={`text-2xl font-bold mb-1 ${
+                      performanceSummary.worst >= 98 ? 'text-green-700 dark:text-green-300' :
+                      performanceSummary.worst >= 95 ? 'text-yellow-700 dark:text-yellow-300' :
+                      'text-red-700 dark:text-red-300'
+                    }`}>
                       {performanceSummary.worst.toFixed(2)}%
                     </div>
-                    <div className="text-xs text-red-600 dark:text-red-400 uppercase tracking-wider">
+                    <div className={`text-xs uppercase tracking-wider ${
+                      performanceSummary.worst >= 98 ? 'text-green-600 dark:text-green-400' :
+                      performanceSummary.worst >= 95 ? 'text-yellow-600 dark:text-yellow-400' :
+                      'text-red-600 dark:text-red-400'
+                    }`}>
                       Worst Performance
                     </div>
-                    <div className="mt-2 bg-red-200 dark:bg-red-800 rounded-full h-2">
+                    <div className={`mt-2 rounded-full h-2 ${
+                      performanceSummary.worst >= 98 ? 'bg-green-200 dark:bg-green-800' :
+                      performanceSummary.worst >= 95 ? 'bg-yellow-200 dark:bg-yellow-800' :
+                      'bg-red-200 dark:bg-red-800'
+                    }`}>
                       <div 
-                        className="bg-red-500 h-2 rounded-full transition-all duration-500"
+                        className={`h-2 rounded-full transition-all duration-500 ${
+                          performanceSummary.worst >= 98 ? 'bg-green-500' :
+                          performanceSummary.worst >= 95 ? 'bg-yellow-500' :
+                          'bg-red-500'
+                        }`}
                         style={{ width: `${Math.min(performanceSummary.worst, 100)}%` }}
                       ></div>
                     </div>
                   </div>
 
                   {/* Standard Deviation */}
-                  <div className="
-                    bg-gradient-to-br from-purple-50 via-violet-50 to-indigo-50 dark:from-purple-900/30 dark:via-violet-900/20 dark:to-indigo-900/30
+                  <div className={`
                     backdrop-blur-glass dark:backdrop-blur-glass-dark dark:backdrop-saturate-140
-                    border border-purple-200 dark:border-purple-700/50
                     rounded-xl 
                     shadow-glass-light dark:shadow-glass-dark
                     p-4 transform hover:scale-105 transition-all duration-300
-                  ">
+                    ${performanceSummary.stdDev <= 1 ? 
+                      'bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/30 dark:to-green-900/20 border border-green-200 dark:border-green-700/50' :
+                      performanceSummary.stdDev <= 3 ? 
+                      'bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-900/30 dark:to-yellow-900/20 border border-yellow-200 dark:border-yellow-700/50' :
+                      'bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/30 dark:to-red-900/20 border border-red-200 dark:border-red-700/50'
+                    }
+                  `}>
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-purple-600 dark:text-purple-400 text-xl">📏</span>
+                      <span className={`text-xl ${
+                        performanceSummary.stdDev <= 1 ? 'text-green-600 dark:text-green-400' :
+                        performanceSummary.stdDev <= 3 ? 'text-yellow-600 dark:text-yellow-400' :
+                        'text-red-600 dark:text-red-400'
+                      }`}>📏</span>
                       <div className={`px-2 py-1 rounded-full text-xs font-medium ${
                         performanceSummary.stdDev <= 1 ? 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300' :
                         performanceSummary.stdDev <= 3 ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/50 dark:text-yellow-300' :
@@ -764,31 +873,55 @@ const PerformanceTab: React.FC = () => {
                         {performanceSummary.stdDev <= 1 ? 'Consistent' : performanceSummary.stdDev <= 3 ? 'Variable' : 'Volatile'}
                       </div>
                     </div>
-                    <div className="text-2xl font-bold text-purple-700 dark:text-purple-300 mb-1">
+                    <div className={`text-2xl font-bold mb-1 ${
+                      performanceSummary.stdDev <= 1 ? 'text-green-700 dark:text-green-300' :
+                      performanceSummary.stdDev <= 3 ? 'text-yellow-700 dark:text-yellow-300' :
+                      'text-red-700 dark:text-red-300'
+                    }`}>
                       {performanceSummary.stdDev.toFixed(2)}%
                     </div>
-                    <div className="text-xs text-purple-600 dark:text-purple-400 uppercase tracking-wider">
+                    <div className={`text-xs uppercase tracking-wider ${
+                      performanceSummary.stdDev <= 1 ? 'text-green-600 dark:text-green-400' :
+                      performanceSummary.stdDev <= 3 ? 'text-yellow-600 dark:text-yellow-400' :
+                      'text-red-600 dark:text-red-400'
+                    }`}>
                       Standard Deviation
                     </div>
-                    <div className="mt-2 bg-purple-200 dark:bg-purple-800 rounded-full h-2">
+                    <div className={`mt-2 rounded-full h-2 ${
+                      performanceSummary.stdDev <= 1 ? 'bg-green-200 dark:bg-green-800' :
+                      performanceSummary.stdDev <= 3 ? 'bg-yellow-200 dark:bg-yellow-800' :
+                      'bg-red-200 dark:bg-red-800'
+                    }`}>
                       <div 
-                        className="bg-purple-500 h-2 rounded-full transition-all duration-500"
+                        className={`h-2 rounded-full transition-all duration-500 ${
+                          performanceSummary.stdDev <= 1 ? 'bg-green-500' :
+                          performanceSummary.stdDev <= 3 ? 'bg-yellow-500' :
+                          'bg-red-500'
+                        }`}
                         style={{ width: `${Math.min(performanceSummary.stdDev * 10, 100)}%` }}
                       ></div>
                     </div>
                   </div>
 
                   {/* Network Consistency Score */}
-                  <div className="
-                    bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 dark:from-amber-900/30 dark:via-orange-900/20 dark:to-yellow-900/30
+                  <div className={`
                     backdrop-blur-glass dark:backdrop-blur-glass-dark dark:backdrop-saturate-140
-                    border border-amber-200 dark:border-amber-700/50
                     rounded-xl 
                     shadow-glass-light dark:shadow-glass-dark
                     p-4 transform hover:scale-105 transition-all duration-300
-                  ">
+                    ${(performanceSummary.best - performanceSummary.worst) <= 5 ? 
+                      'bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/30 dark:to-green-900/20 border border-green-200 dark:border-green-700/50' :
+                      (performanceSummary.best - performanceSummary.worst) <= 10 ? 
+                      'bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-900/30 dark:to-yellow-900/20 border border-yellow-200 dark:border-yellow-700/50' :
+                      'bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/30 dark:to-red-900/20 border border-red-200 dark:border-red-700/50'
+                    }
+                  `}>
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-amber-600 dark:text-amber-400 text-xl">🎯</span>
+                      <span className={`text-xl ${
+                        (performanceSummary.best - performanceSummary.worst) <= 5 ? 'text-green-600 dark:text-green-400' :
+                        (performanceSummary.best - performanceSummary.worst) <= 10 ? 'text-yellow-600 dark:text-yellow-400' :
+                        'text-red-600 dark:text-red-400'
+                      }`}>🎯</span>
                       <div className={`px-2 py-1 rounded-full text-xs font-medium ${
                         (performanceSummary.best - performanceSummary.worst) <= 5 ? 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300' :
                         (performanceSummary.best - performanceSummary.worst) <= 10 ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/50 dark:text-yellow-300' :
@@ -798,15 +931,31 @@ const PerformanceTab: React.FC = () => {
                          (performanceSummary.best - performanceSummary.worst) <= 10 ? 'Moderate' : 'Wide'}
                       </div>
                     </div>
-                    <div className="text-2xl font-bold text-amber-700 dark:text-amber-300 mb-1">
+                    <div className={`text-2xl font-bold mb-1 ${
+                      (performanceSummary.best - performanceSummary.worst) <= 5 ? 'text-green-700 dark:text-green-300' :
+                      (performanceSummary.best - performanceSummary.worst) <= 10 ? 'text-yellow-700 dark:text-yellow-300' :
+                      'text-red-700 dark:text-red-300'
+                    }`}>
                       {(performanceSummary.best - performanceSummary.worst).toFixed(2)}%
                     </div>
-                    <div className="text-xs text-amber-600 dark:text-amber-400 uppercase tracking-wider">
+                    <div className={`text-xs uppercase tracking-wider ${
+                      (performanceSummary.best - performanceSummary.worst) <= 5 ? 'text-green-600 dark:text-green-400' :
+                      (performanceSummary.best - performanceSummary.worst) <= 10 ? 'text-yellow-600 dark:text-yellow-400' :
+                      'text-red-600 dark:text-red-400'
+                    }`}>
                       Performance Range
                     </div>
-                    <div className="mt-2 bg-amber-200 dark:bg-amber-800 rounded-full h-2">
+                    <div className={`mt-2 rounded-full h-2 ${
+                      (performanceSummary.best - performanceSummary.worst) <= 5 ? 'bg-green-200 dark:bg-green-800' :
+                      (performanceSummary.best - performanceSummary.worst) <= 10 ? 'bg-yellow-200 dark:bg-yellow-800' :
+                      'bg-red-200 dark:bg-red-800'
+                    }`}>
                       <div 
-                        className="bg-amber-500 h-2 rounded-full transition-all duration-500"
+                        className={`h-2 rounded-full transition-all duration-500 ${
+                          (performanceSummary.best - performanceSummary.worst) <= 5 ? 'bg-green-500' :
+                          (performanceSummary.best - performanceSummary.worst) <= 10 ? 'bg-yellow-500' :
+                          'bg-red-500'
+                        }`}
                         style={{ width: `${Math.min((performanceSummary.best - performanceSummary.worst) * 5, 100)}%` }}
                       ></div>
                     </div>

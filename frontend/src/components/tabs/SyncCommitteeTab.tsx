@@ -268,22 +268,22 @@ const SyncCommitteeTab: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <GlassCard>
           <div className="text-sm font-medium text-gray-500 mb-1">Overall Participation</div>
-          <div className="text-2xl font-bold text-blue-600">{metrics.overallParticipation.toFixed(2)}%</div>
+          <div className="text-2xl font-bold text-black dark:text-white">{metrics.overallParticipation.toFixed(2)}%</div>
           <div className="text-xs text-gray-400">Average participation rate</div>
         </GlassCard>
         <GlassCard>
           <div className="text-sm font-medium text-gray-500 mb-1">Total Periods Tracked</div>
-          <div className="text-2xl font-bold text-green-600">{metrics.totalPeriodsTracked.toLocaleString()}</div>
+          <div className="text-2xl font-bold text-black dark:text-white">{metrics.totalPeriodsTracked.toLocaleString()}</div>
           <div className="text-xs text-gray-400">Sync committee periods</div>
         </GlassCard>
         <GlassCard>
           <div className="text-sm font-medium text-gray-500 mb-1">Total Attestations</div>
-          <div className="text-2xl font-bold text-purple-600">{metrics.totalAttestations.toLocaleString()}</div>
+          <div className="text-2xl font-bold text-black dark:text-white">{metrics.totalAttestations.toLocaleString()}</div>
           <div className="text-xs text-gray-400">Sync committee attestations</div>
         </GlassCard>
         <GlassCard>
           <div className="text-sm font-medium text-gray-500 mb-1">Success Rate</div>
-          <div className="text-2xl font-bold text-orange-600">{metrics.successRate.toFixed(2)}%</div>
+          <div className="text-2xl font-bold text-black dark:text-white">{metrics.successRate.toFixed(2)}%</div>
           <div className="text-xs text-gray-400">Successful attestations</div>
         </GlassCard>
       </div>

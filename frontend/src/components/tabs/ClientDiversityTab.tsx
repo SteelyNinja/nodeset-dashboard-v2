@@ -244,12 +244,12 @@ const ClientDiversityTab: React.FC = () => {
           <GlassCard>
             <div className="flex items-center">
               <span className="text-xl mr-2">⚙️</span>
-              <div className="text-sm font-medium text-blue-800">Execution Clients</div>
+              <div className="text-sm font-medium text-black dark:text-white">Execution Clients</div>
             </div>
-            <div className="text-2xl font-bold text-blue-900 mt-2">
+            <div className="text-2xl font-bold text-black dark:text-white mt-2">
               {Object.keys(clientData.execution_clients || {}).length}
             </div>
-            <p className="text-xs text-blue-600 mt-1">
+            <p className="text-xs text-black dark:text-white mt-1">
               Different client types
             </p>
           </GlassCard>
@@ -257,12 +257,12 @@ const ClientDiversityTab: React.FC = () => {
           <GlassCard>
             <div className="flex items-center">
               <span className="text-xl mr-2">🏛️</span>
-              <div className="text-sm font-medium text-purple-800">Consensus Clients</div>
+              <div className="text-sm font-medium text-black dark:text-white">Consensus Clients</div>
             </div>
-            <div className="text-2xl font-bold text-purple-900 mt-2">
+            <div className="text-2xl font-bold text-black dark:text-white mt-2">
               {Object.keys(clientData.consensus_clients || {}).length}
             </div>
-            <p className="text-xs text-purple-600 mt-1">
+            <p className="text-xs text-black dark:text-white mt-1">
               Different client types
             </p>
           </GlassCard>
@@ -270,12 +270,12 @@ const ClientDiversityTab: React.FC = () => {
           <GlassCard>
             <div className="flex items-center">
               <span className="text-xl mr-2">📊</span>
-              <div className="text-sm font-medium text-green-800">Diversity Score</div>
+              <div className="text-sm font-medium text-black dark:text-white">Diversity Score</div>
             </div>
-            <div className="text-2xl font-bold text-green-900 mt-2">
+            <div className="text-2xl font-bold text-black dark:text-white mt-2">
               {clientData.diversity_score?.toFixed(3) || '0.000'}
             </div>
-            <p className="text-xs text-green-600 mt-1">
+            <p className="text-xs text-black dark:text-white mt-1">
               Higher is better
             </p>
           </GlassCard>
@@ -283,12 +283,12 @@ const ClientDiversityTab: React.FC = () => {
           <GlassCard>
             <div className="flex items-center">
               <span className="text-xl mr-2">📡</span>
-              <div className="text-sm font-medium text-orange-800">Graffiti Coverage</div>
+              <div className="text-sm font-medium text-black dark:text-white">Graffiti Coverage</div>
             </div>
-            <div className="text-2xl font-bold text-orange-900 mt-2">
+            <div className="text-2xl font-bold text-black dark:text-white mt-2">
               {clientData.graffiti_coverage_percent?.toFixed(1) || '0.0'}%
             </div>
-            <p className="text-xs text-orange-600 mt-1">
+            <p className="text-xs text-black dark:text-white mt-1">
               {clientData.operators_with_proposals || 0} of {clientData.total_operators || 0} operators
             </p>
           </GlassCard>
@@ -331,7 +331,7 @@ const ClientDiversityTab: React.FC = () => {
               <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 text-center">
                 ⚙️ Execution Clients
               </h4>
-              <ResponsiveContainer width="100%" height={250}>
+              <ResponsiveContainer width="100%" height={300}>
                 <PieChart>
                   <Pie
                     data={executionChartData}
@@ -339,8 +339,8 @@ const ClientDiversityTab: React.FC = () => {
                     cy="50%"
                     labelLine={false}
                     label={CustomLabel}
-                    outerRadius={80}
-                    innerRadius={32}
+                    outerRadius={110}
+                    innerRadius={40}
                     fill="#8884d8"
                     dataKey="value"
                   >
@@ -376,7 +376,7 @@ const ClientDiversityTab: React.FC = () => {
               <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 text-center">
                 🏛️ Consensus Clients
               </h4>
-              <ResponsiveContainer width="100%" height={250}>
+              <ResponsiveContainer width="100%" height={300}>
                 <PieChart>
                   <Pie
                     data={consensusChartData}
@@ -384,8 +384,8 @@ const ClientDiversityTab: React.FC = () => {
                     cy="50%"
                     labelLine={false}
                     label={CustomLabel}
-                    outerRadius={80}
-                    innerRadius={32}
+                    outerRadius={110}
+                    innerRadius={40}
                     fill="#8884d8"
                     dataKey="value"
                   >
@@ -421,7 +421,7 @@ const ClientDiversityTab: React.FC = () => {
               <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 text-center">
                 🏠 Setup Type
               </h4>
-              <ResponsiveContainer width="100%" height={250}>
+              <ResponsiveContainer width="100%" height={300}>
                 <PieChart>
                   <Pie
                     data={setupChartData}
@@ -429,8 +429,8 @@ const ClientDiversityTab: React.FC = () => {
                     cy="50%"
                     labelLine={false}
                     label={CustomLabel}
-                    outerRadius={80}
-                    innerRadius={32}
+                    outerRadius={110}
+                    innerRadius={40}
                     fill="#8884d8"
                     dataKey="value"
                   >

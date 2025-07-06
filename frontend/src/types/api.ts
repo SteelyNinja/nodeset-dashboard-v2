@@ -34,6 +34,7 @@ export interface ValidatorData {
   exited_validators?: Record<string, number>;
   ens_names?: Record<string, string>;
   ens_last_updated: string | number;
+  last_updated: string;
   cost_last_updated: number;
   operator_costs?: Record<string, {
     total_cost_eth: number;

@@ -70,10 +70,10 @@ const GasAnalysisTab: React.FC = () => {
 
   const getStrategyColor = (strategy: string): string => {
     const colors: Record<string, string> = {
-      'ultra': '#dc2626',
-      'high': '#ea580c',
-      'normal': '#2563eb',
-      'low': '#16a34a'
+      'ultra': '#16a34a',  // Green for 60M+ (was red)
+      'high': '#2563eb',   // Blue for 45M+ (was orange)
+      'normal': '#ea580c', // Orange for 36M+ (was blue)
+      'low': '#dc2626'     // Red for 30M+ (was green)
     };
     return colors[strategy] || '#6b7280';
   };
@@ -244,12 +244,12 @@ const GasAnalysisTab: React.FC = () => {
           <GlassCard>
             <div className="flex items-center">
               <span className="text-xl mr-2">📊</span>
-              <div className="text-sm font-medium text-blue-800">Average Gas Limit</div>
+              <div className="text-sm font-medium text-black dark:text-white">Average Gas Limit</div>
             </div>
-            <div className="text-2xl font-bold text-blue-900 mt-2">
+            <div className="text-2xl font-bold text-black dark:text-white mt-2">
               {formatGasLimit(gasData.average_gas_limit)}
             </div>
-            <p className="text-xs text-blue-600 mt-1">
+            <p className="text-xs text-black dark:text-white mt-1">
               Network average
             </p>
           </GlassCard>
@@ -257,12 +257,12 @@ const GasAnalysisTab: React.FC = () => {
           <GlassCard>
             <div className="flex items-center">
               <span className="text-xl mr-2">🎯</span>
-              <div className="text-sm font-medium text-green-800">Median Gas Limit</div>
+              <div className="text-sm font-medium text-black dark:text-white">Median Gas Limit</div>
             </div>
-            <div className="text-2xl font-bold text-green-900 mt-2">
+            <div className="text-2xl font-bold text-black dark:text-white mt-2">
               {formatGasLimit(gasData.median_gas_limit)}
             </div>
-            <p className="text-xs text-green-600 mt-1">
+            <p className="text-xs text-black dark:text-white mt-1">
               Network median
             </p>
           </GlassCard>
@@ -270,12 +270,12 @@ const GasAnalysisTab: React.FC = () => {
           <GlassCard>
             <div className="flex items-center">
               <span className="text-xl mr-2">⬆️</span>
-              <div className="text-sm font-medium text-purple-800">Max Gas Limit</div>
+              <div className="text-sm font-medium text-black dark:text-white">Max Gas Limit</div>
             </div>
-            <div className="text-2xl font-bold text-purple-900 mt-2">
+            <div className="text-2xl font-bold text-black dark:text-white mt-2">
               {formatGasLimit(gasData.gas_limit_range.max)}
             </div>
-            <p className="text-xs text-purple-600 mt-1">
+            <p className="text-xs text-black dark:text-white mt-1">
               Highest observed
             </p>
           </GlassCard>
@@ -283,12 +283,12 @@ const GasAnalysisTab: React.FC = () => {
           <GlassCard>
             <div className="flex items-center">
               <span className="text-xl mr-2">⬇️</span>
-              <div className="text-sm font-medium text-orange-800">Min Gas Limit</div>
+              <div className="text-sm font-medium text-black dark:text-white">Min Gas Limit</div>
             </div>
-            <div className="text-2xl font-bold text-orange-900 mt-2">
+            <div className="text-2xl font-bold text-black dark:text-white mt-2">
               {formatGasLimit(gasData.gas_limit_range.min)}
             </div>
-            <p className="text-xs text-orange-600 mt-1">
+            <p className="text-xs text-black dark:text-white mt-1">
               Lowest observed
             </p>
           </GlassCard>

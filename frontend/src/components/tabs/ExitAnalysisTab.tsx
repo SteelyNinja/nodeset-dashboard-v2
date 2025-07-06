@@ -114,22 +114,22 @@ const ExitAnalysisTab: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <GlassCard>
             <div className="text-sm font-medium text-gray-500 mb-1">Total Exits</div>
-            <div className="text-2xl font-bold text-red-600">{exitData.exit_summary.total_exited.toLocaleString()}</div>
+            <div className="text-2xl font-bold text-black dark:text-white">{exitData.exit_summary.total_exited.toLocaleString()}</div>
             <div className="text-xs text-gray-400">Validators that have exited</div>
           </GlassCard>
           <GlassCard>
             <div className="text-sm font-medium text-gray-500 mb-1">Still Active</div>
-            <div className="text-2xl font-bold text-green-600">{exitData.exit_summary.total_active.toLocaleString()}</div>
+            <div className="text-2xl font-bold text-black dark:text-white">{exitData.exit_summary.total_active.toLocaleString()}</div>
             <div className="text-xs text-gray-400">Currently active validators</div>
           </GlassCard>
           <GlassCard>
             <div className="text-sm font-medium text-gray-500 mb-1">Exit Rate</div>
-            <div className="text-2xl font-bold text-orange-600">{exitData.exit_summary.exit_rate_percent.toFixed(2)}%</div>
+            <div className="text-2xl font-bold text-black dark:text-white">{exitData.exit_summary.exit_rate_percent.toFixed(2)}%</div>
             <div className="text-xs text-gray-400">Percentage of validators exited</div>
           </GlassCard>
           <GlassCard>
             <div className="text-sm font-medium text-gray-500 mb-1">Last Updated</div>
-            <div className="text-2xl font-bold text-blue-600">{formatDate(exitData.exit_summary.last_updated).split(',')[0]}</div>
+            <div className="text-2xl font-bold text-black dark:text-white">{formatDate(exitData.exit_summary.last_updated).split(',')[0]}</div>
             <div className="text-xs text-gray-400">Data last refreshed</div>
           </GlassCard>
         </div>

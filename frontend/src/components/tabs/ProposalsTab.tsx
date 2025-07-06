@@ -382,22 +382,22 @@ const ProposalsTab: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <GlassCard>
           <div className="text-sm font-medium text-gray-500 mb-1">Total Proposals</div>
-          <div className="text-2xl font-bold text-blue-600">{metrics.totalProposals.toLocaleString()}</div>
+          <div className="text-2xl font-bold text-black dark:text-white">{metrics.totalProposals.toLocaleString()}</div>
           <div className="text-xs text-gray-400">Block proposals tracked</div>
         </GlassCard>
         <GlassCard>
           <div className="text-sm font-medium text-gray-500 mb-1">Total ETH Value</div>
-          <div className="text-2xl font-bold text-green-600">{metrics.totalValue.toFixed(3)}</div>
+          <div className="text-2xl font-bold text-black dark:text-white">{metrics.totalValue.toFixed(3)}</div>
           <div className="text-xs text-gray-400">ETH total value</div>
         </GlassCard>
         <GlassCard>
           <div className="text-sm font-medium text-gray-500 mb-1">Operators with Proposals</div>
-          <div className="text-2xl font-bold text-purple-600">{metrics.operatorsWithProposals.toLocaleString()}</div>
+          <div className="text-2xl font-bold text-black dark:text-white">{metrics.operatorsWithProposals.toLocaleString()}</div>
           <div className="text-xs text-gray-400">Active proposing operators</div>
         </GlassCard>
         <GlassCard>
           <div className="text-sm font-medium text-gray-500 mb-1">Avg Value/Proposal</div>
-          <div className="text-2xl font-bold text-orange-600">{metrics.avgValuePerProposal.toFixed(4)}</div>
+          <div className="text-2xl font-bold text-black dark:text-white">{metrics.avgValuePerProposal.toFixed(4)}</div>
           <div className="text-xs text-gray-400">ETH average per proposal</div>
         </GlassCard>
       </div>
@@ -529,7 +529,7 @@ const ProposalsTab: React.FC = () => {
           </div>
           
           <div className="bg-white/30 dark:bg-white/5 backdrop-blur-sm rounded-lg p-4 border border-white/20">
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={350}>
               <PieChart>
                 <Pie
                   data={mevRelayBreakdown.map((relay, index) => ({
@@ -539,7 +539,7 @@ const ProposalsTab: React.FC = () => {
                   }))}
                   cx="50%"
                   cy="50%"
-                  outerRadius={80}
+                  outerRadius={130}
                   dataKey="value"
                   label={({ name, percent }) => `${name} ${percent ? (percent * 100).toFixed(0) : '0'}%`}
                 >

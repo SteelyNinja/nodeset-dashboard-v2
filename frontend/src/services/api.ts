@@ -138,11 +138,11 @@ class ApiService {
     return this.extractData(response);
   }
 
-  // Get cache timestamp from validator performance data
+  // Get cache timestamp from validator data (nodeset_validator_tracker_cache.json)
   async getCacheTimestamp(): Promise<string | null> {
     try {
-      const performanceData = await this.getValidatorPerformanceData();
-      return performanceData.last_updated;
+      const validatorData = await this.getValidatorData();
+      return validatorData.last_updated;
     } catch (error) {
       console.error('Failed to get cache timestamp:', error);
       return null;
