@@ -486,14 +486,9 @@ const ClientDiversityTab: React.FC = () => {
                 tick={{ fontSize: 12 }}
               />
               <Tooltip 
-                formatter={(value, name) => [value, 'Operators']}
+                formatter={(value: number) => [value.toLocaleString(), 'Operators']}
                 labelFormatter={(label) => `Client Combination: ${label}`}
-                contentStyle={{
-                  backgroundColor: '#fff',
-                  border: '1px solid #ccc',
-                  borderRadius: '4px',
-                  fontSize: '12px'
-                }}
+                cursor={false}
               />
               <Bar dataKey="value">
                 {combinationChartData.map((entry, index) => {
