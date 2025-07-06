@@ -138,6 +138,17 @@ class ApiService {
     return this.extractData(response);
   }
 
+  // Get cache timestamp from validator performance data
+  async getCacheTimestamp(): Promise<string | null> {
+    try {
+      const performanceData = await this.getValidatorPerformanceData();
+      return performanceData.last_updated;
+    } catch (error) {
+      console.error('Failed to get cache timestamp:', error);
+      return null;
+    }
+  }
+
   // Utility methods
   async checkBackendConnection(): Promise<boolean> {
     try {

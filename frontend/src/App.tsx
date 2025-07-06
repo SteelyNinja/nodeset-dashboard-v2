@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { TabId } from './types/api';
 import { apiService } from './services/api';
 import TabNavigation from './components/common/TabNavigation';
@@ -17,15 +17,79 @@ import GasAnalysisTab from './components/tabs/GasAnalysisTab';
 function App() {
   const [activeTab, setActiveTab] = useState<TabId>('information');
   const [backendConnected, setBackendConnected] = useState<boolean | null>(null);
+  const [cacheTimestamp, setCacheTimestamp] = useState<string | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
+
+  // Format timestamp for display in UTC
+  const formatCacheTimestamp = (timestamp: string | null): string => {
+    if (!timestamp) return '';
+    
+    try {
+      const date = new Date(timestamp);
+      return date.toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false,
+        timeZone: 'UTC',
+        timeZoneName: 'short'
+      });
+    } catch (error) {
+      console.error('Error formatting timestamp:', error);
+      return timestamp;
+    }
+  };
+
+  // Refresh cache timestamp
+  const refreshCacheTimestamp = useCallback(async () => {
+    if (!backendConnected) return;
+    
+    setIsRefreshing(true);
+    try {
+      const newTimestamp = await apiService.getCacheTimestamp();
+      if (newTimestamp && newTimestamp !== cacheTimestamp) {
+        setCacheTimestamp(newTimestamp);
+        console.log('Cache timestamp updated:', newTimestamp);
+      }
+    } catch (error) {
+      console.warn('Failed to refresh cache timestamp:', error);
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [backendConnected, cacheTimestamp]);
 
   useEffect(() => {
     const checkBackend = async () => {
       const connected = await apiService.checkBackendConnection();
       setBackendConnected(connected);
+      
+      // If backend is connected, try to fetch cache timestamp
+      if (connected) {
+        try {
+          const timestamp = await apiService.getCacheTimestamp();
+          setCacheTimestamp(timestamp);
+        } catch (error) {
+          console.warn('Failed to fetch cache timestamp:', error);
+          // Don't break the app if cache timestamp fails
+        }
+      }
     };
     
     checkBackend();
   }, []);
+
+  // Set up periodic cache timestamp refresh
+  useEffect(() => {
+    if (!backendConnected) return;
+
+    // Refresh every 30 seconds to detect new cache data
+    const interval = setInterval(refreshCacheTimestamp, 30000);
+    
+    return () => clearInterval(interval);
+  }, [backendConnected, refreshCacheTimestamp]);
 
   const renderActiveTab = () => {
     switch (activeTab) {
@@ -99,6 +163,20 @@ function App() {
                           </div>
                           <div className="text-base text-gray-600 dark:text-gray-400 mt-1 opacity-90">
                             Data cache updated every 15 minutes
+                            {cacheTimestamp && (
+                              <div className="text-sm mt-1 flex items-center justify-center gap-2">
+                                <span>Current cache: {formatCacheTimestamp(cacheTimestamp)}</span>
+                                {isRefreshing && (
+                                  <span className="inline-flex items-center gap-1 text-xs text-blue-500">
+                                    <svg className="animate-spin h-3 w-3" fill="none" viewBox="0 0 24 24">
+                                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                      <path className="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    Checking...
+                                  </span>
+                                )}
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>

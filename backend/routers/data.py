@@ -2,7 +2,7 @@
 Data API endpoints for raw data access
 """
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
 from typing import Dict, Any, Optional
 import sys
@@ -143,12 +143,76 @@ async def get_exit_data():
         raise HTTPException(status_code=500, detail=f"Failed to load exit data: {str(e)}")
 
 @router.get("/validator-performance", response_model=DataResponse)
-async def get_validator_performance_data():
-    """Get validator performance data"""
+async def get_validator_performance_data(
+    period: Optional[str] = Query(None, description="Performance period: '1d', '7d', '31d'")
+):
+    """Get validator performance data, optionally filtered by performance period"""
     try:
         data, source_file = load_validator_performance_data()
         if data is None:
             raise HTTPException(status_code=404, detail="Validator performance data not found")
+        
+        # If period is specified, filter the performance data
+        if period and "validators" in data:
+            # Map period parameter to performance field names
+            period_field_map = {
+                "1d": "performance_1d", 
+                "7d": "performance_7d",
+                "31d": "performance_31d"
+            }
+            
+            if period in period_field_map:
+                performance_field = period_field_map[period]
+                
+                # Create a simplified structure focused on the specific period
+                operators_performance = {}
+                
+                for validator_id, validator_info in data["validators"].items():
+                    operator = validator_info.get("operator", "Unknown")
+                    performance_metrics = validator_info.get("performance_metrics", {})
+                    
+                    if performance_field in performance_metrics:
+                        performance_value = performance_metrics[performance_field]
+                        
+                        if operator not in operators_performance:
+                            operators_performance[operator] = {
+                                "validators": [],
+                                "total_performance": 0,
+                                "count": 0
+                            }
+                        
+                        operators_performance[operator]["validators"].append({
+                            "validator_index": validator_info.get("validator_index"),
+                            "performance": performance_value
+                        })
+                        operators_performance[operator]["total_performance"] += performance_value
+                        operators_performance[operator]["count"] += 1
+                
+                # Calculate average performance per operator
+                for operator, data_info in operators_performance.items():
+                    if data_info["count"] > 0:
+                        data_info["average_performance"] = data_info["total_performance"] / data_info["count"]
+                    else:
+                        data_info["average_performance"] = 0
+                
+                # Create filtered response with operators performance
+                filtered_data = {
+                    "last_updated": data.get("last_updated"),
+                    "total_validators": data.get("total_validators"),
+                    "period": period,
+                    "performance_field": performance_field,
+                    "operators_performance": operators_performance,
+                    "operator_count": len(operators_performance)
+                }
+                
+                return DataResponse(
+                    data=filtered_data,
+                    source_file=source_file,
+                    success=True,
+                    message=f"Validator performance data ({period}) loaded successfully"
+                )
+            else:
+                raise HTTPException(status_code=400, detail=f"Invalid period '{period}'. Valid periods are: 1d, 7d, 31d")
         
         return DataResponse(
             data=data,

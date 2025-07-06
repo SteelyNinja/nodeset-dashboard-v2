@@ -171,6 +171,13 @@ def load_validator_data() -> Tuple[Optional[Dict], Optional[str]]:
                 try:
                     with open(cache_file, 'r') as f:
                         cache = json.load(f)
+                    
+                    # Add last_updated timestamp based on file modification time
+                    # to ensure cache timestamp reflects when data was actually updated
+                    if 'last_updated' not in cache:
+                        file_mod_time = os.path.getmtime(cache_file)
+                        cache['last_updated'] = datetime.fromtimestamp(file_mod_time).isoformat() + '+00:00'
+                    
                     return cache, cache_file
                 except Exception as e:
                     print(f"⚠ Error loading {cache_file}: {str(e)}")
@@ -261,6 +268,12 @@ def load_validator_performance_data() -> Tuple[Optional[Dict], Optional[str]]:
                 if os.path.exists(path):
                     with open(path, 'r') as f:
                         data = json.load(f)
+                    
+                    # Update last_updated to reflect file modification time
+                    # This ensures the cache timestamp reflects when data was actually updated
+                    file_mod_time = os.path.getmtime(path)
+                    data['last_updated'] = datetime.fromtimestamp(file_mod_time).isoformat() + '+00:00'
+                    
                     return data, path
             except Exception as e:
                 print(f"⚠ Error loading {path}: {str(e)}")

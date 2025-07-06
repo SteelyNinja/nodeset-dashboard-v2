@@ -68,6 +68,7 @@ const BarChartComponent: React.FC<BarChartProps> = ({
           <Tooltip 
             formatter={(value: number) => [value.toLocaleString(), 'Operators']}
             labelFormatter={(label) => `${label} Validators`}
+            cursor={false}
           />
           <Bar 
             dataKey={dataKey} 

@@ -82,6 +82,160 @@ class AnalyticsService:
         
         return operator_performance
     
+    def _get_operator_performance_by_period(self, performance_data: Dict, period: str) -> Tuple[Dict[str, float], Dict[str, float]]:
+        """Extract operator performance data and calculate relative scores using identical table logic"""
+        if not performance_data or "validators" not in performance_data:
+            return {}, {}
+        
+        # Map period parameter to performance field names and lookback days
+        period_config = {
+            "1d": {"field": "performance_1d", "min_active_days": 1, "lookback_days": None},
+            "7d": {"field": "performance_7d", "min_active_days": 7, "lookback_days": 10}, 
+            "31d": {"field": "performance_31d", "min_active_days": 32, "lookback_days": 34}
+        }
+        
+        if period not in period_config:
+            return {}, {}
+        
+        config = period_config[period]
+        performance_field = config["field"]
+        
+        # For periods without relative score calculation (1d), use simple averaging
+        if config["lookback_days"] is None:
+            return self._calculate_simple_operator_performance(performance_data, performance_field)
+        
+        # Load additional data needed for exclusions (7d and 31d only)
+        proposals_data, _ = load_proposals_data()
+        sync_committee_data, _ = load_sync_committee_data()
+        
+        # Calculate timestamps for exclusions
+        import time
+        current_timestamp = time.time()
+        lookback_timestamp = current_timestamp - (config["lookback_days"] * 24 * 60 * 60)
+        min_activation_timestamp = current_timestamp - (config["min_active_days"] * 24 * 60 * 60)
+        
+        # Get excluded validators (with proposals or sync duties in lookback period)
+        excluded_validators = self._get_excluded_validators(proposals_data, sync_committee_data, lookback_timestamp)
+        
+        # Calculate attestation-only performance per operator using identical table logic
+        operator_performance, operator_relative_scores = self._calculate_attestation_only_performance(
+            performance_data, performance_field, excluded_validators, min_activation_timestamp
+        )
+        
+        return operator_performance, operator_relative_scores
+    
+    def _calculate_simple_operator_performance(self, performance_data: Dict, performance_field: str) -> Tuple[Dict[str, float], Dict[str, float]]:
+        """Simple performance calculation for periods without relative scoring"""
+        operator_performance = {}
+        operator_totals = {}
+        operator_counts = {}
+        
+        for validator_id, validator_info in performance_data["validators"].items():
+            operator = validator_info.get("operator", "Unknown")
+            performance_metrics = validator_info.get("performance_metrics", {})
+            
+            if performance_field in performance_metrics:
+                performance_value = performance_metrics[performance_field]
+                
+                if operator not in operator_totals:
+                    operator_totals[operator] = 0
+                    operator_counts[operator] = 0
+                
+                operator_totals[operator] += performance_value
+                operator_counts[operator] += 1
+        
+        # Calculate average performance per operator
+        for operator in operator_totals:
+            if operator_counts[operator] > 0:
+                operator_performance[operator] = operator_totals[operator] / operator_counts[operator]
+            else:
+                operator_performance[operator] = 0
+        
+        return operator_performance, {}
+    
+    def _get_excluded_validators(self, proposals_data: Optional[Dict], sync_committee_data: Optional[Dict], lookback_timestamp: float) -> set:
+        """Get validators to exclude based on proposals and sync committee duties"""
+        excluded_validators = set()
+        
+        # Exclude validators with proposals in lookback period
+        if proposals_data and "proposals" in proposals_data:
+            for proposal in proposals_data["proposals"]:
+                proposal_timestamp = proposal.get("timestamp", 0)
+                if proposal_timestamp >= lookback_timestamp:
+                    validator_index = proposal.get("validator_index") or proposal.get("proposer_index")
+                    if validator_index:
+                        excluded_validators.add(validator_index)
+        
+        # Exclude validators with sync committee duties in lookback period  
+        if sync_committee_data and "detailed_stats" in sync_committee_data:
+            GENESIS_TIME = 1606824023  # Ethereum beacon chain genesis time
+            for stat in sync_committee_data["detailed_stats"]:
+                if stat.get("validator_index") and stat.get("actual_end_slot"):
+                    end_timestamp = GENESIS_TIME + (stat["actual_end_slot"] * 12)  # Genesis + slot * 12 seconds
+                    if end_timestamp >= lookback_timestamp:
+                        excluded_validators.add(stat["validator_index"])
+        
+        return excluded_validators
+    
+    def _calculate_attestation_only_performance(self, performance_data: Dict, performance_field: str, excluded_validators: set, min_activation_timestamp: float) -> Tuple[Dict[str, float], Dict[str, float]]:
+        """Calculate attestation-only performance using identical table logic"""
+        operator_data = {}
+        
+        for validator_id, validator_info in performance_data["validators"].items():
+            operator = validator_info.get("operator", "Unknown")
+            validator_index = validator_info.get("validator_index")
+            performance_metrics = validator_info.get("performance_metrics", {})
+            activation_data = validator_info.get("activation_data", {})
+            
+            # Check minimum activity requirement
+            activation_timestamp = activation_data.get("activation_timestamp", 0)
+            if activation_timestamp > min_activation_timestamp:
+                continue  # Skip validators that haven't been active long enough
+            
+            if performance_field in performance_metrics and validator_index is not None:
+                performance_gwei = performance_metrics[performance_field]
+                
+                if operator not in operator_data:
+                    operator_data[operator] = {
+                        "total_validators": 0,
+                        "attestation_only_validators": 0,
+                        "excluded_validators": 0,
+                        "regular_performances": []
+                    }
+                
+                operator_data[operator]["total_validators"] += 1
+                
+                if validator_index in excluded_validators:
+                    operator_data[operator]["excluded_validators"] += 1
+                elif performance_gwei > 0:
+                    # This is an attestation-only validator with positive performance
+                    operator_data[operator]["attestation_only_validators"] += 1
+                    operator_data[operator]["regular_performances"].append(performance_gwei)
+        
+        # Calculate average performance per operator
+        operator_performance = {}
+        operator_averages = []
+        
+        for operator, data in operator_data.items():
+            if len(data["regular_performances"]) > 0:
+                avg_performance = sum(data["regular_performances"]) / len(data["regular_performances"])
+                operator_performance[operator] = avg_performance
+                operator_averages.append(avg_performance)
+            else:
+                operator_performance[operator] = 0
+        
+        # Calculate relative scores (top performer = 100%)
+        highest_performance = max(operator_averages) if operator_averages else 1
+        operator_relative_scores = {}
+        
+        for operator, performance in operator_performance.items():
+            if highest_performance > 0:
+                operator_relative_scores[operator] = (performance / highest_performance) * 100
+            else:
+                operator_relative_scores[operator] = 0
+        
+        return operator_performance, operator_relative_scores
+    
     def calculate_concentration_metrics(self) -> Dict[str, Any]:
         """Calculate concentration metrics including Gini coefficient"""
         try:
@@ -133,8 +287,8 @@ class AnalyticsService:
         except Exception as e:
             return {"error": f"Failed to calculate concentration metrics: {str(e)}"}
     
-    def create_performance_analysis(self) -> Dict[str, Any]:
-        """Create performance analysis data"""
+    def create_performance_analysis(self, period: Optional[str] = None) -> Dict[str, Any]:
+        """Create performance analysis data, optionally filtered by performance period"""
         try:
             validator_data, _ = load_validator_data()
             performance_data, _ = load_validator_performance_data()
@@ -144,7 +298,13 @@ class AnalyticsService:
                 return {"error": "Validator data not available"}
             
             operator_validators = self._get_operator_validators_from_data(validator_data)
-            operator_performance = self._get_operator_performance_from_data(validator_data, performance_data)
+            
+            # If period is specified, use period-specific performance data
+            if period and performance_data:
+                operator_performance, operator_ranks = self._get_operator_performance_by_period(performance_data, period)
+            else:
+                operator_performance = self._get_operator_performance_from_data(validator_data, performance_data)
+                operator_ranks = {}
             
             if not operator_performance:
                 return {"error": "No performance data found"}
@@ -162,13 +322,19 @@ class AnalyticsService:
                     total_validators += validator_count
                     
                     display_name = format_operator_display_plain(addr, ens_names or {})
-                    perf_data.append({
+                    operator_data = {
                         'operator': display_name,
                         'full_address': addr,
                         'performance': performance,
                         'validator_count': validator_count,
                         'performance_category': category
-                    })
+                    }
+                    
+                    # Add rank information if available
+                    if addr in operator_ranks:
+                        operator_data['relative_score'] = operator_ranks[addr]
+                    
+                    perf_data.append(operator_data)
 
             # Calculate percentages
             performance_distribution = {}
@@ -180,7 +346,7 @@ class AnalyticsService:
                     "poor": round((performance_counts["poor"] / total_validators) * 100, 1)
                 }
 
-            return {
+            result = {
                 'excellent_count': performance_counts["excellent"],
                 'good_count': performance_counts["good"],
                 'average_count': performance_counts["average"],
@@ -189,6 +355,13 @@ class AnalyticsService:
                 'performance_distribution': performance_distribution,
                 'operator_details': sorted(perf_data, key=lambda x: x['performance'], reverse=True)  # All operators sorted by performance
             }
+            
+            # Add period information if specified
+            if period:
+                result['period'] = period
+                result['performance_field'] = f"performance_{period}"
+                
+            return result
             
         except Exception as e:
             return {"error": f"Failed to create performance analysis: {str(e)}"}

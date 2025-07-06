@@ -2,7 +2,7 @@
 Dashboard API endpoints for processed data and analytics
 """
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
 from typing import Dict, Any, Optional, List
 import sys
@@ -62,18 +62,25 @@ async def get_concentration_metrics():
         raise HTTPException(status_code=500, detail=f"Failed to calculate concentration metrics: {str(e)}")
 
 @router.get("/performance-analysis")
-async def get_performance_analysis():
-    """Get performance analysis (categorization and distribution)"""
+async def get_performance_analysis(
+    period: Optional[str] = Query(None, description="Performance period: '1d', '7d', '31d'")
+):
+    """Get performance analysis (categorization and distribution), optionally filtered by performance period"""
     try:
-        analysis = analytics_service.create_performance_analysis()
+        # Validate period parameter
+        if period and period not in ["1d", "7d", "31d"]:
+            raise HTTPException(status_code=400, detail=f"Invalid period '{period}'. Valid periods are: 1d, 7d, 31d")
+            
+        analysis = analytics_service.create_performance_analysis(period=period)
         
         if "error" in analysis:
             raise HTTPException(status_code=404, detail=analysis["error"])
         
+        period_msg = f" ({period})" if period else ""
         return AnalysisResponse(
             data=analysis,
             success=True,
-            message="Performance analysis completed successfully",
+            message=f"Performance analysis{period_msg} completed successfully",
             timestamp=datetime.now().isoformat()
         )
     except Exception as e:
