@@ -30,25 +30,25 @@ const GlassCard: React.FC<GlassCardProps> = ({
       shadow: 'shadow-none',
       border: 'border-gray-200/60 dark:border-white/10',
       backdrop: 'backdrop-blur-[5px]',
-      bg: 'bg-gradient-to-br from-primary-500/12 to-secondary-500/12 dark:from-primary-400/10 dark:to-secondary-400/10'
+      bg: 'bg-gradient-to-br from-primary-500/16 to-secondary-500/16 dark:from-primary-400/10 dark:to-secondary-400/10'
     },
     raised: {
       shadow: 'shadow-sm',
       border: 'border-gray-200/80 dark:border-white/15',
       backdrop: 'backdrop-blur-[10px] dark:backdrop-blur-[15px]',
-      bg: 'bg-gradient-to-br from-primary-500/12 to-secondary-500/12 dark:from-primary-400/10 dark:to-secondary-400/10'
+      bg: 'bg-gradient-to-br from-primary-500/16 to-secondary-500/16 dark:from-primary-400/10 dark:to-secondary-400/10'
     },
     elevated: {
       shadow: 'shadow-md',
       border: 'border-gray-300/60 dark:border-white/20',
       backdrop: 'backdrop-blur-[15px] dark:backdrop-blur-[20px]',
-      bg: 'bg-gradient-to-br from-primary-500/12 to-secondary-500/12 dark:from-primary-400/10 dark:to-secondary-400/10'
+      bg: 'bg-gradient-to-br from-primary-500/16 to-secondary-500/16 dark:from-primary-400/10 dark:to-secondary-400/10'
     },
     floating: {
       shadow: 'shadow-lg shadow-primary-500/10 dark:shadow-primary-400/20',
       border: 'border-gray-300/80 dark:border-white/25',
       backdrop: 'backdrop-blur-[20px] dark:backdrop-blur-[25px]',
-      bg: 'bg-gradient-to-br from-primary-500/12 to-secondary-500/12 dark:from-primary-400/10 dark:to-secondary-400/10'
+      bg: 'bg-gradient-to-br from-primary-500/16 to-secondary-500/16 dark:from-primary-400/10 dark:to-secondary-400/10'
     }
   };
 
