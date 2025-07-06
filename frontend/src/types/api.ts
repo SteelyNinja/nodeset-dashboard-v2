@@ -32,6 +32,7 @@ export interface ValidatorData {
   operator_validators: Record<string, number>;
   active_validators?: Record<string, number>;
   exited_validators?: Record<string, number>;
+  pending_pubkeys?: string[];
   ens_names?: Record<string, string>;
   ens_last_updated: string | number;
   last_updated: string;

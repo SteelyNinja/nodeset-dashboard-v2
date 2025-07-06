@@ -377,6 +377,75 @@ const InformationTab: React.FC = () => {
           </GlassCard>
         </div>
 
+        {/* Activation Queue Metrics */}
+        <GlassCard size="large">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
+            ⏳ Validator Activation Queue
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="bg-white/30 dark:bg-white/5 rounded-lg p-4 border border-white/20">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">Validators in Queue</span>
+                <span className="text-xl">⏸️</span>
+              </div>
+              <div className="text-3xl font-bold text-black dark:text-white mb-1">
+                {validatorData?.pending_pubkeys ? validatorData.pending_pubkeys.length.toLocaleString() : 'Loading...'}
+              </div>
+              <p className="text-xs text-gray-600 dark:text-gray-400">
+                Waiting for activation
+              </p>
+            </div>
+
+            <div className="bg-white/30 dark:bg-white/5 rounded-lg p-4 border border-white/20">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">Activation Rate</span>
+                <span className="text-xl">✅</span>
+              </div>
+              <div className="text-3xl font-bold text-black dark:text-white mb-1">
+                {validatorData ? 
+                  `${(((validatorData.total_validators - (validatorData.total_exited || 0)) / 
+                      (validatorData.total_validators + (validatorData.pending_pubkeys?.length || 0))) * 100).toFixed(1)}%`
+                  : 'Loading...'}
+              </div>
+              <p className="text-xs text-gray-600 dark:text-gray-400">
+                {validatorData ? 
+                  `${(validatorData.total_validators - (validatorData.total_exited || 0)).toLocaleString()} of ${(validatorData.total_validators + (validatorData.pending_pubkeys?.length || 0)).toLocaleString()} activated`
+                  : 'Activated validators'}
+              </p>
+            </div>
+
+            <div className="bg-white/30 dark:bg-white/5 rounded-lg p-4 border border-white/20">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">Queue Rate</span>
+                <span className="text-xl">⏳</span>
+              </div>
+              <div className="text-3xl font-bold text-black dark:text-white mb-1">
+                {validatorData ? 
+                  `${(((validatorData.pending_pubkeys?.length || 0) / 
+                      (validatorData.total_validators + (validatorData.pending_pubkeys?.length || 0))) * 100).toFixed(1)}%`
+                  : 'Loading...'}
+              </div>
+              <p className="text-xs text-gray-600 dark:text-gray-400">
+                {validatorData?.pending_pubkeys ? 
+                  `${validatorData.pending_pubkeys.length.toLocaleString()} validators waiting`
+                  : 'Pending activation'}
+              </p>
+            </div>
+          </div>
+          
+          {validatorData?.pending_pubkeys && validatorData.pending_pubkeys.length > 0 && (
+            <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700/50 rounded-lg">
+              <div className="flex items-start">
+                <span className="text-blue-500 text-lg mr-2 flex-shrink-0">ℹ️</span>
+                <div className="text-sm text-blue-800 dark:text-blue-200">
+                  <strong>Queue Status:</strong> {validatorData.pending_pubkeys.length} validators are waiting for activation on the Ethereum beacon chain. 
+                  These validators have made their deposits but are awaiting their turn in the activation queue.
+                </div>
+              </div>
+            </div>
+          )}
+        </GlassCard>
+
         {/* Decentralization Metrics */}
         <GlassCard size="large">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">

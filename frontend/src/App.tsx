@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { TabId } from './types/api';
 import { apiService } from './services/api';
+import { analyticsService } from './services/analytics';
+import AnalyticsPage from './components/AnalyticsPage';
 import TabNavigation from './components/common/TabNavigation';
 import InformationTab from './components/tabs/InformationTab';
 import DistributionTab from './components/tabs/DistributionTab';
@@ -90,6 +92,12 @@ function App() {
     
     return () => clearInterval(interval);
   }, [backendConnected, refreshCacheTimestamp]);
+
+  // Analytics tracking for tab switches
+  const handleTabChange = (newTab: TabId) => {
+    setActiveTab(newTab);
+    analyticsService.trackTabSwitch(newTab);
+  };
 
   const renderActiveTab = () => {
     switch (activeTab) {
@@ -330,7 +338,7 @@ function App() {
       {/* Tab Navigation */}
       <TabNavigation 
         activeTab={activeTab} 
-        onTabChange={setActiveTab}
+        onTabChange={handleTabChange}
       />
 
       {/* Main Content */}
@@ -363,4 +371,14 @@ function App() {
   );
 }
 
-export default App;
+// Main App component with analytics route handling
+function AppWithAnalytics() {
+  // Check for hidden analytics route
+  if (window.location.pathname === '/analytics') {
+    return <AnalyticsPage />;
+  }
+  
+  return <App />;
+}
+
+export default AppWithAnalytics;

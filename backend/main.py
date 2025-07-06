@@ -11,7 +11,7 @@ import uvicorn
 from contextlib import asynccontextmanager
 
 # Import routers
-from routers import dashboard, data, health
+from routers import dashboard, data, health, analytics
 
 # Version and metadata
 __version__ = "1.0.0"
@@ -49,6 +49,7 @@ app.add_middleware(
 app.include_router(health.router, prefix="/health", tags=["health"])
 app.include_router(data.router, prefix="/api/data", tags=["data"])
 app.include_router(dashboard.router, prefix="/api/dashboard", tags=["dashboard"])
+app.include_router(analytics.router, prefix="/api", tags=["analytics"])
 
 # Root endpoint
 @app.get("/")
