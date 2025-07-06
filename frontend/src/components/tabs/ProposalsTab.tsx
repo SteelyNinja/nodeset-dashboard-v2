@@ -408,8 +408,8 @@ const ProposalsTab: React.FC = () => {
       <GlassCard size="large" elevation="floating">
         <div className="flex justify-between items-center mb-4">
           <div>
-            <h3 className="text-lg font-semibold text-gray-900"><Icon name="star" size="lg" color="primary" className="inline mr-2" />Largest Proposals by Value</h3>
-            <p className="text-sm text-gray-600">Showing the 5 highest value proposals across all operators</p>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white"><Icon name="star" size="lg" color="primary" className="inline mr-2" />Largest Proposals by Value</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400">Showing the 5 highest value proposals across all operators</p>
           </div>
           <GlassButton
             onClick={() => downloadCSV(largestProposals, 'largest_proposals.csv')}
@@ -453,8 +453,8 @@ const ProposalsTab: React.FC = () => {
       <GlassCard size="large" elevation="floating">
         <div className="flex justify-between items-center mb-4">
           <div>
-            <h3 className="text-lg font-semibold text-gray-900">🕘 Latest Proposals</h3>
-            <p className="text-sm text-gray-600">Showing the 5 most recent proposals across all operators</p>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">🕘 Latest Proposals</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400">Showing the 5 most recent proposals across all operators</p>
           </div>
           <GlassButton
             onClick={() => downloadCSV(latestProposals, 'latest_proposals.csv')}
@@ -498,8 +498,8 @@ const ProposalsTab: React.FC = () => {
       <GlassCard hoverable={false}>
         <div className="flex justify-between items-center mb-4">
           <div>
-            <h3 className="text-lg font-semibold text-gray-900"><Icon name="analytics" size="lg" color="primary" className="inline mr-2" />MEV Relay Usage Breakdown</h3>
-            <p className="text-sm text-gray-600">Breakdown of MEV relays used in proposals, sorted by usage count</p>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white"><Icon name="analytics" size="lg" color="primary" className="inline mr-2" />MEV Relay Usage Breakdown</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400">Breakdown of MEV relays used in proposals, sorted by usage count</p>
           </div>
           <GlassButton
             onClick={() => downloadCSV(mevRelayBreakdown, 'mev_relay_breakdown.csv')}
@@ -564,9 +564,9 @@ const ProposalsTab: React.FC = () => {
         <GlassCard size="large" elevation="floating">
           <div className="flex justify-between items-center mb-4">
             <div>
-              <h3 className="text-lg font-semibold text-gray-900">❌ Missed Proposals Analysis</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">❌ Missed Proposals Analysis</h3>
               {missedProposalsTable.length > 0 && (
-                <p className="text-sm text-gray-600">Showing {filteredMissedProposals.length} of {missedProposalsTable.length} missed proposal records</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Showing {filteredMissedProposals.length} of {missedProposalsTable.length} missed proposal records</p>
               )}
             </div>
             {missedProposalsTable.length > 0 && (
@@ -594,8 +594,8 @@ const ProposalsTab: React.FC = () => {
           )}
           
           {missedSummary && (
-            <div className="bg-danger-light/30 dark:bg-danger-dark/20 border border-danger/30 rounded-lg p-4 mb-4">
-              <p className="text-sm text-red-800">
+            <div className="bg-danger-100/30 dark:bg-danger-900/20 border border-danger-200/30 dark:border-danger-700/30 rounded-lg p-4 mb-4">
+              <p className="text-sm text-danger-800 dark:text-danger-200">
                 <strong>Summary:</strong> {missedSummary.totalSuccessful.toLocaleString()} successful proposals • {missedSummary.totalMissed.toLocaleString()} missed proposals • {missedSummary.missedPercentage.toFixed(1)}% missed rate
               </p>
             </div>
