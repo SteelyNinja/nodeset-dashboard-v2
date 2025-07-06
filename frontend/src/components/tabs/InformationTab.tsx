@@ -18,18 +18,26 @@ const InformationTab: React.FC = () => {
       try {
         setLoading(true);
         
-        // Fetch all overview data in parallel
-        const [validator, concentration, performance, client] = await Promise.all([
+        // Fetch all overview data in parallel including network overview
+        const [validator, concentration, performance, client, overview] = await Promise.all([
           apiService.getValidatorData(),
           apiService.getConcentrationMetrics(),
           apiService.getPerformanceAnalysis(),
-          apiService.getClientDiversity()
+          apiService.getClientDiversity(),
+          apiService.getNetworkOverview()
         ]);
 
         setValidatorData(validator);
         setConcentrationData(concentration);
         setPerformanceData(performance);
         setClientData(client);
+        // Store network overview data in validatorData for activation rates
+        if (overview && validator) {
+          setValidatorData({
+            ...validator,
+            network_overview: overview
+          });
+        }
         setError(null);
       } catch (err) {
         setError('Failed to load network information');
@@ -329,7 +337,7 @@ const InformationTab: React.FC = () => {
               <div className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Active Validators</div>
             </div>
             <div className="text-3xl font-extrabold text-gray-900 dark:text-white mb-1 tracking-tight">
-              {formatNumber(activeValidators)}
+              {validatorData?.network_overview ? formatNumber(validatorData.network_overview.active_validators) : formatNumber(activeValidators)}
             </div>
             <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
               Currently validating
@@ -388,14 +396,13 @@ const InformationTab: React.FC = () => {
                 <Icon name="success" size="lg" color="success" />
               </div>
               <div className="text-3xl font-bold text-black dark:text-white mb-1">
-                {validatorData ? 
-                  `${(((validatorData.total_validators - (validatorData.total_exited || 0)) / 
-                      (validatorData.total_validators + (validatorData.pending_pubkeys?.length || 0))) * 100).toFixed(1)}%`
+                {validatorData?.network_overview ? 
+                  `${validatorData.network_overview.activation_rate}%`
                   : 'Loading...'}
               </div>
               <p className="text-xs text-gray-600 dark:text-gray-400">
-                {validatorData ? 
-                  `${(validatorData.total_validators - (validatorData.total_exited || 0)).toLocaleString()} of ${(validatorData.total_validators + (validatorData.pending_pubkeys?.length || 0)).toLocaleString()} activated`
+                {validatorData?.network_overview ? 
+                  `${validatorData.network_overview.active_validators.toLocaleString()} of ${(validatorData.total_validators - (validatorData.total_exited || 0)).toLocaleString()} activated`
                   : 'Activated validators'}
               </p>
             </div>
@@ -406,14 +413,13 @@ const InformationTab: React.FC = () => {
                 <Icon name="info" size="lg" color="warning" />
               </div>
               <div className="text-3xl font-bold text-black dark:text-white mb-1">
-                {validatorData ? 
-                  `${(((validatorData.pending_pubkeys?.length || 0) / 
-                      (validatorData.total_validators + (validatorData.pending_pubkeys?.length || 0))) * 100).toFixed(1)}%`
+                {validatorData?.network_overview ? 
+                  `${validatorData.network_overview.queue_rate}%`
                   : 'Loading...'}
               </div>
               <p className="text-xs text-gray-600 dark:text-gray-400">
-                {validatorData?.pending_pubkeys ? 
-                  `${validatorData.pending_pubkeys.length.toLocaleString()} validators waiting`
+                {validatorData?.network_overview ? 
+                  `${validatorData.network_overview.validators_in_queue.toLocaleString()} validators waiting`
                   : 'Pending activation'}
               </p>
             </div>

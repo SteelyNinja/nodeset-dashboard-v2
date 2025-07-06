@@ -4,6 +4,7 @@ import {
   HealthResponse,
   DataFilesHealthResponse,
   ValidatorData,
+  NetworkOverview,
   ConcentrationMetrics,
   PerformanceAnalysis,
   ProposalsData,
@@ -128,6 +129,11 @@ class ApiService {
 
   async getAllExitRecords(): Promise<ExitData> {
     const response = await this.apiClient.get<ApiResponse<ExitData>>('/api/dashboard/all-exit-records');
+    return this.extractData(response);
+  }
+
+  async getNetworkOverview(): Promise<NetworkOverview> {
+    const response = await this.apiClient.get<ApiResponse<NetworkOverview>>('/api/dashboard/network-overview');
     return this.extractData(response);
   }
 

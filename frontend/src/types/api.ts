@@ -23,6 +23,20 @@ export interface DataFilesHealthResponse {
   files: Record<string, DataFileStatus>;
 }
 
+// Network Overview Types
+export interface NetworkOverview {
+  total_validators: number;
+  active_validators: number;
+  validators_in_queue: number;
+  activation_rate: number;
+  queue_rate: number;
+  total_operators: number;
+  total_proposals: number;
+  successful_proposals: number;
+  missed_proposals: number;
+  network_health_score: number;
+}
+
 // Dashboard Data Types
 export interface ValidatorData {
   last_block: number;
@@ -37,6 +51,7 @@ export interface ValidatorData {
   ens_last_updated: string | number;
   last_updated: string;
   cost_last_updated: number;
+  network_overview?: NetworkOverview;
   operator_costs?: Record<string, {
     total_cost_eth: number;
     successful_txs: number;

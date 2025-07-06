@@ -572,9 +572,21 @@ class AnalyticsService:
             if not validator_data:
                 return {"error": "Validator data not available"}
             
-            validators = validator_data.get("validators", [])
-            total_validators = len(validators)
-            active_validators = sum(1 for v in validators if v.get("status") == "active")
+            # Get the correct counts from the data structure
+            total_validators = validator_data.get("total_validators", 0)
+            total_exited = validator_data.get("total_exited", 0)
+            pending_count = len(validator_data.get("pending_pubkeys", []))
+            
+            # Calculate viable validators (total - exited)
+            viable_validators = total_validators - total_exited
+            
+            # Calculate activated validators (viable - queue)
+            validators_in_queue = pending_count
+            active_validators = viable_validators - validators_in_queue
+            
+            # Calculate correct percentages that add up to 100% (based on viable validators)
+            activation_rate = round((active_validators / viable_validators) * 100, 1) if viable_validators > 0 else 0
+            queue_rate = round((validators_in_queue / viable_validators) * 100, 1) if viable_validators > 0 else 0
             
             operator_validators = self._get_operator_validators_from_data(validator_data)
             total_operators = len(operator_validators)
@@ -587,13 +599,6 @@ class AnalyticsService:
                 proposals_stats["successful_proposals"] = sum(1 for p in proposals if p.get("status") == "proposed")
                 proposals_stats["missed_proposals"] = proposals_stats["total_proposals"] - proposals_stats["successful_proposals"]
             
-            # Exit statistics
-            exit_stats = {"exit_rate": 0.0, "activation_rate": 0.0}
-            if exit_data:
-                # Would implement based on actual exit data structure
-                exit_stats["exit_rate"] = 0.7  # Mock value
-                exit_stats["activation_rate"] = 2.1  # Mock value
-            
             # Calculate network health score
             proposal_success_rate = (proposals_stats["successful_proposals"] / proposals_stats["total_proposals"]) * 100 if proposals_stats["total_proposals"] > 0 else 100
             active_rate = (active_validators / total_validators) * 100 if total_validators > 0 else 100
@@ -602,9 +607,11 @@ class AnalyticsService:
             return {
                 'total_validators': total_validators,
                 'active_validators': active_validators,
+                'validators_in_queue': validators_in_queue,
+                'activation_rate': activation_rate,
+                'queue_rate': queue_rate,
                 'total_operators': total_operators,
                 **proposals_stats,
-                **exit_stats,
                 'network_health_score': round(network_health_score, 1)
             }
             
