@@ -87,10 +87,6 @@ const ExitAnalysisTab: React.FC = () => {
     return new Date(timestamp * 1000).toLocaleString();
   };
 
-  const formatBalance = (balanceGwei: number | null): string => {
-    if (balanceGwei === null) return 'N/A';
-    return `${(balanceGwei / 1e9).toFixed(4)} ETH`;
-  };
 
   if (loading) return <LoadingSpinner />;
   if (error) return <ErrorMessage message={error} />;

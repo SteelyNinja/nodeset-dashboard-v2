@@ -17,8 +17,6 @@ import {
   // Data & Analytics Icons  
   ArrowTrendingUpIcon,
   ArrowTrendingDownIcon,
-  ArrowUpIcon,
-  ArrowDownIcon,
   PresentationChartLineIcon,
   ChartBarSquareIcon,
   
