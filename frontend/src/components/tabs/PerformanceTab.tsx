@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { ValidatorPerformanceData, ExitData } from '../../types/api';
 import { apiService } from '../../services/api';
 import LoadingSpinner from '../common/LoadingSpinner';
@@ -291,7 +291,7 @@ const PerformanceTab: React.FC = () => {
     return results;
   };
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       
@@ -425,11 +425,11 @@ const PerformanceTab: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [fetchData]);
 
   const downloadCSV = () => {
     if (!hasPerformanceData) return;

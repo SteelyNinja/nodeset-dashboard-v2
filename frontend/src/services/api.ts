@@ -6,7 +6,6 @@ import {
   ValidatorData,
   ConcentrationMetrics,
   PerformanceAnalysis,
-  ProposalData,
   ProposalsData,
   MissedProposalsData,
   ValidatorPerformanceData,

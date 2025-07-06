@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { ConcentrationMetrics, ValidatorData } from '../../types/api';
+import { ConcentrationMetrics } from '../../types/api';
 import { apiService } from '../../services/api';
 import LoadingSpinner from '../common/LoadingSpinner';
 import ErrorMessage from '../common/ErrorMessage';
-import GlassCard from '../common/GlassCard';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 interface LorenzCurveData {

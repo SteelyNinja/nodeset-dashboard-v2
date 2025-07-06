@@ -81,12 +81,6 @@ const SyncCommitteeTab: React.FC = () => {
     fetchData();
   }, []);
 
-  const formatOperatorDisplay = (address: string, ensName?: string): string => {
-    if (ensName) {
-      return ensName;
-    }
-    return `${address.slice(0, 8)}...${address.slice(-6)}`;
-  };
 
   const calculateMetrics = (): SyncCommitteeMetrics => {
     if (!syncCommitteeData?.metadata) {

@@ -6,7 +6,7 @@ import ErrorMessage from '../common/ErrorMessage';
 import GlassCard from '../common/GlassCard';
 import GlassButton from '../common/GlassButton';
 import { GlassTable, GlassTableHeader, GlassTableBody, GlassTableRow, GlassTableCell } from '../common/GlassTable';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 
 interface ProposalMetrics {
   totalProposals: number;

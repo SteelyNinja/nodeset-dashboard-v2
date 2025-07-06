@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ValidatorData, ExitData } from '../../types/api';
+import { ExitData } from '../../types/api';
 import { apiService } from '../../services/api';
 import LoadingSpinner from '../common/LoadingSpinner';
 import ErrorMessage from '../common/ErrorMessage';

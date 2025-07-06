@@ -4,7 +4,7 @@ import LoadingSpinner from '../common/LoadingSpinner';
 import GlassCard from '../common/GlassCard';
 import GlassButton from '../common/GlassButton';
 import { GlassTable, GlassTableHeader, GlassTableBody, GlassTableRow, GlassTableCell } from '../common/GlassTable';
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 import { GasAnalysis } from '../../types/api';
 
 const GasAnalysisTab: React.FC = () => {
@@ -178,21 +178,6 @@ const GasAnalysisTab: React.FC = () => {
   }));
 
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-white dark:bg-gray-800 p-3 border border-gray-200 dark:border-gray-600 rounded shadow-lg">
-          <p className="font-semibold">{label}</p>
-          {payload.map((entry: any, index: number) => (
-            <p key={index} className="text-blue-600">
-              {entry.name}: {entry.name.includes('gas_limit') ? formatGasLimit(entry.value) : entry.value}
-            </p>
-          ))}
-        </div>
-      );
-    }
-    return null;
-  };
 
   const CustomPieTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
