@@ -14,14 +14,6 @@ interface AnalyticsEvent {
   };
 }
 
-interface AnalyticsSession {
-  sessionId: string;
-  startTime: number;
-  endTime?: number;
-  events: AnalyticsEvent[];
-  tabSwitches: number;
-  downloads: number;
-}
 
 class AnalyticsService {
   private sessionId: string;
