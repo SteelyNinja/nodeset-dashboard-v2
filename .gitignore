@@ -37,4 +37,4 @@ CLAUDE.md
 
 # Temporary files
 *.tmp
-*.temp
+*.tempjson_data/*.json
