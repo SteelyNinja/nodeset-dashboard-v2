@@ -296,14 +296,14 @@ const ClientDiversityTab: React.FC = () => {
         </div>
 
         {/* Analysis Note */}
-        <GlassCard className="bg-warning-100/30 dark:bg-warning-900/20 border border-warning-200/30 dark:border-warning-700/30" hoverable={false}>
+        <GlassCard hoverable={false}>
           <div className="flex">
             <div className="flex-shrink-0">
-              <Icon name="info" size="lg" color="warning" />
+              <Icon name="info" size="lg" color="primary" />
             </div>
             <div className="ml-3">
-              <h3 className="text-sm font-medium text-warning-800 dark:text-warning-200">Analysis Note</h3>
-              <div className="mt-2 text-sm text-warning-700 dark:text-warning-300">
+              <h3 className="text-sm font-medium text-gray-900 dark:text-white">Analysis Note</h3>
+              <div className="mt-2 text-sm text-gray-600 dark:text-gray-400">
                 <p>{clientData.analysis_note}</p>
               </div>
             </div>
