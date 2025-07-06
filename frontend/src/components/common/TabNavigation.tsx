@@ -94,18 +94,18 @@ const TabNavigation: React.FC<TabNavigationProps> = ({ activeTab, onTabChange, c
               className={`
                 group relative whitespace-nowrap py-3 px-4 mx-1 my-2 rounded-2xl font-semibold text-sm 
                 transition-all duration-300 ease-glass backdrop-blur-md border-2 overflow-hidden
-                transform hover:scale-105 hover:-translate-y-1 active:scale-95
+                transform hover:scale-[1.02] hover:-translate-y-0.5 active:scale-95
                 ${activeTab === tab.id
                   ? `
                     bg-gradient-to-br from-primary-500/90 via-primary-600/80 to-primary-700/90
                     border-primary-300/60 text-white shadow-[0_8px_32px_-8px_rgba(59,130,246,0.6)]
-                    hover:shadow-[0_12px_40px_-8px_rgba(59,130,246,0.8)]
+                    hover:shadow-[0_10px_36px_-8px_rgba(59,130,246,0.7)]
                   `
                   : `
                     bg-white/10 dark:bg-white/5 border-white/20 dark:border-white/10
                     text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400
-                    hover:bg-gray-100/60 dark:hover:bg-white/10 hover:border-primary-300/70
-                    shadow-[0_4px_16px_-4px_rgba(0,0,0,0.1)] hover:shadow-[0_8px_32px_-8px_rgba(59,130,246,0.5)]
+                    hover:bg-gray-100/40 dark:hover:bg-white/8 hover:border-primary-300/50
+                    shadow-[0_4px_16px_-4px_rgba(0,0,0,0.1)] hover:shadow-[0_6px_24px_-6px_rgba(59,130,246,0.3)]
                   `
                 }
               `}
@@ -118,7 +118,7 @@ const TabNavigation: React.FC<TabNavigationProps> = ({ activeTab, onTabChange, c
               
               {/* Shimmer effect */}
               <div className="absolute inset-0 overflow-hidden rounded-2xl">
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/50 dark:via-white/30 to-transparent -skew-x-12 transform -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out" />
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 dark:via-white/20 to-transparent -skew-x-12 transform -translate-x-full group-hover:translate-x-full transition-transform duration-1500 ease-out" />
               </div>
               
               {/* Top glass highlight */}

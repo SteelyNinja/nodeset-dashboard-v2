@@ -94,7 +94,7 @@ const GlassTableCell: React.FC<GlassTableCellProps> = ({
   return (
     <Component 
       className={`
-        p-3 text-left
+        p-3 text-left border-r border-gray-300/80 dark:border-white/25 last:border-r-0
         ${header 
           ? 'font-semibold text-gray-800 dark:text-gray-200 text-sm uppercase tracking-wider border-b border-gray-300/30 dark:border-white/20' 
           : 'text-gray-700 dark:text-gray-300'
