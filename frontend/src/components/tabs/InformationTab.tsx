@@ -61,17 +61,17 @@ const InformationTab: React.FC = () => {
 
   const getGiniCoefficientColor = (gini: number): string => {
     if (gini < 0.03) {
-      return 'text-success-600 dark:text-success-400'; // Green for good decentralization
+      return 'text-success-600 dark:text-success-400'; // Green for good decentralisation
     } else if (gini >= 0.03 && gini <= 0.05) {
-      return 'text-warning-600 dark:text-warning-400'; // Amber for moderate decentralization
+      return 'text-warning-600 dark:text-warning-400'; // Amber for moderate decentralisation
     } else {
-      return 'text-danger-600 dark:text-danger-400'; // Red for poor decentralization
+      return 'text-danger-600 dark:text-danger-400'; // Red for poor decentralisation
     }
   };
 
   const getTop1PercentColor = (percentage: number): string => {
     if (percentage < 1) {
-      return 'text-success-600 dark:text-success-400'; // Green for good decentralization
+      return 'text-success-600 dark:text-success-400'; // Green for good decentralisation
     } else if (percentage >= 1 && percentage <= 2) {
       return 'text-warning-600 dark:text-warning-400'; // Amber for moderate concentration
     } else {
@@ -81,7 +81,7 @@ const InformationTab: React.FC = () => {
 
   const getTop10PercentColor = (percentage: number): string => {
     if (percentage < 10) {
-      return 'text-success-600 dark:text-success-400'; // Green for good decentralization
+      return 'text-success-600 dark:text-success-400'; // Green for good decentralisation
     } else if (percentage >= 10 && percentage <= 20) {
       return 'text-warning-600 dark:text-warning-400'; // Amber for moderate concentration
     } else {
@@ -131,7 +131,7 @@ const InformationTab: React.FC = () => {
     const exitRate = (validatorData.total_exited || 0) / validatorData.total_validators;
     const avgValidatorsPerOperator = validatorData.total_validators / concentrationData.total_operators;
     
-    const wellDecentralized = gini < 0.1; // Lower Gini = more decentralized
+    const wellDecentralized = gini < 0.1; // Lower Gini = more decentralised
     const lowExitRate = exitRate < 0.05; // Less than 5% exit rate
     const smallOperators = avgValidatorsPerOperator < 20; // Average operator size
     const mostlyActivated = activeValidators / validatorData.total_validators > 0.95; // 95%+ active
@@ -228,7 +228,7 @@ const InformationTab: React.FC = () => {
               <div className="flex items-center text-sm">
                 <Icon name="success" size="sm" color={networkHealth.wellDecentralized ? 'success' : 'warning'} className="mr-2" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  {networkHealth.wellDecentralized ? 'Well Decentralized' : 'Moderately Decentralized'}
+                  {networkHealth.wellDecentralized ? 'Well Decentralised' : 'Moderately Decentralised'}
                 </span>
               </div>
               <div className="flex items-center text-sm">
@@ -248,11 +248,6 @@ const InformationTab: React.FC = () => {
                 <span className="text-gray-700 dark:text-gray-300">
                   {networkHealth.mostlyActivated ? 'Mostly Activated' : 'Some Inactive'}
                 </span>
-              </div>
-            </div>
-            <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
-              <div className="text-xs text-gray-500 dark:text-gray-400">
-                Network Health: {networkHealth.overallStatus} {networkHealth.wellDecentralized && networkHealth.lowExitRate && networkHealth.smallOperators ? 'Well Decentralized' : 'Moderately Decentralized'} • {networkHealth.lowExitRate ? 'Low Exit Rate' : 'Moderate Exit Rate'} • {networkHealth.smallOperators ? 'Small Operators' : 'Medium Operators'} • {networkHealth.mostlyActivated ? 'Mostly Activated' : 'Some Inactive'}
               </div>
             </div>
           </GlassCard>
@@ -283,11 +278,6 @@ const InformationTab: React.FC = () => {
                 </span>
               </div>
             </div>
-            <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
-              <div className="text-xs text-gray-500 dark:text-gray-400">
-                Performance Health (24 hours): {performanceHealth.overallStatus} {performanceHealth.excellentPerformance ? 'Excellent Performance' : 'Good Performance'} • {performanceHealth.excellentPercent.toFixed(1)}% Excellent • {performanceHealth.poorPercent.toFixed(1)}% Poor
-              </div>
-            </div>
           </GlassCard>
 
           {/* ENS Resolution */}
@@ -314,11 +304,6 @@ const InformationTab: React.FC = () => {
                 <span className="text-gray-700 dark:text-gray-300">
                   {ensResolution.validatorCoverage.toFixed(1)}% validator coverage
                 </span>
-              </div>
-            </div>
-            <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
-              <div className="text-xs text-gray-500 dark:text-gray-400">
-                ENS / Discord Name Resolution: {ensResolution.ensCount} names found • {ensResolution.operatorCoverage.toFixed(1)}% operator coverage • {ensResolution.validatorCoverage.toFixed(1)}% validator coverage
               </div>
             </div>
           </GlassCard>
@@ -447,10 +432,10 @@ const InformationTab: React.FC = () => {
           )}
         </GlassCard>
 
-        {/* Decentralization Metrics */}
+        {/* Decentralisation Metrics */}
         <GlassCard size="large" elevation="floating">
           <h3 className="text-headline-large font-semibold text-neutral-900 dark:text-white mb-6">
-            <Icon name="metrics" size="lg" color="primary" className="inline mr-3" />Network Decentralization
+            <Icon name="metrics" size="lg" color="primary" className="inline mr-3" />Network Decentralisation
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <div className="bg-white/30 dark:bg-white/5 rounded-lg p-4 border border-white/20">
@@ -461,7 +446,7 @@ const InformationTab: React.FC = () => {
                 </span>
               </div>
               <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                Lower is more decentralized
+                Lower is more decentralised
               </p>
             </div>
 

@@ -148,7 +148,7 @@ The application requires these JSON data files in the `json_data/` directory:
 ## Dashboard Tabs
 
 1. **Distribution** - Validator distribution histogram with key insights
-2. **Concentration** - Network decentralization metrics (Gini coefficient, Herfindahl index)
+2. **Concentration** - Network decentralisation metrics (Gini coefficient, Herfindahl index)
 3. **Operators** - Top operators ranking and details
 4. **Performance** - Validator performance analysis with 7d/31d periods
 5. **Proposals** - Block proposals, MEV data, and missed proposals analysis

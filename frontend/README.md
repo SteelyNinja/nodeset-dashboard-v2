@@ -16,7 +16,7 @@ This React application provides a high-performance, mobile-responsive interface 
 
 ### 📊 Dashboard Tabs
 - **Distribution**: Validator distribution histogram with key insights
-- **Concentration**: Network decentralization metrics (Gini coefficient, Herfindahl index)
+- **Concentration**: Network decentralisation metrics (Gini coefficient, Herfindahl index)
 - **Operators**: Complete operator rankings with exit data and CSV export
 - **Performance**: Attestation performance analysis (7d/31d periods)
 - **Proposals**: Block proposals, MEV analysis, and missed proposals tracking
