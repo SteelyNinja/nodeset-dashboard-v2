@@ -225,107 +225,98 @@ function App() {
             </div>
           </div>
           
-          {/* Desktop Layout: Original horizontal layout */}
-          <div className="hidden lg:flex justify-between items-center py-4">
-            <div className="flex items-center space-x-8">
-              {/* NodeSet Logo - positioned to the left like original */}
-              <div className="flex-shrink-0">
-                <a 
-                  href="https://nodeset.io/" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="block hover:opacity-80 transition-opacity duration-200"
-                >
-                  <img 
-                    src="/Nodeset_light_mode.png" 
-                    alt="NodeSet Protocol" 
-                    className="h-24 w-auto dark:hidden cursor-pointer"
-                  />
-                  <img 
-                    src="/Nodeset_dark_mode.png" 
-                    alt="NodeSet Protocol" 
-                    className="h-24 w-auto hidden dark:block cursor-pointer"
-                  />
-                </a>
-              </div>
-              
-              {/* Banner Text - Centered */}
-              <div className="flex items-center flex-1 ml-4">
-                {/* Main Banner Text Card - Centered with more space */}
-                <div className="flex-1">
-                  <div className="flex justify-center">
-                    <div className="
-                      bg-glass-light dark:bg-glass-dark 
-                      backdrop-blur-glass dark:backdrop-blur-glass-dark dark:backdrop-saturate-140
-                      border border-gray-200 dark:border-white/15
-                      rounded-xl 
-                      shadow-glass-light dark:shadow-glass-dark
-                      p-4
-                      max-w-3xl
-                    ">
-                      <div className="flex items-start space-x-3">
-                        <Icon name="metrics" size="xl" color="primary" className="flex-shrink-0" />
-                        <div className="text-gray-900 dark:text-white text-center">
-                          <div className="text-base text-gray-600 dark:text-gray-400 mt-1 opacity-90">
-                            Data cache updated every 15 minutes
-                            {cacheTimestamp && (
-                              <div className="text-sm mt-1 flex items-center justify-center gap-2">
-                                <span>Current cache: {formatCacheTimestamp(cacheTimestamp)}</span>
-                                {isRefreshing && (
-                                  <span className="inline-flex items-center gap-1 text-xs text-blue-500">
-                                    <svg className="animate-spin h-3 w-3" fill="none" viewBox="0 0 24 24">
-                                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                      <path className="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                    </svg>
-                                    Checking...
-                                  </span>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        </div>
+          {/* Desktop Layout: Logo, Main Content, Disclaimer, Connection Status */}
+          <div className="hidden lg:flex items-center space-x-6 py-4">
+            {/* NodeSet Logo */}
+            <div className="flex-shrink-0">
+              <a 
+                href="https://nodeset.io/" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="block hover:opacity-80 transition-opacity duration-200"
+              >
+                <img 
+                  src="/Nodeset_light_mode.png" 
+                  alt="NodeSet Protocol" 
+                  className="h-24 w-auto dark:hidden cursor-pointer"
+                />
+                <img 
+                  src="/Nodeset_dark_mode.png" 
+                  alt="NodeSet Protocol" 
+                  className="h-24 w-auto hidden dark:block cursor-pointer"
+                />
+              </a>
+            </div>
+            
+            {/* Main Banner Text Card */}
+            <div className="
+              bg-glass-light dark:bg-glass-dark 
+              backdrop-blur-glass dark:backdrop-blur-glass-dark dark:backdrop-saturate-140
+              border border-gray-200 dark:border-white/15
+              rounded-xl 
+              shadow-glass-light dark:shadow-glass-dark
+              p-4
+              flex-shrink-0
+            ">
+              <div className="flex items-start space-x-3">
+                <Icon name="metrics" size="xl" color="primary" className="flex-shrink-0" />
+                <div className="text-gray-900 dark:text-white">
+                  <div className="text-base text-gray-600 dark:text-gray-400 mt-1 opacity-90">
+                    Data cache updated every 15 minutes
+                    {cacheTimestamp && (
+                      <div className="text-sm mt-1 flex items-center gap-2">
+                        <span>Current cache: {formatCacheTimestamp(cacheTimestamp)}</span>
+                        {isRefreshing && (
+                          <span className="inline-flex items-center gap-1 text-xs text-blue-500">
+                            <svg className="animate-spin h-3 w-3" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Checking...
+                          </span>
+                        )}
                       </div>
-                    </div>
+                    )}
                   </div>
                 </div>
               </div>
             </div>
             
-            <div className="flex items-center space-x-4 flex-shrink-0">
-              {/* Disclaimer Card - Far Right */}
-              <div className="
-                bg-glass-light dark:bg-glass-dark 
-                backdrop-blur-glass dark:backdrop-blur-glass-dark dark:backdrop-saturate-140
-                border border-gray-200 dark:border-white/15
-                rounded-xl 
-                shadow-glass-light dark:shadow-glass-dark
-                p-4
-                max-w-sm
-              ">
-                <div className="text-gray-700 dark:text-gray-300">
-                  <div className="text-base font-medium mb-2">
-                    Disclaimer
-                  </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">
-                    This site is independently maintained through an open source project. If you see any discrepancies or wish to contribute, please make an issue{' '}
-                    <a 
-                      href="https://github.com/SteelyNinja/nodeset-dashboard-v2" 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 underline transition-colors duration-200"
-                    >
-                      here
-                    </a>.
-                  </div>
+            {/* Disclaimer Card */}
+            <div className="
+              bg-glass-light dark:bg-glass-dark 
+              backdrop-blur-glass dark:backdrop-blur-glass-dark dark:backdrop-saturate-140
+              border border-gray-200 dark:border-white/15
+              rounded-xl 
+              shadow-glass-light dark:shadow-glass-dark
+              p-4
+              max-w-sm
+              flex-shrink-0
+            ">
+              <div className="text-gray-700 dark:text-gray-300">
+                <div className="text-base font-medium mb-2">
+                  Disclaimer
+                </div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                  This site is independently maintained through an open source project. If you see any discrepancies or wish to contribute, please make an issue{' '}
+                  <a 
+                    href="https://github.com/SteelyNinja/nodeset-dashboard-v2" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 underline transition-colors duration-200"
+                  >
+                    here
+                  </a>.
                 </div>
               </div>
-              
-              <div className="flex items-center space-x-2">
-                <div className={`w-2 h-2 rounded-full ${backendConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
-                <span className="text-sm text-gray-600 dark:text-gray-400">
-                  {backendConnected === null ? 'Checking...' : backendConnected ? 'Connected' : 'Disconnected'}
-                </span>
-              </div>
+            </div>
+            
+            {/* Connection Status - Far Right */}
+            <div className="flex items-center space-x-2 ml-auto">
+              <div className={`w-2 h-2 rounded-full ${backendConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
+              <span className="text-sm text-gray-600 dark:text-gray-400">
+                {backendConnected === null ? 'Checking...' : backendConnected ? 'Connected' : 'Disconnected'}
+              </span>
             </div>
           </div>
         </div>
