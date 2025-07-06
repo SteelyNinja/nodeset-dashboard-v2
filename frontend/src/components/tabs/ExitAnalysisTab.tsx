@@ -239,7 +239,6 @@ const ExitAnalysisTab: React.FC = () => {
                     <GlassTableCell>Exit Date</GlassTableCell>
                     <GlassTableCell>Status</GlassTableCell>
                     <GlassTableCell>Slashed</GlassTableCell>
-                    <GlassTableCell>Balance</GlassTableCell>
                     <GlassTableCell>Exit Epoch</GlassTableCell>
                   </GlassTableRow>
                 </GlassTableHeader>
@@ -264,7 +263,6 @@ const ExitAnalysisTab: React.FC = () => {
                           {exit.slashed ? 'Yes' : 'No'}
                         </span>
                       </GlassTableCell>
-                      <GlassTableCell>{formatBalance(exit.balance_gwei)}</GlassTableCell>
                       <GlassTableCell>{exit.exit_epoch}</GlassTableCell>
                     </GlassTableRow>
                   ))}

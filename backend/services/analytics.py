@@ -612,9 +612,9 @@ class AnalyticsService:
             return {"error": f"Failed to get network overview: {str(e)}"}
     
     def get_all_exit_records(self):
-        """Extract all individual exit records from validator data"""
+        """Extract all individual exit records from validator data exit_details"""
         try:
-            # Load main validator data
+            # Load validator data which contains complete exit details
             validator_data, _ = load_validator_data()
             if not validator_data:
                 return {"error": "Validator data not available"}
@@ -623,46 +623,61 @@ class AnalyticsService:
             ens_names_data, _ = load_ens_names()
             ens_names = ens_names_data or {}
             
-            # Get exit details from main validator data
+            # Get all exit details from validator data (has all exits with timestamps)
             exit_details = validator_data.get('exit_details', {})
             if not exit_details:
                 return {"error": "No exit details found in validator data"}
             
-            # Convert exit details to individual records format
+            # Convert all exit details to individual records
             all_exit_records = []
             
             for validator_pubkey, exit_info in exit_details.items():
-                # Extract exit information
+                # Extract exit information from the complete exit_details
                 validator_index = exit_info.get('validator_index', 'N/A')
                 operator = exit_info.get('operator', '')
-                operator_name = ens_names.get(operator, f"{operator[:8]}...{operator[-6:]}" if operator else 'N/A')
+                operator_name = exit_info.get('operator_name', '')
+                if not operator_name and operator:
+                    operator_name = ens_names.get(operator, f"{operator[:8]}...{operator[-6:]}")
+                
                 status = exit_info.get('status', 'unknown')
                 exit_epoch = exit_info.get('exit_epoch', 'N/A')
+                exit_timestamp = exit_info.get('exit_timestamp')
+                slashed = exit_info.get('slashed', False)
+                balance_gwei = exit_info.get('balance')
                 
-                # Try to determine slashed status from status
-                slashed = 'slashed' in status.lower() if isinstance(status, str) else False
+                # Convert timestamp to formatted date if available
+                exit_date = 'N/A'
+                if exit_timestamp:
+                    try:
+                        from datetime import datetime
+                        exit_date = datetime.fromtimestamp(exit_timestamp).strftime('%Y-%m-%d %H:%M:%S')
+                    except:
+                        exit_date = 'N/A'
                 
-                # Create exit record in same format as recent_exits
+                # Create exit record with all available data
                 exit_record = {
                     'validator_index': validator_index,
                     'validator_pubkey': validator_pubkey,
                     'operator': operator,
                     'operator_name': operator_name,
-                    'exit_timestamp': None,  # Not available in this data
-                    'exit_date': 'N/A',      # Not available in this data
+                    'exit_timestamp': exit_timestamp,
+                    'exit_date': exit_date,
                     'status': status,
                     'slashed': slashed,
-                    'balance_gwei': None,    # Not available in this data
+                    'balance_gwei': balance_gwei,
                     'exit_epoch': exit_epoch
                 }
                 
                 all_exit_records.append(exit_record)
             
-            # Sort by validator index for consistency
-            all_exit_records.sort(key=lambda x: x['validator_index'] if isinstance(x['validator_index'], int) else 0)
+            # Sort by exit timestamp (most recent first), then by validator index
+            all_exit_records.sort(key=lambda x: (
+                -(x.get('exit_timestamp', 0) or 0),  # Newest first
+                x.get('validator_index', 0) if isinstance(x.get('validator_index'), int) else 0
+            ))
             
             return {
-                'recent_exits': all_exit_records,  # Use same key as original data
+                'recent_exits': all_exit_records,
                 'total_count': len(all_exit_records)
             }
             
