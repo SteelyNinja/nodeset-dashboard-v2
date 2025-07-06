@@ -125,8 +125,7 @@ class AnalyticsService {
   private async sendToBackend(event: AnalyticsEvent): Promise<void> {
     try {
       // Send to our backend analytics endpoint
-      const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:8000';
-      await fetch(`${apiUrl}/api/analytics`, {
+      await fetch(`/api/analytics`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
