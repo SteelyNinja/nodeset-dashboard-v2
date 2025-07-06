@@ -59,9 +59,7 @@ const GasAnalysisTab: React.FC = () => {
     const csvData = gasData.operator_details.map(op => ({
       operator: op.operator,
       strategy: op.strategy,
-      max_gas_limit: op.max_gas_limit,
-      avg_gas_limit: op.avg_gas_limit,
-      gas_limit_diff: op.max_gas_limit - op.avg_gas_limit
+      max_gas_limit: op.max_gas_limit
     }));
 
     const timestamp = new Date().toISOString().replace(/[:]/g, '-').split('.')[0];
@@ -121,9 +119,7 @@ const GasAnalysisTab: React.FC = () => {
       address: op.operator,
       ens_name: op.operator_name || '',
       strategy: op.strategy,
-      max_gas_limit: op.max_gas_limit,
-      avg_gas_limit: op.avg_gas_limit,
-      gas_limit_diff: op.max_gas_limit - op.avg_gas_limit
+      max_gas_limit: op.max_gas_limit
     }));
 
     const timestamp = new Date().toISOString().replace(/[:]/g, '-').split('.')[0];
@@ -403,8 +399,6 @@ const GasAnalysisTab: React.FC = () => {
                     <GlassTableCell>ENS Name</GlassTableCell>
                     <GlassTableCell>Strategy</GlassTableCell>
                     <GlassTableCell>Max Gas Limit</GlassTableCell>
-                    <GlassTableCell>Avg Gas Limit</GlassTableCell>
-                    <GlassTableCell>Difference</GlassTableCell>
                   </GlassTableRow>
                 </GlassTableHeader>
                 <GlassTableBody>
@@ -429,12 +423,6 @@ const GasAnalysisTab: React.FC = () => {
                       </GlassTableCell>
                       <GlassTableCell className="text-right font-semibold">
                         {formatGasLimit(op.max_gas_limit)}
-                      </GlassTableCell>
-                      <GlassTableCell className="text-right font-semibold">
-                        {formatGasLimit(op.avg_gas_limit)}
-                      </GlassTableCell>
-                      <GlassTableCell className="text-right font-semibold">
-                        {formatGasLimit(op.max_gas_limit - op.avg_gas_limit)}
                       </GlassTableCell>
                     </GlassTableRow>
                   ))}

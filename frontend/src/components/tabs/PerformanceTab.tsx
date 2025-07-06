@@ -463,7 +463,7 @@ const PerformanceTab: React.FC = () => {
   const downloadAttestationCSV = (data: AttestationPerformanceData[], period: string) => {
     if (!data || data.length === 0) return;
     
-    const headers = ['Rank', 'Address', 'ENS / Discord Name', 'Avg Performance (gwei)', 'Attestation Validators', 'Excluded (Proposals/Sync)', 'Total Validators', 'Relative Score (%)'];
+    const headers = ['Rank', 'Address', 'ENS / Discord Name', 'Avg Performance', 'Attestation Validators', 'Excluded (Proposals/Sync)', 'Total Validators', 'Relative Score (%)'];
     const csvContent = [
       headers.join(','),
       ...data.map((op, index) => [
@@ -1177,7 +1177,7 @@ const PerformanceTab: React.FC = () => {
                           <GlassTableCell header>Rank</GlassTableCell>
                           <GlassTableCell header>Address</GlassTableCell>
                           <GlassTableCell header>ENS/Discord Name</GlassTableCell>
-                          <GlassTableCell header>Avg Performance (gwei)</GlassTableCell>
+                          <GlassTableCell header>Avg Performance</GlassTableCell>
                           <GlassTableCell header>Attestation Validators</GlassTableCell>
                           <GlassTableCell header>Excluded (Proposals/Sync)</GlassTableCell>
                           <GlassTableCell header>Total Validators</GlassTableCell>
@@ -1267,7 +1267,7 @@ const PerformanceTab: React.FC = () => {
                           <GlassTableCell header>Rank</GlassTableCell>
                           <GlassTableCell header>Address</GlassTableCell>
                           <GlassTableCell header>ENS/Discord Name</GlassTableCell>
-                          <GlassTableCell header>Avg Performance (gwei)</GlassTableCell>
+                          <GlassTableCell header>Avg Performance</GlassTableCell>
                           <GlassTableCell header>Attestation Validators</GlassTableCell>
                           <GlassTableCell header>Excluded (Proposals/Sync)</GlassTableCell>
                           <GlassTableCell header>Total Validators</GlassTableCell>
