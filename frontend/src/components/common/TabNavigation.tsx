@@ -84,7 +84,7 @@ const TabNavigation: React.FC<TabNavigationProps> = ({ activeTab, onTabChange, c
         
         <div 
           ref={scrollRef}
-          className="flex space-x-1 sm:space-x-2 overflow-x-auto scrollbar-hide scroll-smooth py-2 md:overflow-x-visible md:flex-wrap md:justify-center"
+          className="flex space-x-1 sm:space-x-2 overflow-x-auto scrollbar-hide scroll-smooth py-2"
           onScroll={checkScrollButtons}
         >
           {tabs.map((tab) => (
@@ -92,10 +92,10 @@ const TabNavigation: React.FC<TabNavigationProps> = ({ activeTab, onTabChange, c
               key={tab.id}
               onClick={() => onTabChange(tab.id)}
               className={`
-                group relative whitespace-nowrap py-2 sm:py-3 px-2 sm:px-3 lg:px-4 mx-0.5 sm:mx-1 my-1 sm:my-2 rounded-xl sm:rounded-2xl font-semibold text-xs sm:text-sm 
+                group relative whitespace-nowrap py-2 sm:py-3 px-2 sm:px-3 md:px-4 mx-0.5 sm:mx-1 my-1 sm:my-2 rounded-xl sm:rounded-2xl font-semibold text-xs sm:text-sm 
                 transition-all duration-300 ease-glass backdrop-blur-md border-2 overflow-visible
                 transform hover:scale-[1.02] hover:-translate-y-0.5 active:scale-95
-                flex-shrink min-w-0 md:flex-shrink-0 md:min-w-fit
+                flex-shrink-0 min-w-fit
                 ${activeTab === tab.id
                   ? `
                     bg-gradient-to-br from-primary-500/90 via-primary-600/80 to-primary-700/90
@@ -133,7 +133,7 @@ const TabNavigation: React.FC<TabNavigationProps> = ({ activeTab, onTabChange, c
                 {/* Icon + text on sm screens and up */}
                 <span className="hidden sm:flex items-center space-x-1 sm:space-x-2">
                   <span className="text-sm sm:text-base flex-shrink-0">{tab.icon}</span>
-                  <span className="tracking-tight sm:tracking-wide text-center text-xs sm:text-sm lg:text-base truncate">{tab.label}</span>
+                  <span className="tracking-tight sm:tracking-normal text-center text-xs sm:text-sm">{tab.label}</span>
                 </span>
               </span>
             </button>
