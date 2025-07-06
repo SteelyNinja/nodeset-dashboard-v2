@@ -99,31 +99,27 @@ const TabNavigation: React.FC<TabNavigationProps> = ({ activeTab, onTabChange, c
                 ${activeTab === tab.id
                   ? `
                     bg-gradient-to-br from-primary-500/90 via-primary-600/80 to-primary-700/90
-                    border-primary-300/60 text-white shadow-[0_8px_32px_-8px_rgba(59,130,246,0.6)]
-                    hover:shadow-[0_10px_36px_-8px_rgba(59,130,246,0.7)]
+                    border-primary-300/60 text-white 
+                    shadow-[0_4px_16px_-4px_rgba(59,130,246,0.4)] dark:shadow-[0_4px_16px_-4px_rgba(59,130,246,0.2)]
+                    hover:shadow-[0_6px_20px_-6px_rgba(59,130,246,0.5)] dark:hover:shadow-[0_6px_20px_-6px_rgba(59,130,246,0.3)]
                   `
                   : `
                     bg-white/10 dark:bg-white/5 border-white/20 dark:border-white/10
                     text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400
                     hover:bg-gray-100/40 dark:hover:bg-white/8 hover:border-primary-300/50
-                    shadow-[0_4px_16px_-4px_rgba(0,0,0,0.1)] hover:shadow-[0_6px_24px_-6px_rgba(59,130,246,0.3)]
+                    shadow-[0_2px_8px_-2px_rgba(0,0,0,0.1)] dark:shadow-[0_2px_8px_-2px_rgba(0,0,0,0.3)]
+                    hover:shadow-[0_4px_12px_-4px_rgba(59,130,246,0.2)] dark:hover:shadow-[0_4px_12px_-4px_rgba(59,130,246,0.1)]
                   `
                 }
               `}
             >
               {/* Glass overlay */}
-              <div className="absolute inset-0 bg-white/20 dark:bg-white/5 rounded-2xl backdrop-blur-sm" />
-              
-              {/* Inner glass border */}
-              <div className="absolute inset-0 rounded-2xl border border-white/40 dark:border-white/10" />
+              <div className="absolute inset-0 bg-white/10 dark:bg-white/5 rounded-lg sm:rounded-xl backdrop-blur-sm" />
               
               {/* Shimmer effect */}
-              <div className="absolute inset-0 overflow-hidden rounded-2xl">
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 dark:via-white/20 to-transparent -skew-x-12 transform -translate-x-full group-hover:translate-x-full transition-transform duration-1500 ease-out" />
+              <div className="absolute inset-0 overflow-hidden rounded-lg sm:rounded-xl">
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 dark:via-white/10 to-transparent -skew-x-12 transform -translate-x-full group-hover:translate-x-full transition-transform duration-1500 ease-out" />
               </div>
-              
-              {/* Top glass highlight */}
-              <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/50 to-transparent rounded-t-2xl" />
               
               {/* Content */}
               <span className="relative z-10 flex items-center justify-center">
