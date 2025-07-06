@@ -34,9 +34,9 @@ const GlassCard: React.FC<GlassCardProps> = ({
     },
     raised: {
       shadow: 'shadow-sm',
-      border: 'border-gray-200/80 dark:border-white/15',
+      border: 'border-gray-400/90 dark:border-white/15',
       backdrop: 'backdrop-blur-[10px] dark:backdrop-blur-[15px]',
-      bg: 'bg-gradient-to-br from-primary-500/16 to-secondary-500/16 dark:from-primary-400/10 dark:to-secondary-400/10'
+      bg: 'bg-gradient-to-br from-primary-500/25 to-secondary-500/25 dark:from-primary-400/10 dark:to-secondary-400/10'
     },
     elevated: {
       shadow: 'shadow-md',
