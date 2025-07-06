@@ -310,14 +310,6 @@ function App() {
                 </div>
               </div>
             </div>
-            
-            {/* Connection Status - Far Right */}
-            <div className="flex items-center space-x-2 ml-auto">
-              <div className={`w-2 h-2 rounded-full ${backendConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
-              <span className="text-sm text-gray-600 dark:text-gray-400">
-                {backendConnected === null ? 'Checking...' : backendConnected ? 'Connected' : 'Disconnected'}
-              </span>
-            </div>
           </div>
         </div>
       </header>
