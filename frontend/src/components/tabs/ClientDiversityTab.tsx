@@ -144,8 +144,8 @@ const ClientDiversityTab: React.FC = () => {
       const data = payload[0];
       return (
         <div className="bg-white dark:bg-gray-800 p-3 border border-gray-200 dark:border-gray-600 rounded shadow-lg">
-          <p className="font-semibold">{data.payload.fullName}</p>
-          <p className="text-blue-600">{data.value.toFixed(1)}%</p>
+          <p className="font-semibold text-gray-900 dark:text-white">{data.payload.fullName}</p>
+          <p className="text-blue-600 dark:text-blue-400">{data.value.toFixed(1)}%</p>
         </div>
       );
     }
