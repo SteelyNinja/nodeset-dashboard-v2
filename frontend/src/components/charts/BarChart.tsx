@@ -1,5 +1,5 @@
 import React from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { PROFESSIONAL_CHART_COLORS, chartAnimationConfig, CHART_THEME } from '../../constants/chartThemes';
 
 interface BarChartData {
@@ -36,15 +36,52 @@ const BarChartComponent: React.FC<BarChartProps> = ({
   // Get professional color - use provided color or palette
   const chartColor = color || PROFESSIONAL_CHART_COLORS[colorPalette][0];
   
-  // Custom tooltip component with professional styling
+  // Custom Y-axis tick formatter for clean number display
+  const formatYAxisTick = (value: number) => {
+    // If it's a percentage (between 0-100), format as percentage
+    if ((yAxisLabel && yAxisLabel.toLowerCase().includes('percentage')) || (yAxisLabel && yAxisLabel.includes('%'))) {
+      return `${Math.round(value)}%`;
+    }
+    
+    // For large numbers, use compact notation
+    if (Math.abs(value) >= 1000000) {
+      return `${(value / 1000000).toFixed(1)}M`;
+    } else if (Math.abs(value) >= 1000) {
+      return `${(value / 1000).toFixed(1)}K`;
+    }
+    
+    // For decimal numbers, limit to 1 decimal place if needed
+    if (value % 1 !== 0) {
+      return value.toFixed(1);
+    }
+    
+    return value.toString();
+  };
+  
+  
+  // Enhanced tooltip component with professional styling and animations
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div style={CHART_THEME.tooltip.content} className="dark:hidden">
+        <div 
+          style={{
+            ...CHART_THEME.tooltip.content,
+            transform: active ? 'scale(1) translateY(0)' : 'scale(0.95) translateY(10px)',
+            opacity: active ? 1 : 0,
+            transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
+          }} 
+          className="dark:hidden"
+        >
           <p className="font-medium">{`${label}`}</p>
           <p className="text-primary-600">
             {`${payload[0].name}: ${payload[0].value.toLocaleString()}`}
           </p>
+          <div className="w-full h-1 bg-primary-200 rounded-full mt-2">
+            <div 
+              className="h-full bg-primary-500 rounded-full transition-all duration-300"
+              style={{ width: `${Math.min(100, (payload[0].value / Math.max(...data.map(d => d[dataKey]))) * 100)}%` }}
+            />
+          </div>
         </div>
       );
     }
@@ -54,11 +91,25 @@ const BarChartComponent: React.FC<BarChartProps> = ({
   const CustomTooltipDark = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div style={CHART_THEME.tooltip.contentDark} className="hidden dark:block">
+        <div 
+          style={{
+            ...CHART_THEME.tooltip.contentDark,
+            transform: active ? 'scale(1) translateY(0)' : 'scale(0.95) translateY(10px)',
+            opacity: active ? 1 : 0,
+            transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
+          }} 
+          className="hidden dark:block"
+        >
           <p className="font-medium">{`${label}`}</p>
           <p className="text-primary-400">
             {`${payload[0].name}: ${payload[0].value.toLocaleString()}`}
           </p>
+          <div className="w-full h-1 bg-primary-800 rounded-full mt-2">
+            <div 
+              className="h-full bg-primary-400 rounded-full transition-all duration-300"
+              style={{ width: `${Math.min(100, (payload[0].value / Math.max(...data.map(d => d[dataKey]))) * 100)}%` }}
+            />
+          </div>
         </div>
       );
     }
@@ -86,7 +137,7 @@ const BarChartComponent: React.FC<BarChartProps> = ({
           margin={{
             top: 20,
             right: 30,
-            left: 40,
+            left: 60,
             bottom: 60,
           }}
         >
@@ -110,6 +161,7 @@ const BarChartComponent: React.FC<BarChartProps> = ({
           <YAxis 
             tick={CHART_THEME.axis.tick}
             axisLine={CHART_THEME.axis.line}
+            tickFormatter={formatYAxisTick}
             label={{ 
               value: yAxisLabel, 
               angle: -90, 
@@ -140,7 +192,14 @@ const BarChartComponent: React.FC<BarChartProps> = ({
               animationDuration: chartAnimationConfig.animationDuration,
               animationEasing: chartAnimationConfig.animationEasing
             })}
-          />
+          >
+            {data.map((entry, index) => (
+              <Cell
+                key={`cell-${index}`}
+                fill={chartColor}
+              />
+            ))}
+          </Bar>
         </BarChart>
       </ResponsiveContainer>
     </div>

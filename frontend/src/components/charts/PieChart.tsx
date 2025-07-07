@@ -36,12 +36,21 @@ const PieChartComponent: React.FC<PieChartProps> = ({
   // Get professional colors - use provided colors or palette
   const chartColors = colors || PROFESSIONAL_CHART_COLORS[colorPalette];
   
-  // Custom tooltip component with professional styling
+
+  // Custom tooltip component with professional styling and animations
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       const data = payload[0];
       return (
-        <div style={CHART_THEME.tooltip.content} className="dark:hidden">
+        <div 
+          style={{
+            ...CHART_THEME.tooltip.content,
+            transform: active ? 'scale(1) translateY(0)' : 'scale(0.95) translateY(10px)',
+            opacity: active ? 1 : 0,
+            transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
+          }} 
+          className="dark:hidden"
+        >
           <p className="font-medium">{data.payload.name}</p>
           <p className="text-primary-600">
             {`${data.name}: ${data.value.toLocaleString()}`}
@@ -59,7 +68,15 @@ const PieChartComponent: React.FC<PieChartProps> = ({
     if (active && payload && payload.length) {
       const data = payload[0];
       return (
-        <div style={CHART_THEME.tooltip.contentDark} className="hidden dark:block">
+        <div 
+          style={{
+            ...CHART_THEME.tooltip.contentDark,
+            transform: active ? 'scale(1) translateY(0)' : 'scale(0.95) translateY(10px)',
+            opacity: active ? 1 : 0,
+            transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
+          }} 
+          className="hidden dark:block"
+        >
           <p className="font-medium">{data.payload.name}</p>
           <p className="text-primary-400">
             {`${data.name}: ${data.value.toLocaleString()}`}
@@ -139,9 +156,6 @@ const PieChartComponent: React.FC<PieChartProps> = ({
               <Cell 
                 key={`cell-${index}`} 
                 fill={entry.color || chartColors[index % chartColors.length]}
-                style={{
-                  filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1))'
-                }}
               />
             ))}
           </Pie>

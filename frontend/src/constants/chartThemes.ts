@@ -56,6 +56,19 @@ export const chartAnimationConfig = {
   enter: {
     animationDuration: 600,
     animationEasing: 'ease-out' as const
+  },
+  
+  // Staggered animations for multiple elements
+  stagger: {
+    delay: 50, // 50ms between each element
+    maxDelay: 500 // Maximum total delay
+  },
+  
+  // Advanced easing curves
+  easing: {
+    smooth: 'cubic-bezier(0.4, 0, 0.2, 1)',
+    bounce: 'cubic-bezier(0.68, -0.55, 0.265, 1.55)',
+    swift: 'cubic-bezier(0.55, 0, 0.1, 1)'
   }
 };
 
@@ -204,7 +217,7 @@ export const getPrimaryGradient = (opacity: number = 0.8) => ({
   ]
 });
 
-export default {
+const chartThemes = {
   PROFESSIONAL_CHART_COLORS,
   chartAnimationConfig,
   CHART_THEME,
@@ -212,3 +225,5 @@ export default {
   getColorByIndex,
   getPrimaryGradient
 };
+
+export default chartThemes;
