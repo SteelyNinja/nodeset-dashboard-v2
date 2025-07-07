@@ -288,11 +288,11 @@ const InformationTab: React.FC = () => {
             </div>
           </GlassCard>
 
-          {/* ENS Resolution */}
+          {/* ENS / Discord Names */}
           <GlassCard elevation="elevated" className="p-4">
             <div className="flex items-center mb-3">
               <Icon name="info" size="lg" color="primary" className="mr-3" />
-              <h3 className="text-headline-small font-semibold text-neutral-900 dark:text-white">ENS Resolution</h3>
+              <h3 className="text-headline-small font-semibold text-neutral-900 dark:text-white">ENS / Discord Names</h3>
             </div>
             <div className="space-y-2">
               <div className="flex items-center text-sm">
