@@ -995,21 +995,47 @@ const PerformanceTab: React.FC = () => {
 
             {/* Performance Trend Line Chart */}
             <LineChartComponent
-              data={performanceData.slice().sort((a, b) => a.validator_count - b.validator_count).slice(0, 20)}
-              title="Performance by Operator Size"
+              data={(() => {
+                // Group operators by validator count and calculate average performance
+                const groupedData = performanceData.reduce((acc, operator) => {
+                  const count = operator.validator_count;
+                  if (!acc[count]) {
+                    acc[count] = {
+                      validator_count: count,
+                      performances: [],
+                      total_performance: 0,
+                      operator_count: 0
+                    };
+                  }
+                  acc[count].performances.push(operator.performance);
+                  acc[count].total_performance += operator.performance;
+                  acc[count].operator_count += 1;
+                  return acc;
+                }, {} as Record<number, { validator_count: number; performances: number[]; total_performance: number; operator_count: number; }>);
+
+                // Convert to array with average performance
+                return Object.values(groupedData)
+                  .map(group => ({
+                    validator_count: group.validator_count,
+                    performance: group.total_performance / group.operator_count,
+                    operator_count: group.operator_count
+                  }))
+                  .sort((a, b) => a.validator_count - b.validator_count);
+              })()}
+              title="Performance by Operator Size (Average)"
               lines={[{
                 dataKey: 'performance',
                 stroke: '#8884d8',
                 strokeWidth: 2,
-                name: 'Performance',
-                dot: false
+                name: 'Avg Performance',
+                dot: true
               }]}
               xAxisDataKey="validator_count"
               xAxisLabel="Number of Validators"
-              yAxisLabel="Performance (%)"
+              yAxisLabel="Average Performance (%)"
               yDomain={performanceData.length > 0 ? 
-                [Math.max(0, Math.min(...performanceData.map(d => d.performance)) - 1), 'auto'] : 
-                ['auto', 'auto']
+                [Math.max(0, Math.min(...performanceData.map(d => d.performance)) - 1), 100] : 
+                [0, 100]
               }
               showLegend={false}
             />
