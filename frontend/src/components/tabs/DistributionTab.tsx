@@ -189,18 +189,23 @@ const DistributionTab: React.FC = () => {
       </div>
 
       {/* Histogram Chart */}
-      <div className="mb-8">
-        <BarChartComponent
-          data={histogramData}
-          title="Distribution of Validators per Operator"
-          colorPalette="primary"
-          xAxisDataKey="name"
-          xAxisLabel="Validators per Operator"
-          yAxisLabel="Number of Operators"
-          enableAnimations={true}
-          className="shadow-lg border border-gray-200 dark:border-gray-700"
-        />
-      </div>
+      <GlassCard hoverable={false} className="mb-8">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
+          <Icon name="distribution" size="lg" color="primary" className="inline mr-2" />Distribution of Validators per Operator
+        </h3>
+        <div className="h-[500px]">
+          <BarChartComponent
+            data={histogramData}
+            title=""
+            colorPalette="primary"
+            xAxisDataKey="name"
+            xAxisLabel="Validators per Operator"
+            yAxisLabel="Number of Operators"
+            enableAnimations={true}
+            className="h-full"
+          />
+        </div>
+      </GlassCard>
 
       {/* Key Insights Section */}
       <div className="mb-8">

@@ -124,6 +124,7 @@ const BarChartComponent: React.FC<BarChartProps> = ({
       shadow-glass-light dark:shadow-glass-dark
       p-6 
       subtle-bar-hover
+      ${className.includes('h-') ? '' : 'h-[400px]'}
       ${className}
     `}>
       {title && (
@@ -131,14 +132,14 @@ const BarChartComponent: React.FC<BarChartProps> = ({
           {title}
         </h3>
       )}
-      <ResponsiveContainer width="100%" height={400}>
+      <ResponsiveContainer width="100%" height="100%">
         <BarChart
           data={data}
           margin={{
             top: 20,
             right: 30,
             left: 60,
-            bottom: 100,
+            bottom: 30,
           }}
         >
           <CartesianGrid 
@@ -149,12 +150,13 @@ const BarChartComponent: React.FC<BarChartProps> = ({
           <XAxis 
             dataKey={xAxisDataKey}
             tick={{
-              ...CHART_THEME.axis.tick,
+              fontSize: 12,
+              fill: '#64748b',
               textAnchor: 'end'
             }}
-            axisLine={CHART_THEME.axis.line}
+            axisLine={{ stroke: '#cbd5e1', strokeWidth: 1 }}
             interval={0}
-            height={80}
+            height={35}
             angle={-45}
           />
           <YAxis 
