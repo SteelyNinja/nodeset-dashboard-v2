@@ -24,6 +24,7 @@ from data_loader_api import (
     clear_cache,
     get_cache_info
 )
+from analysis import calculate_attestation_performance
 
 router = APIRouter()
 
@@ -274,3 +275,74 @@ async def get_cache_information():
         return CacheInfoResponse(**cache_info)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to get cache info: {str(e)}")
+
+@router.get("/relative-performance", response_model=DataResponse)
+async def get_relative_performance(
+    period: str = Query(..., description="Performance period: '7d' or '31d'")
+):
+    """Get relative performance data for attestation-only analysis"""
+    try:
+        # Validate period parameter
+        if period not in ['7d', '31d']:
+            raise HTTPException(status_code=400, detail="Period must be '7d' or '31d'")
+        
+        # Convert period to days
+        days = 7 if period == '7d' else 31
+        
+        # Load required data
+        validator_performance_data, perf_source = load_validator_performance_data()
+        if not validator_performance_data:
+            raise HTTPException(status_code=404, detail="Validator performance data not found")
+        
+        proposals_data, proposals_source = load_proposals_data()
+        if not proposals_data:
+            raise HTTPException(status_code=404, detail="Proposals data not found")
+        
+        sync_committee_data, sync_source = load_sync_committee_data()
+        if not sync_committee_data:
+            raise HTTPException(status_code=404, detail="Sync committee data not found")
+        
+        validator_data, validator_source = load_validator_data()
+        if not validator_data:
+            raise HTTPException(status_code=404, detail="Validator data not found")
+        
+        exit_data, exit_source = load_exit_data()
+        if not exit_data:
+            raise HTTPException(status_code=404, detail="Exit data not found")
+        
+        # Calculate attestation performance
+        performance_results = calculate_attestation_performance(
+            validator_performance_data,
+            proposals_data,
+            sync_committee_data,
+            validator_data,
+            exit_data,
+            days
+        )
+        
+        # Create response data
+        response_data = {
+            "period": period,
+            "days": days,
+            "lookback_days": 10 if days == 7 else 34,
+            "activity_days": 7 if days == 7 else 32,
+            "total_operators": len(performance_results),
+            "operators": performance_results,
+            "metadata": {
+                "description": f"Attestation-only performance analysis for {period} period",
+                "exclusion_criteria": "Validators with proposals or sync committee duties in lookback window are excluded",
+                "activity_requirement": f"Validators must be active for {7 if days == 7 else 31}+ days"
+            }
+        }
+        
+        return DataResponse(
+            data=response_data,
+            source_file=f"Combined: {perf_source}, {proposals_source}, {sync_source}, {validator_source}, {exit_source}",
+            success=True,
+            message=f"Relative performance data ({period}) calculated successfully"
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to calculate relative performance: {str(e)}")

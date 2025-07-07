@@ -2,6 +2,8 @@ import numpy as np
 import pandas as pd
 from utils import format_operator_display_plain, get_performance_category
 from collections import Counter
+import time
+from typing import Dict, List, Any, Optional
 
 def calculate_concentration_metrics(operator_validators):
     """Calculate concentration metrics including Gini coefficient"""
@@ -288,3 +290,179 @@ def analyze_missed_proposals_stats(missed_proposals_data, proposals_data):
         'operator_missed_counts': dict(operator_missed_counts),
         'avg_missed_per_operator': total_missed / len(operator_missed_counts) if operator_missed_counts else 0
     }
+
+def calculate_attestation_performance(
+    validators_data: Dict[str, Any],
+    proposals_data: Dict[str, Any],
+    sync_committee_data: Dict[str, Any],
+    validator_data: Dict[str, Any],
+    exit_data: Dict[str, Any],
+    days: int
+) -> List[Dict[str, Any]]:
+    """
+    Calculate attestation-only performance analysis matching original Streamlit logic exactly.
+    
+    Args:
+        validators_data: Validator performance data
+        proposals_data: Block proposals data
+        sync_committee_data: Sync committee participation data
+        validator_data: Main validator data (for ENS names)
+        exit_data: Exit data to exclude exited validators
+        days: Analysis period (7 or 31 days)
+    
+    Returns:
+        List of operator performance data with attestation-only metrics
+    """
+    if not validators_data or not validators_data.get('validators'):
+        return []
+    
+    now = time.time()
+    lookback_days = 10 if days == 7 else 34  # 10 days for 7-day analysis, 34 for 31-day
+    lookback_timestamp = now - (lookback_days * 24 * 60 * 60)
+    
+    # Activity requirement timestamps (matching original logic)
+    activity_days = 7 if days == 7 else 31  # Must be active for 7+ days for 7-day analysis, 31+ days for 31-day
+    activity_timestamp = now - (activity_days * 24 * 60 * 60)
+    
+    print(f"Calculating {days}-day attestation performance, excluding proposals/sync from last {lookback_days} days")
+    
+    # Get validators with proposals in lookback window
+    validators_with_proposals = set()
+    if proposals_data and proposals_data.get('proposals'):
+        for proposal in proposals_data['proposals']:
+            proposal_timestamp = proposal.get('timestamp', 0)
+            if proposal_timestamp >= lookback_timestamp:
+                validator_index = proposal.get('validator_index') or proposal.get('proposer_index')
+                if validator_index:
+                    validators_with_proposals.add(validator_index)
+    
+    # Get validators with sync committee duties in lookback window (using end_slot as per original)
+    validators_with_sync_duties = set()
+    if sync_committee_data and sync_committee_data.get('detailed_stats'):
+        GENESIS_TIME = 1606824023  # Ethereum beacon chain genesis time
+        
+        for stat in sync_committee_data['detailed_stats']:
+            if stat.get('validator_index') and stat.get('end_slot'):
+                end_timestamp = GENESIS_TIME + (stat['end_slot'] * 12)  # Genesis + slot * 12 seconds
+                if end_timestamp >= lookback_timestamp:
+                    validators_with_sync_duties.add(stat['validator_index'])
+    
+    # Get exited validators
+    exited_validators = set()
+    if exit_data and exit_data.get('exited_validators'):
+        for exit_info in exit_data['exited_validators']:
+            validator_index = exit_info.get('validator_index')
+            if validator_index:
+                exited_validators.add(validator_index)
+    
+    # Combine excluded validators (those with proposals, sync duties, or exits)
+    excluded_validators = validators_with_proposals.union(validators_with_sync_duties).union(exited_validators)
+    
+    print(f"Found {len(validators_with_proposals)} validators with proposals, {len(validators_with_sync_duties)} with sync duties, {len(exited_validators)} exited")
+    print(f"Total excluded validators: {len(excluded_validators)}")
+    
+    # Get ENS names from main validator data
+    ens_names = {}
+    if validator_data and validator_data.get('ens_names'):
+        ens_names = validator_data['ens_names']
+    
+    # Group validators by operator and calculate attestation performance
+    operator_data = {}
+    validators = validators_data.get('validators', {})
+    
+    for validator_id, validator_info in validators.items():
+        try:
+            validator_index = validator_info.get('validator_index')
+            operator = validator_info.get('operator')
+            
+            if not validator_index or not operator:
+                continue
+            
+            # Check if validator meets activity requirements (matching frontend logic exactly)
+            activation_data = validator_info.get('activation_data', {})
+            activation_timestamp = activation_data.get('activation_timestamp', 0)
+            if activation_timestamp and activation_timestamp > activity_timestamp:
+                continue  # Validator hasn't been active long enough
+            
+            # Get performance data (matching frontend access pattern exactly)
+            performance_metrics = validator_info.get('performance_metrics', {})
+            
+            # Use the appropriate period's performance data (matching frontend logic)
+            if days == 7:
+                performance_gwei = performance_metrics.get('performance_7d', 0) or 0
+            else:  # 31 days
+                performance_gwei = performance_metrics.get('performance_31d', 0) or 0
+            
+            # Initialize operator data if not exists
+            if operator not in operator_data:
+                operator_data[operator] = {
+                    'operator': operator,
+                    'ens_name': ens_names.get(operator, ''),
+                    'total_validators': 0,
+                    'attestation_validators': 0,
+                    'excluded_validators': 0,
+                    'regular_performances': []  # Track individual performances like frontend
+                }
+            
+            # Count total validators for this operator
+            operator_data[operator]['total_validators'] += 1
+            
+            # Check if validator is excluded from attestation-only analysis (matching frontend logic)
+            if validator_index in excluded_validators:
+                operator_data[operator]['excluded_validators'] += 1
+            elif performance_gwei > 0:  # Only include validators with positive performance (matching frontend)
+                # This is an attestation-only validator with positive performance
+                operator_data[operator]['attestation_validators'] += 1
+                operator_data[operator]['regular_performances'].append(performance_gwei)
+        
+        except Exception as e:
+            print(f"Error processing validator {validator_id}: {e}")
+            continue
+    
+    # Calculate final metrics and create preliminary results (matching frontend logic exactly)
+    preliminary_results = []
+    for operator, data in operator_data.items():
+        # Only include operators with attestation-only validators with positive performance (matching frontend filter)
+        if len(data['regular_performances']) == 0:
+            continue
+        
+        # Calculate average performance excluding zero rewards (matching frontend logic)
+        regular_performances = [p for p in data['regular_performances'] if p > 0]
+        avg_attestation_performance = (
+            sum(regular_performances) / len(regular_performances) 
+            if len(regular_performances) > 0 else 0
+        )
+        
+        preliminary_results.append({
+            'operator': operator,
+            'ens_name': data['ens_name'],
+            'total_validators': data['total_validators'],
+            'attestation_validators': data['attestation_validators'],
+            'excluded_validators': data['excluded_validators'],
+            'regular_performance_gwei': avg_attestation_performance,
+            'avg_performance': avg_attestation_performance
+        })
+    
+    # Sort by average performance (descending) to find highest performer
+    preliminary_results.sort(key=lambda x: x['avg_performance'], reverse=True)
+    
+    # Calculate relative scores as percentage of highest performer (matching frontend logic)
+    highest_performance = preliminary_results[0]['avg_performance'] if preliminary_results else 1
+    
+    results = []
+    for result in preliminary_results:
+        relative_score = (result['avg_performance'] / highest_performance) * 100 if highest_performance > 0 else 0
+        
+        results.append({
+            'operator': result['operator'],
+            'ens_name': result['ens_name'],
+            'total_validators': result['total_validators'],
+            'attestation_validators': result['attestation_validators'],
+            'excluded_validators': result['excluded_validators'],
+            'regular_performance_gwei': result['regular_performance_gwei'],
+            'relative_score': relative_score
+        })
+    
+    print(f"Generated {len(results)} operator records for {days}-day attestation analysis")
+    
+    return results
