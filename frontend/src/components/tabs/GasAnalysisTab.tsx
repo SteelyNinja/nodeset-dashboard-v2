@@ -5,7 +5,7 @@ import GlassCard from '../common/GlassCard';
 import GlassButton from '../common/GlassButton';
 import Icon from '../common/Icon';
 import { GlassTable, GlassTableHeader, GlassTableBody, GlassTableRow, GlassTableCell } from '../common/GlassTable';
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
+import PieChartComponent from '../charts/PieChart';
 import { GasAnalysis } from '../../types/api';
 
 const GasAnalysisTab: React.FC = () => {
@@ -170,44 +170,8 @@ const GasAnalysisTab: React.FC = () => {
   const strategyChartData = Object.entries(gasData.strategies).map(([strategy, count]) => ({
     name: getStrategyLabel(strategy),
     value: count,
-    fullName: getStrategyLabel(strategy),
-    rawStrategy: strategy
+    color: getStrategyColor(strategy)
   }));
-
-
-
-  const CustomPieTooltip = ({ active, payload }: any) => {
-    if (active && payload && payload.length) {
-      const data = payload[0];
-      return (
-        <div className="bg-white dark:bg-gray-800 p-3 border border-gray-200 dark:border-gray-600 rounded shadow-lg">
-          <p className="font-semibold">{data.payload.fullName}</p>
-          <p className="text-blue-600">{data.value} operators</p>
-        </div>
-      );
-    }
-    return null;
-  };
-
-  const CustomLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, value }: any) => {
-    const RADIAN = Math.PI / 180;
-    const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
-    const x = cx + radius * Math.cos(-midAngle * RADIAN);
-    const y = cy + radius * Math.sin(-midAngle * RADIAN);
-
-    return (
-      <text 
-        x={x} 
-        y={y} 
-        fill="white" 
-        textAnchor={x > cx ? 'start' : 'end'} 
-        dominantBaseline="central"
-        className="text-xs font-semibold"
-      >
-        {value > 0 ? value : ''}
-      </text>
-    );
-  };
 
   return (
     <div className="p-6">
@@ -290,33 +254,16 @@ const GasAnalysisTab: React.FC = () => {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Pie Chart */}
-            <div className="bg-white/30 dark:bg-white/5 backdrop-blur-sm rounded-lg p-4 border border-white/20">
-              <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 text-center">
-                Strategy Distribution
-              </h4>
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie
-                    data={strategyChartData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={CustomLabel}
-                    outerRadius={100}
-                    innerRadius={40}
-                    fill="#8884d8"
-                    dataKey="value"
-                  >
-                    {strategyChartData.map((entry, index) => (
-                      <Cell 
-                        key={`cell-${index}`} 
-                        fill={getStrategyColor(entry.rawStrategy)} 
-                      />
-                    ))}
-                  </Pie>
-                  <Tooltip content={<CustomPieTooltip />} />
-                </PieChart>
-              </ResponsiveContainer>
+            <div>
+              <PieChartComponent
+                data={strategyChartData}
+                title="Strategy Distribution"
+                colorPalette="categorical"
+                innerRadius={40}
+                outerRadius={100}
+                enableAnimations={true}
+                showLegend={false}
+              />
             </div>
 
             {/* Strategy Legend & Stats */}
@@ -329,7 +276,7 @@ const GasAnalysisTab: React.FC = () => {
                   <div className="flex items-center">
                     <div 
                       className="w-4 h-4 rounded-full mr-3"
-                      style={{ backgroundColor: getStrategyColor(entry.rawStrategy) }}
+                      style={{ backgroundColor: entry.color }}
                     ></div>
                     <span className="text-sm font-medium text-gray-900 dark:text-white">
                       {entry.name}

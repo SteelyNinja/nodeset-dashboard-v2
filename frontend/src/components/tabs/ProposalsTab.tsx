@@ -7,7 +7,7 @@ import GlassCard from '../common/GlassCard';
 import GlassButton from '../common/GlassButton';
 import Icon from '../common/Icon';
 import { GlassTable, GlassTableHeader, GlassTableBody, GlassTableRow, GlassTableCell } from '../common/GlassTable';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
+import PieChartComponent from '../charts/PieChart';
 
 interface ProposalMetrics {
   totalProposals: number;
@@ -533,28 +533,19 @@ const ProposalsTab: React.FC = () => {
             </GlassTable>
           </div>
           
-          <div className="bg-white/30 dark:bg-white/5 backdrop-blur-sm rounded-lg p-4 border border-white/20">
-            <ResponsiveContainer width="100%" height={350}>
-              <PieChart>
-                <Pie
-                  data={mevRelayBreakdown.map((relay, index) => ({
-                    name: relay.name,
-                    value: relay.count,
-                    fill: `hsl(${(index * 137.5) % 360}, 70%, 60%)`
-                  }))}
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={130}
-                  dataKey="value"
-                  label={({ name, percent }) => `${name} ${percent ? (percent * 100).toFixed(0) : '0'}%`}
-                >
-                  {mevRelayBreakdown.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={`hsl(${(index * 137.5) % 360}, 70%, 60%)`} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
+          <div>
+            <PieChartComponent
+              data={mevRelayBreakdown.map((relay, index) => ({
+                name: relay.name,
+                value: relay.count,
+                percentage: relay.percentage
+              }))}
+              title="MEV Relay Distribution"
+              colorPalette="categorical"
+              outerRadius={130}
+              enableAnimations={true}
+              showLegend={true}
+            />
           </div>
         </div>
       </GlassCard>

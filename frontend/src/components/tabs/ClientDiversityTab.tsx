@@ -4,7 +4,8 @@ import LoadingSpinner from '../common/LoadingSpinner';
 import GlassCard from '../common/GlassCard';
 import GlassButton from '../common/GlassButton';
 import Icon from '../common/Icon';
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
+import PieChartComponent from '../charts/PieChart';
+import BarChartComponent from '../charts/BarChart';
 import { ClientDiversity } from '../../types/api';
 
 const ClientDiversityTab: React.FC = () => {
@@ -139,38 +140,6 @@ const ClientDiversityTab: React.FC = () => {
     }));
   };
 
-  const CustomTooltip = ({ active, payload }: any) => {
-    if (active && payload && payload.length) {
-      const data = payload[0];
-      return (
-        <div className="bg-white dark:bg-gray-800 p-3 border border-gray-200 dark:border-gray-600 rounded shadow-lg">
-          <p className="font-semibold text-gray-900 dark:text-white">{data.payload.fullName}</p>
-          <p className="text-blue-600 dark:text-blue-400">{data.value.toFixed(1)}%</p>
-        </div>
-      );
-    }
-    return null;
-  };
-
-  const CustomLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, value }: any) => {
-    const RADIAN = Math.PI / 180;
-    const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
-    const x = cx + radius * Math.cos(-midAngle * RADIAN);
-    const y = cy + radius * Math.sin(-midAngle * RADIAN);
-
-    return (
-      <text 
-        x={x} 
-        y={y} 
-        fill="white" 
-        textAnchor={x > cx ? 'start' : 'end'} 
-        dominantBaseline="central"
-        className="text-xs font-semibold"
-      >
-        {value > 5 ? `${value.toFixed(1)}%` : ''}
-      </text>
-    );
-  };
 
   if (loading) {
     return <LoadingSpinner />;
@@ -328,33 +297,18 @@ const ClientDiversityTab: React.FC = () => {
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Execution Clients Pie Chart */}
-            <div className="bg-white/30 dark:bg-white/5 backdrop-blur-sm rounded-lg p-4 border border-white/20">
-              <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 text-center">
-                <Icon name="settings" size="lg" color="primary" className="inline mr-2" />Execution Clients
-              </h4>
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie
-                    data={executionChartData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={CustomLabel}
-                    outerRadius={110}
-                    innerRadius={40}
-                    fill="#8884d8"
-                    dataKey="value"
-                  >
-                    {executionChartData.map((entry, index) => (
-                      <Cell 
-                        key={`cell-${index}`} 
-                        fill={getClientColor(entry.name, 'execution')} 
-                      />
-                    ))}
-                  </Pie>
-                  <Tooltip content={<CustomTooltip />} />
-                </PieChart>
-              </ResponsiveContainer>
+            <div>
+              <PieChartComponent
+                data={executionChartData.map((entry, index) => ({
+                  ...entry,
+                  color: getClientColor(entry.name, 'execution')
+                }))}
+                title="Execution Clients"
+                innerRadius={40}
+                outerRadius={110}
+                enableAnimations={true}
+                showLegend={false}
+              />
               
               {/* Execution Client Legend */}
               <div className="grid grid-cols-1 gap-1 mt-4">
@@ -373,33 +327,18 @@ const ClientDiversityTab: React.FC = () => {
             </div>
 
             {/* Consensus Clients Pie Chart */}
-            <div className="bg-white/30 dark:bg-white/5 backdrop-blur-sm rounded-lg p-4 border border-white/20">
-              <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 text-center">
-                <Icon name="building" size="lg" color="primary" className="inline mr-2" />Consensus Clients
-              </h4>
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie
-                    data={consensusChartData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={CustomLabel}
-                    outerRadius={110}
-                    innerRadius={40}
-                    fill="#8884d8"
-                    dataKey="value"
-                  >
-                    {consensusChartData.map((entry, index) => (
-                      <Cell 
-                        key={`cell-${index}`} 
-                        fill={getClientColor(entry.name, 'consensus')} 
-                      />
-                    ))}
-                  </Pie>
-                  <Tooltip content={<CustomTooltip />} />
-                </PieChart>
-              </ResponsiveContainer>
+            <div>
+              <PieChartComponent
+                data={consensusChartData.map((entry, index) => ({
+                  ...entry,
+                  color: getClientColor(entry.name, 'consensus')
+                }))}
+                title="Consensus Clients"
+                innerRadius={40}
+                outerRadius={110}
+                enableAnimations={true}
+                showLegend={false}
+              />
 
               {/* Consensus Client Legend */}
               <div className="grid grid-cols-1 gap-1 mt-4">
@@ -418,33 +357,18 @@ const ClientDiversityTab: React.FC = () => {
             </div>
 
             {/* Setup Type Pie Chart */}
-            <div className="bg-white/30 dark:bg-white/5 backdrop-blur-sm rounded-lg p-4 border border-white/20">
-              <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 text-center">
-                🏠 Setup Type
-              </h4>
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie
-                    data={setupChartData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={CustomLabel}
-                    outerRadius={110}
-                    innerRadius={40}
-                    fill="#8884d8"
-                    dataKey="value"
-                  >
-                    {setupChartData.map((entry, index) => (
-                      <Cell 
-                        key={`cell-${index}`} 
-                        fill={getSetupColor(entry.name)} 
-                      />
-                    ))}
-                  </Pie>
-                  <Tooltip content={<CustomTooltip />} />
-                </PieChart>
-              </ResponsiveContainer>
+            <div>
+              <PieChartComponent
+                data={setupChartData.map((entry, index) => ({
+                  ...entry,
+                  color: getSetupColor(entry.name)
+                }))}
+                title="🏠 Setup Type"
+                innerRadius={40}
+                outerRadius={110}
+                enableAnimations={true}
+                showLegend={false}
+              />
 
               {/* Setup Type Legend */}
               <div className="grid grid-cols-1 gap-1 mt-4">
@@ -469,42 +393,16 @@ const ClientDiversityTab: React.FC = () => {
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
             <Icon name="clientDiversity" size="lg" color="primary" className="inline mr-2" />Client Combinations (Execution + Consensus)
           </h3>
-          <ResponsiveContainer width="100%" height={500}>
-            <BarChart data={combinationChartData} margin={{ top: 20, right: 30, left: 20, bottom: 120 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-              <XAxis 
-                dataKey="name" 
-                angle={45}
-                textAnchor="start"
-                height={120}
-                interval={0}
-                fontSize={12}
-                tick={{ fontSize: 12 }}
-              />
-              <YAxis 
-                label={{ value: 'Number of Operators', angle: -90, position: 'insideLeft' }}
-                tick={{ fontSize: 12 }}
-              />
-              <Tooltip 
-                formatter={(value: number) => [value.toLocaleString(), 'Operators']}
-                labelFormatter={(label) => `Client Combination: ${label}`}
-                cursor={false}
-              />
-              <Bar dataKey="value">
-                {combinationChartData.map((entry, index) => {
-                  const maxValue = Math.max(...combinationChartData.map(d => d.value));
-                  const intensity = entry.value / maxValue;
-                  const opacity = 0.3 + 0.7 * intensity;
-                  return (
-                    <Cell 
-                      key={`cell-${index}`} 
-                      fill={`rgba(103, 126, 234, ${opacity})`} 
-                    />
-                  );
-                })}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
+          <BarChartComponent
+            data={combinationChartData}
+            title=""
+            colorPalette="primary"
+            xAxisDataKey="name"
+            xAxisLabel="Client Combinations"
+            yAxisLabel="Number of Operators"
+            enableAnimations={true}
+            className="h-[500px]"
+          />
         </GlassCard>
 
       </div>

@@ -193,10 +193,11 @@ const DistributionTab: React.FC = () => {
         <BarChartComponent
           data={histogramData}
           title="Distribution of Validators per Operator"
-          color="#667eea"
+          colorPalette="primary"
           xAxisDataKey="name"
           xAxisLabel="Validators per Operator"
           yAxisLabel="Number of Operators"
+          enableAnimations={true}
           className="shadow-lg border border-gray-200 dark:border-gray-700"
         />
       </div>
