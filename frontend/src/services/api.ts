@@ -14,6 +14,7 @@ import {
   GasAnalysis,
   ClientDiversity,
   SyncCommitteeData,
+  ENSSourcesData,
 } from '../types/api';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL;
@@ -103,6 +104,11 @@ class ApiService {
 
   async getSyncCommitteeData(): Promise<SyncCommitteeData> {
     const response = await this.apiClient.get<ApiResponse<SyncCommitteeData>>('/api/data/sync-committee');
+    return this.extractData(response);
+  }
+
+  async getENSSourcesData(): Promise<ENSSourcesData> {
+    const response = await this.apiClient.get<ApiResponse<ENSSourcesData>>('/api/data/ens-sources');
     return this.extractData(response);
   }
 

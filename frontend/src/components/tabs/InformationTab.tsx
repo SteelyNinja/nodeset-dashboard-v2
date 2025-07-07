@@ -3,13 +3,14 @@ import { apiService } from '../../services/api';
 import LoadingSpinner from '../common/LoadingSpinner';
 import GlassCard from '../common/GlassCard';
 import Icon from '../common/Icon';
-import { ValidatorData, ConcentrationMetrics, PerformanceAnalysis, ClientDiversity } from '../../types/api';
+import { ValidatorData, ConcentrationMetrics, PerformanceAnalysis, ClientDiversity, ENSSourcesData } from '../../types/api';
 
 const InformationTab: React.FC = () => {
   const [validatorData, setValidatorData] = useState<ValidatorData | null>(null);
   const [concentrationData, setConcentrationData] = useState<ConcentrationMetrics | null>(null);
   const [performanceData, setPerformanceData] = useState<PerformanceAnalysis | null>(null);
   const [clientData, setClientData] = useState<ClientDiversity | null>(null);
+  const [ensSourcesData, setEnsSourcesData] = useState<ENSSourcesData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -19,18 +20,20 @@ const InformationTab: React.FC = () => {
         setLoading(true);
         
         // Fetch all overview data in parallel including network overview
-        const [validator, concentration, performance, client, overview] = await Promise.all([
+        const [validator, concentration, performance, client, overview, ensSources] = await Promise.all([
           apiService.getValidatorData(),
           apiService.getConcentrationMetrics(),
           apiService.getPerformanceAnalysis(),
           apiService.getClientDiversity(),
-          apiService.getNetworkOverview()
+          apiService.getNetworkOverview(),
+          apiService.getENSSourcesData()
         ]);
 
         setValidatorData(validator);
         setConcentrationData(concentration);
         setPerformanceData(performance);
         setClientData(client);
+        setEnsSourcesData(ensSources);
         // Store network overview data in validatorData for activation rates
         if (overview && validator) {
           setValidatorData({
@@ -182,28 +185,33 @@ const InformationTab: React.FC = () => {
   };
 
   const ensResolutionStatus = () => {
-    if (!validatorData || !concentrationData) return { 
+    if (!ensSourcesData || !concentrationData) return { 
       status: 'warning', 
       text: 'Loading...',
       ensCount: 0,
       operatorCoverage: 0,
-      validatorCoverage: 0
+      validatorCoverage: 0,
+      onChainCount: 0,
+      manualCount: 0,
+      onChainPercentage: 0,
+      manualPercentage: 0
     };
     
-    // Count ENS names from validator data
-    const ensNames = validatorData.ens_names || {};
-    const ensCount = Object.keys(ensNames).length;
     const operatorCoverage = concentrationData.total_operators > 0 ? 
-      (ensCount / concentrationData.total_operators * 100) : 0;
+      (ensSourcesData.total_ens_names / concentrationData.total_operators * 100) : 0;
     
     // Estimate validator coverage (assuming ENS names cover operators proportionally)
-    const validatorCoverage = validatorData.total_validators > 0 ? 
-      (ensCount / concentrationData.total_operators * 100) : 0;
+    const validatorCoverage = ensSourcesData.total_ens_names > 0 ? 
+      (ensSourcesData.total_ens_names / concentrationData.total_operators * 100) : 0;
     
     return {
-      ensCount,
+      ensCount: ensSourcesData.total_ens_names,
       operatorCoverage,
       validatorCoverage,
+      onChainCount: ensSourcesData.on_chain_count,
+      manualCount: ensSourcesData.manual_count,
+      onChainPercentage: ensSourcesData.on_chain_percentage,
+      manualPercentage: ensSourcesData.manual_percentage,
       status: operatorCoverage > 30 ? 'success' : operatorCoverage > 20 ? 'warning' : 'warning'
     };
   };
@@ -298,7 +306,7 @@ const InformationTab: React.FC = () => {
               <div className="flex items-center text-sm">
                 <Icon name="info" size="sm" color="primary" className="mr-2" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  {ensResolution.ensCount} names found
+                  {ensResolution.ensCount} names ({ensResolution.onChainCount} on-chain, {ensResolution.manualCount} manual)
                 </span>
               </div>
               <div className="flex items-center text-sm">

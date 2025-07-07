@@ -346,6 +346,19 @@ export interface MissedProposalsData {
   }>;
 }
 
+export interface ENSSourcesData {
+  total_ens_names: number;
+  on_chain_count: number;
+  manual_count: number;
+  on_chain_percentage: number;
+  manual_percentage: number;
+  breakdown: {
+    on_chain: number;
+    manual: number;
+  };
+  raw_sources: Record<string, string>;
+}
+
 // Tab identifiers
 export type TabId = 
   | 'information'

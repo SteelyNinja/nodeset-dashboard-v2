@@ -276,6 +276,48 @@ async def get_cache_information():
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to get cache info: {str(e)}")
 
+@router.get("/ens-sources", response_model=DataResponse)
+async def get_ens_sources():
+    """Get ENS sources breakdown (on-chain vs manual)"""
+    try:
+        data, source_file = load_validator_data()
+        if data is None:
+            raise HTTPException(status_code=404, detail="Validator data not found")
+        
+        # Extract ENS sources data
+        ens_sources = data.get("ens_sources", {})
+        
+        # Count on-chain vs manual
+        on_chain_count = sum(1 for source in ens_sources.values() if source == "on-chain")
+        manual_count = sum(1 for source in ens_sources.values() if source == "manual")
+        total_count = len(ens_sources)
+        
+        # Calculate percentages
+        on_chain_percentage = (on_chain_count / total_count * 100) if total_count > 0 else 0
+        manual_percentage = (manual_count / total_count * 100) if total_count > 0 else 0
+        
+        response_data = {
+            "total_ens_names": total_count,
+            "on_chain_count": on_chain_count,
+            "manual_count": manual_count,
+            "on_chain_percentage": on_chain_percentage,
+            "manual_percentage": manual_percentage,
+            "breakdown": {
+                "on_chain": on_chain_count,
+                "manual": manual_count
+            },
+            "raw_sources": ens_sources
+        }
+        
+        return DataResponse(
+            data=response_data,
+            source_file=source_file,
+            success=True,
+            message="ENS sources breakdown loaded successfully"
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to load ENS sources: {str(e)}")
+
 @router.get("/relative-performance", response_model=DataResponse)
 async def get_relative_performance(
     period: str = Query(..., description="Performance period: '7d' or '31d'")
