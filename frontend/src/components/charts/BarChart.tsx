@@ -138,7 +138,7 @@ const BarChartComponent: React.FC<BarChartProps> = ({
             top: 20,
             right: 30,
             left: 60,
-            bottom: 60,
+            bottom: 100,
           }}
         >
           <CartesianGrid 
@@ -148,15 +148,14 @@ const BarChartComponent: React.FC<BarChartProps> = ({
           />
           <XAxis 
             dataKey={xAxisDataKey}
-            tick={CHART_THEME.axis.tick}
+            tick={{
+              ...CHART_THEME.axis.tick,
+              textAnchor: 'end'
+            }}
             axisLine={CHART_THEME.axis.line}
             interval={0}
-            label={{ 
-              value: xAxisLabel, 
-              position: 'insideBottom', 
-              offset: -10,
-              style: CHART_THEME.axis.label
-            }}
+            height={80}
+            angle={-45}
           />
           <YAxis 
             tick={CHART_THEME.axis.tick}
