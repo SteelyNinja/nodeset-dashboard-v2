@@ -188,15 +188,14 @@ class ClickHouseService:
         query = f"""
         SELECT 
             val_nos_name,
-            val_index,
+            val_id,
             att_valid_head,
             att_valid_target,
             att_valid_source,
-            slot,
             epoch
         FROM validators_summary 
         WHERE val_nos_name IS NOT NULL {where_clause}
-        ORDER BY epoch DESC, slot DESC
+        ORDER BY epoch DESC, val_id DESC
         LIMIT 1000
         """
         
@@ -212,15 +211,14 @@ class ClickHouseService:
             
             results = []
             for row in raw_data:
-                if len(row) >= 7:
+                if len(row) >= 6:
                     results.append({
                         'operator': row[0],
                         'validator_index': safe_int(row[1]),
                         'head_valid': safe_bool(row[2]),
                         'target_valid': safe_bool(row[3]),
                         'source_valid': safe_bool(row[4]),
-                        'slot': safe_int(row[5]),
-                        'epoch': safe_int(row[6])
+                        'epoch': safe_int(row[5])
                     })
             
             return results
