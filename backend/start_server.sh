@@ -17,6 +17,30 @@ else
     pip install -r requirements.txt
 fi
 
+# Handle environment configuration
+if [ "$1" = "production" ]; then
+    echo "🚀 Starting in PRODUCTION mode..."
+    export ENVIRONMENT=production
+    if [ -f ".env.production" ]; then
+        cp .env.production .env
+    else
+        echo "⚠️  .env.production not found, using current .env"
+    fi
+elif [ "$1" = "local" ]; then
+    echo "🧪 Starting in LOCAL mode..."
+    export ENVIRONMENT=local
+else
+    echo "🧪 Starting in LOCAL mode (default)..."
+    export ENVIRONMENT=local
+fi
+
+# Show current configuration
+echo "Environment: ${ENVIRONMENT:-local}"
+if [ -f ".env" ]; then
+    echo "ClickHouse Host: $(grep CLICKHOUSE_HOST .env | cut -d'=' -f2)"
+    echo "ClickHouse Enabled: $(grep CLICKHOUSE_ENABLED .env | cut -d'=' -f2)"
+fi
+
 # Check data files
 echo "📄 Checking data files..."
 check_file_exists() {
@@ -70,6 +94,7 @@ echo "🌐 Starting FastAPI server..."
 echo "   API Documentation: http://localhost:8000/docs"
 echo "   Health Check: http://localhost:8000/health/"
 echo "   Root Endpoint: http://localhost:8000/"
+echo "   ClickHouse Health: http://localhost:8000/api/attestations/health"
 echo ""
 echo "Press Ctrl+C to stop the server"
 echo ""
