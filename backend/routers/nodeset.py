@@ -19,9 +19,10 @@ async def get_validators_down(
 ) -> List[Dict[str, Any]]:
     """
     Get NodeSet validators that have missed attestations for the last 3 epochs in a row.
+    Excludes exited validators and those in withdrawal process.
     
     Returns:
-        List of validators with operator and validator_id that have missed 3 consecutive attestations
+        List of active validators with operator and validator_id that have missed 3 consecutive attestations
     """
     try:
         if not clickhouse_service.is_available():
@@ -38,27 +39,36 @@ async def get_validators_down(
         start_epoch = latest_epoch - 2  # 3 epochs total: latest, latest-1, latest-2
         
         # Query to find validators that missed attestations in all 3 epochs
+        # Exclude exited validators by checking their status in the latest epoch
         query = f"""
         WITH validator_epochs AS (
             SELECT 
                 val_id,
                 val_nos_name,
                 epoch,
+                val_status,
                 CASE WHEN att_happened = 0 OR att_happened IS NULL THEN 1 ELSE 0 END as missed_attestation
             FROM validators_summary 
             WHERE epoch >= {start_epoch} 
             AND epoch <= {latest_epoch}
             AND val_nos_name IS NOT NULL
         ),
+        active_validators AS (
+            SELECT DISTINCT val_id
+            FROM validator_epochs
+            WHERE epoch = {latest_epoch}
+            AND val_status NOT IN ('exited', 'withdrawal_possible', 'withdrawal_done')
+        ),
         consecutive_misses AS (
             SELECT 
-                val_id,
-                val_nos_name,
+                ve.val_id,
+                ve.val_nos_name,
                 COUNT(*) as total_epochs,
-                SUM(missed_attestation) as missed_epochs
-            FROM validator_epochs
-            GROUP BY val_id, val_nos_name
-            HAVING COUNT(*) = 3 AND SUM(missed_attestation) = 3
+                SUM(ve.missed_attestation) as missed_epochs
+            FROM validator_epochs ve
+            INNER JOIN active_validators av ON ve.val_id = av.val_id
+            GROUP BY ve.val_id, ve.val_nos_name
+            HAVING COUNT(*) = 3 AND SUM(ve.missed_attestation) = 3
         )
         SELECT 
             val_nos_name as operator,
@@ -98,13 +108,14 @@ async def get_validators_down_extended(
 ) -> List[Dict[str, Any]]:
     """
     Get NodeSet validators that have missed attestations for N consecutive epochs.
+    Excludes exited validators and those in withdrawal process.
     
     Args:
         epochs_back: Number of consecutive epochs to check (default: 2)
         limit: Maximum number of validators to return
         
     Returns:
-        List of validators with operator and validator_id that have missed N consecutive attestations
+        List of active validators with operator and validator_id that have missed N consecutive attestations
     """
     try:
         if not clickhouse_service.is_available():
@@ -121,27 +132,36 @@ async def get_validators_down_extended(
         start_epoch = latest_epoch - epochs_back + 1
         
         # Build query to find validators that missed attestations in all specified epochs
+        # Exclude exited validators by checking their status in the latest epoch
         query = f"""
         WITH validator_epochs AS (
             SELECT 
                 val_id,
                 val_nos_name,
                 epoch,
+                val_status,
                 CASE WHEN att_happened = 0 OR att_happened IS NULL THEN 1 ELSE 0 END as missed_attestation
             FROM validators_summary 
             WHERE epoch >= {start_epoch} 
             AND epoch <= {latest_epoch}
             AND val_nos_name IS NOT NULL
         ),
+        active_validators AS (
+            SELECT DISTINCT val_id
+            FROM validator_epochs
+            WHERE epoch = {latest_epoch}
+            AND val_status NOT IN ('exited', 'withdrawal_possible', 'withdrawal_done')
+        ),
         consecutive_misses AS (
             SELECT 
-                val_id,
-                val_nos_name,
+                ve.val_id,
+                ve.val_nos_name,
                 COUNT(*) as total_epochs,
-                SUM(missed_attestation) as missed_epochs
-            FROM validator_epochs
-            GROUP BY val_id, val_nos_name
-            HAVING COUNT(*) = {epochs_back} AND SUM(missed_attestation) = {epochs_back}
+                SUM(ve.missed_attestation) as missed_epochs
+            FROM validator_epochs ve
+            INNER JOIN active_validators av ON ve.val_id = av.val_id
+            GROUP BY ve.val_id, ve.val_nos_name
+            HAVING COUNT(*) = {epochs_back} AND SUM(ve.missed_attestation) = {epochs_back}
         )
         SELECT 
             val_nos_name as operator,
@@ -179,9 +199,10 @@ async def get_validators_down_extended(
 async def get_validators_down_summary() -> Dict[str, Any]:
     """
     Get summary statistics about validators that have missed recent attestations.
+    Excludes exited validators and those in withdrawal process.
     
     Returns:
-        Summary statistics about validator downtime (3 consecutive epochs)
+        Summary statistics about active validator downtime (3 consecutive epochs)
     """
     try:
         if not clickhouse_service.is_available():
@@ -215,21 +236,29 @@ async def get_validators_down_summary() -> Dict[str, Any]:
                         val_id,
                         val_nos_name,
                         epoch,
+                        val_status,
                         CASE WHEN att_happened = 0 OR att_happened IS NULL THEN 1 ELSE 0 END as missed_attestation
                     FROM validators_summary 
                     WHERE epoch >= {start_epoch} 
                     AND epoch <= {latest_epoch}
                     AND val_nos_name IS NOT NULL
                 ),
+                active_validators AS (
+                    SELECT DISTINCT val_id
+                    FROM validator_epochs
+                    WHERE epoch = {latest_epoch}
+                    AND val_status NOT IN ('exited', 'withdrawal_possible', 'withdrawal_done')
+                ),
                 consecutive_misses AS (
                     SELECT 
-                        val_id,
-                        val_nos_name,
+                        ve.val_id,
+                        ve.val_nos_name,
                         COUNT(*) as total_epochs,
-                        SUM(missed_attestation) as missed_epochs
-                    FROM validator_epochs
-                    GROUP BY val_id, val_nos_name
-                    HAVING COUNT(*) = 3 AND SUM(missed_attestation) = 3
+                        SUM(ve.missed_attestation) as missed_epochs
+                    FROM validator_epochs ve
+                    INNER JOIN active_validators av ON ve.val_id = av.val_id
+                    GROUP BY ve.val_id, ve.val_nos_name
+                    HAVING COUNT(*) = 3 AND SUM(ve.missed_attestation) = 3
                 )
                 SELECT val_id FROM consecutive_misses
             ) as consecutive
