@@ -574,8 +574,9 @@ async def get_below_threshold_extended(
             # Use available data instead of returning error
             start_epoch = min_available_epoch
             total_epochs = epochs_available
-            days = round(epochs_available / 225, 2)
-            logger.info(f"Using {epochs_available} epochs ({days} days) instead of requested due to insufficient data")
+            days_actual = round(epochs_available / 225, 2)
+            days = max(1, int(epochs_available / 225))  # Ensure days is an integer, minimum 1
+            logger.info(f"Using {epochs_available} epochs ({days_actual} days actual) instead of requested due to insufficient data")
         
         # Query to find validators below threshold
         # Calculate theoretical maximum rewards vs actual rewards
