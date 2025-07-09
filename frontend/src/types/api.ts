@@ -393,3 +393,20 @@ export interface ScatterChartData {
     color?: string;
   }>;
 }
+
+export interface TheoreticalPerformanceData {
+  operator: string;
+  validator_count: number;
+  total_actual_rewards: number;
+  total_theoretical_max_rewards: number;
+  operator_reward_percentage: number;
+  avg_validator_reward_percentage: number;
+  total_attestations_made: number;
+  total_attestations_missed: number;
+  total_blocks_proposed: number;
+  total_blocks_missed: number;
+  avg_sync_performance: number;
+  latest_epoch: number;
+  start_epoch: number;
+  epochs_analyzed: number;
+}

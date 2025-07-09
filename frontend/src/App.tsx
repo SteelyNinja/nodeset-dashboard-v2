@@ -4,6 +4,7 @@ import { apiService } from './services/api';
 import Icon from './components/common/Icon';
 import { analyticsService } from './services/analytics';
 import AnalyticsPage from './components/AnalyticsPage';
+import TheoreticalPerformancePage from './components/TheoreticalPerformancePage';
 import TabNavigation from './components/common/TabNavigation';
 import InformationTab from './components/tabs/InformationTab';
 import DistributionTab from './components/tabs/DistributionTab';
@@ -338,6 +339,11 @@ function AppWithAnalytics() {
   // Check for hidden analytics route
   if (window.location.pathname === '/analytics') {
     return <AnalyticsPage />;
+  }
+  
+  // Check for hidden theoretical performance route
+  if (window.location.pathname === '/theoretical') {
+    return <TheoreticalPerformancePage />;
   }
   
   return <App />;

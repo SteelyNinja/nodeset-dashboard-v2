@@ -15,6 +15,7 @@ import {
   ClientDiversity,
   SyncCommitteeData,
   ENSSourcesData,
+  TheoreticalPerformanceData,
 } from '../types/api';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL;
@@ -147,6 +148,12 @@ class ApiService {
   async getData<T>(dataset: string): Promise<T> {
     const response = await this.apiClient.get<ApiResponse<T>>(`/api/data/${dataset}`);
     return this.extractData(response);
+  }
+
+  // NodeSet theoretical performance endpoint
+  async getTheoreticalPerformance(): Promise<TheoreticalPerformanceData[]> {
+    const response = await this.apiClient.get<TheoreticalPerformanceData[]>('/api/nodeset/theoretical_performance?limit=1000');
+    return response.data;
   }
 
   // Get cache timestamp from validator data (nodeset_validator_tracker_cache.json)
