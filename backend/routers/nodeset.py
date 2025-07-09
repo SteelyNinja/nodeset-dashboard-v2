@@ -743,8 +743,8 @@ async def get_theoretical_performance(
                 -- Sum rewards and penalties for active periods only
                 SUM(CASE WHEN is_active_duty = 1 THEN COALESCE(att_earned_reward, 0) ELSE 0 END) as total_actual_rewards,
                 SUM(CASE WHEN is_active_duty = 1 THEN COALESCE(att_penalty, 0) ELSE 0 END) as total_penalties,
-                -- Calculate average reward per successful attestation
-                AVG(CASE WHEN successful_attestation = 1 AND att_earned_reward IS NOT NULL THEN att_earned_reward END) as avg_reward_per_attestation,
+                -- Calculate theoretical maximum using actual reward structure
+                SUM(CASE WHEN is_active_duty = 1 THEN COALESCE(att_earned_reward, 0) + COALESCE(att_missed_reward, 0) ELSE 0 END) as total_theoretical_max_rewards,
                 -- Calculate validator coverage
                 COUNT(*) as total_data_points,
                 ({latest_epoch} - {start_epoch} + 1) as epochs_in_period
@@ -760,19 +760,17 @@ async def get_theoretical_performance(
             pending_periods,
             total_actual_rewards,
             total_penalties,
-            avg_reward_per_attestation,
+            total_theoretical_max_rewards,
             total_data_points,
             epochs_in_period,
             -- Calculate expected total epochs for all validators
             (validator_count * epochs_in_period) as expected_total_epochs,
             -- Net rewards after penalties
             (total_actual_rewards - total_penalties) as net_rewards,
-            -- Max possible rewards
-            (active_duty_periods * avg_reward_per_attestation) as max_possible_rewards,
-            -- Theoretical performance
+            -- Theoretical performance using actual reward structure
             CASE 
-                WHEN (active_duty_periods * avg_reward_per_attestation) > 0 
-                THEN ((total_actual_rewards - total_penalties) * 100.0 / (active_duty_periods * avg_reward_per_attestation))
+                WHEN total_theoretical_max_rewards > 0 
+                THEN ((total_actual_rewards - total_penalties) * 100.0 / total_theoretical_max_rewards)
                 ELSE 0.0
             END as theoretical_performance,
             -- Attestation success rate
@@ -797,7 +795,7 @@ async def get_theoretical_performance(
         # Transform to structured format
         results = []
         for row in raw_data:
-            if len(row) >= 17:
+            if len(row) >= 16:
                 try:
                     expected_total_epochs = int(float(row[11])) if row[11] is not None else 0
                     total_data_points = int(float(row[9])) if row[9] is not None else 0
@@ -807,9 +805,9 @@ async def get_theoretical_performance(
                         'operator': str(row[0]),
                         'validator_count': int(float(row[1])) if row[1] is not None else 0,
                         'total_actual_rewards': int(float(row[6])) if row[6] is not None else 0,
-                        'total_theoretical_max_rewards': int(float(row[13])) if row[13] is not None else 0,
-                        'operator_reward_percentage': float(row[14]) if row[14] is not None else 0.0,
-                        'avg_validator_reward_percentage': float(row[14]) if row[14] is not None else 0.0,
+                        'total_theoretical_max_rewards': int(float(row[8])) if row[8] is not None else 0,
+                        'operator_reward_percentage': float(row[13]) if row[13] is not None else 0.0,
+                        'avg_validator_reward_percentage': float(row[13]) if row[13] is not None else 0.0,
                         'total_attestations_made': int(float(row[3])) if row[3] is not None else 0,
                         'total_attestations_missed': int(float(row[4])) if row[4] is not None else 0,
                         'total_blocks_proposed': 0,  # Not calculated in this query
@@ -825,9 +823,9 @@ async def get_theoretical_performance(
                         'pending_periods': int(float(row[5])) if row[5] is not None else 0,
                         'total_penalties': int(float(row[7])) if row[7] is not None else 0,
                         'net_rewards': int(float(row[12])) if row[12] is not None else 0,
-                        'max_possible_rewards': int(float(row[13])) if row[13] is not None else 0,
-                        'attestation_success_rate': float(row[15]) if row[15] is not None else 0.0,
-                        'data_coverage_percentage': float(row[16]) if row[16] is not None else 0.0,
+                        'max_possible_rewards': int(float(row[8])) if row[8] is not None else 0,
+                        'attestation_success_rate': float(row[14]) if row[14] is not None else 0.0,
+                        'data_coverage_percentage': float(row[15]) if row[15] is not None else 0.0,
                         'missing_data_points': missing_data_points
                     })
                 except (ValueError, TypeError) as e:
