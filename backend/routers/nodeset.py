@@ -333,13 +333,13 @@ async def get_below_threshold(
     limit: int = Query(100, description="Maximum number of validators to return")
 ) -> Union[List[Dict[str, Any]], Dict[str, Any]]:
     """
-    Get NodeSet validators that are below 97% of theoretical maximum rewards over a 1 day period (225 epochs).
+    Get NodeSet validators that are below 97% of theoretical maximum attestation rewards over a 1 day period (225 epochs).
     
-    Theoretical maximum rewards = sum of (earned + missed) rewards for attestations, proposals, and sync committee duties.
-    This represents what a validator could have earned with perfect performance.
+    Theoretical maximum attestation rewards = (att_earned_reward + att_missed_reward).
+    This represents what a validator could have earned with perfect attestation performance.
     
     Returns:
-        List of validators with their reward performance below the 97% threshold
+        List of validators with their attestation reward performance below the 97% threshold
     """
     try:
         if not clickhouse_service.is_available():
@@ -388,10 +388,10 @@ async def get_below_threshold(
                 val_id,
                 val_nos_name,
                 COUNT(*) as total_epochs,
-                -- Actual rewards earned
-                SUM(COALESCE(att_earned_reward, 0) + COALESCE(propose_earned_reward, 0) + COALESCE(sync_earned_reward, 0)) as actual_rewards,
-                -- Theoretical maximum rewards (earned + missed = what could have been earned with perfect performance)
-                SUM(COALESCE(att_earned_reward, 0) + COALESCE(att_missed_reward, 0) + COALESCE(propose_earned_reward, 0) + COALESCE(propose_missed_reward, 0) + COALESCE(sync_earned_reward, 0) + COALESCE(sync_missed_reward, 0)) as theoretical_max_rewards,
+                -- Actual attestation rewards earned
+                SUM(COALESCE(att_earned_reward, 0)) as actual_rewards,
+                -- Theoretical maximum attestation rewards (earned + missed)
+                SUM(COALESCE(att_earned_reward, 0) + COALESCE(att_missed_reward, 0)) as theoretical_max_rewards,
                 -- Performance metrics
                 SUM(CASE WHEN att_happened = 1 THEN 1 ELSE 0 END) as attestations_made,
                 SUM(CASE WHEN att_happened = 0 OR att_happened IS NULL THEN 1 ELSE 0 END) as attestations_missed,
@@ -404,7 +404,7 @@ async def get_below_threshold(
             AND val_nos_name IS NOT NULL
             AND val_status NOT IN ('exited', 'withdrawal_possible', 'withdrawal_done')
             GROUP BY val_id, val_nos_name
-            HAVING COUNT(*) = 225  -- Must have data for all 225 epochs
+            HAVING COUNT(*) >= 1  -- Must have at least some data
         ),
         performance_analysis AS (
             SELECT 
@@ -483,11 +483,11 @@ async def get_below_threshold_extended(
     limit: int = Query(100, description="Maximum number of validators to return")
 ) -> Union[List[Dict[str, Any]], Dict[str, Any]]:
     """
-    Get NodeSet validators that are below the specified reward percentage threshold over a configurable time period.
+    Get NodeSet validators that are below the specified attestation reward percentage threshold over a configurable time period.
     Each day is counted as 225 epochs, with the first day back from the latest epoch stored.
     
-    Theoretical maximum rewards = sum of (earned + missed) rewards for attestations, proposals, and sync committee duties.
-    This represents what a validator could have earned with perfect performance.
+    Theoretical maximum attestation rewards = (att_earned_reward + att_missed_reward).
+    This represents what a validator could have earned with perfect attestation performance.
     
     Args:
         days: Number of days to analyze (1-31)
@@ -495,7 +495,7 @@ async def get_below_threshold_extended(
         limit: Maximum number of validators to return
         
     Returns:
-        List of validators with their reward performance below the specified threshold
+        List of validators with their attestation reward performance below the specified threshold
     """
     try:
         if not clickhouse_service.is_available():
@@ -545,10 +545,10 @@ async def get_below_threshold_extended(
                 val_id,
                 val_nos_name,
                 COUNT(*) as total_epochs,
-                -- Actual rewards earned
-                SUM(COALESCE(att_earned_reward, 0) + COALESCE(propose_earned_reward, 0) + COALESCE(sync_earned_reward, 0)) as actual_rewards,
-                -- Theoretical maximum rewards (earned + missed = what could have been earned with perfect performance)
-                SUM(COALESCE(att_earned_reward, 0) + COALESCE(att_missed_reward, 0) + COALESCE(propose_earned_reward, 0) + COALESCE(propose_missed_reward, 0) + COALESCE(sync_earned_reward, 0) + COALESCE(sync_missed_reward, 0)) as theoretical_max_rewards,
+                -- Actual attestation rewards earned
+                SUM(COALESCE(att_earned_reward, 0)) as actual_rewards,
+                -- Theoretical maximum attestation rewards (earned + missed)
+                SUM(COALESCE(att_earned_reward, 0) + COALESCE(att_missed_reward, 0)) as theoretical_max_rewards,
                 -- Performance metrics
                 SUM(CASE WHEN att_happened = 1 THEN 1 ELSE 0 END) as attestations_made,
                 SUM(CASE WHEN att_happened = 0 OR att_happened IS NULL THEN 1 ELSE 0 END) as attestations_missed,
@@ -556,15 +556,15 @@ async def get_below_threshold_extended(
                 SUM(CASE WHEN is_proposer = 1 AND (block_proposed = 0 OR block_proposed IS NULL) THEN 1 ELSE 0 END) as blocks_missed,
                 AVG(CASE WHEN sync_percent IS NOT NULL THEN sync_percent ELSE NULL END) as avg_sync_performance,
                 -- Daily breakdown for most recent day
-                SUM(CASE WHEN epoch > {latest_epoch} - 225 THEN COALESCE(att_earned_reward, 0) + COALESCE(propose_earned_reward, 0) + COALESCE(sync_earned_reward, 0) ELSE 0 END) as day_1_actual,
-                SUM(CASE WHEN epoch > {latest_epoch} - 225 THEN COALESCE(att_earned_reward, 0) + COALESCE(att_missed_reward, 0) + COALESCE(propose_earned_reward, 0) + COALESCE(propose_missed_reward, 0) + COALESCE(sync_earned_reward, 0) + COALESCE(sync_missed_reward, 0) ELSE 0 END) as day_1_theoretical
+                SUM(CASE WHEN epoch > {latest_epoch} - 225 THEN COALESCE(att_earned_reward, 0) ELSE 0 END) as day_1_actual,
+                SUM(CASE WHEN epoch > {latest_epoch} - 225 THEN COALESCE(att_earned_reward, 0) + COALESCE(att_missed_reward, 0) ELSE 0 END) as day_1_theoretical
             FROM validators_summary 
             WHERE epoch >= {start_epoch} 
             AND epoch <= {latest_epoch}
             AND val_nos_name IS NOT NULL
             AND val_status NOT IN ('exited', 'withdrawal_possible', 'withdrawal_done')
             GROUP BY val_id, val_nos_name
-            HAVING COUNT(*) = {total_epochs}  -- Must have data for all epochs
+            HAVING COUNT(*) >= 1  -- Must have at least some data
         ),
         performance_analysis AS (
             SELECT 
@@ -656,14 +656,14 @@ async def get_theoretical_performance(
     limit: int = Query(100, description="Maximum number of operators to return")
 ) -> Union[List[Dict[str, Any]], Dict[str, Any]]:
     """
-    Get theoretical performance analysis for NodeSet operators over a 1 day period (225 epochs).
-    Shows the percentage of rewards operators have vs theoretical maximum, averaged across all validators they control.
+    Get theoretical attestation performance analysis for NodeSet operators over a 1 day period (225 epochs).
+    Shows the percentage of attestation rewards operators have vs theoretical maximum, averaged across all validators they control.
     
-    Theoretical maximum rewards = sum of (earned + missed) rewards for attestations, proposals, and sync committee duties.
+    Theoretical maximum attestation rewards = (att_earned_reward + att_missed_reward).
     Results are aggregated by operator (val_nos_name) and averaged across all their validators.
     
     Returns:
-        List of operators with their averaged theoretical performance metrics
+        List of operators with their averaged theoretical attestation performance metrics
     """
     try:
         if not clickhouse_service.is_available():
@@ -710,10 +710,10 @@ async def get_theoretical_performance(
                 val_id,
                 val_nos_name,
                 COUNT(*) as total_epochs,
-                -- Actual rewards earned per validator
-                SUM(COALESCE(att_earned_reward, 0) + COALESCE(propose_earned_reward, 0) + COALESCE(sync_earned_reward, 0)) as actual_rewards,
-                -- Theoretical maximum rewards per validator
-                SUM(COALESCE(att_earned_reward, 0) + COALESCE(att_missed_reward, 0) + COALESCE(propose_earned_reward, 0) + COALESCE(propose_missed_reward, 0) + COALESCE(sync_earned_reward, 0) + COALESCE(sync_missed_reward, 0)) as theoretical_max_rewards,
+                -- Actual attestation rewards earned per validator
+                SUM(COALESCE(att_earned_reward, 0)) as actual_rewards,
+                -- Theoretical maximum attestation rewards per validator
+                SUM(COALESCE(att_earned_reward, 0) + COALESCE(att_missed_reward, 0)) as theoretical_max_rewards,
                 -- Performance metrics per validator
                 SUM(CASE WHEN att_happened = 1 THEN 1 ELSE 0 END) as attestations_made,
                 SUM(CASE WHEN att_happened = 0 OR att_happened IS NULL THEN 1 ELSE 0 END) as attestations_missed,
@@ -722,8 +722,8 @@ async def get_theoretical_performance(
                 AVG(CASE WHEN sync_percent IS NOT NULL THEN sync_percent ELSE NULL END) as avg_sync_performance,
                 -- Calculate per-validator reward percentage
                 CASE 
-                    WHEN SUM(COALESCE(att_earned_reward, 0) + COALESCE(att_missed_reward, 0) + COALESCE(propose_earned_reward, 0) + COALESCE(propose_missed_reward, 0) + COALESCE(sync_earned_reward, 0) + COALESCE(sync_missed_reward, 0)) > 0 
-                    THEN (SUM(COALESCE(att_earned_reward, 0) + COALESCE(propose_earned_reward, 0) + COALESCE(sync_earned_reward, 0)) * 100.0 / SUM(COALESCE(att_earned_reward, 0) + COALESCE(att_missed_reward, 0) + COALESCE(propose_earned_reward, 0) + COALESCE(propose_missed_reward, 0) + COALESCE(sync_earned_reward, 0) + COALESCE(sync_missed_reward, 0)))
+                    WHEN SUM(COALESCE(att_earned_reward, 0) + COALESCE(att_missed_reward, 0)) > 0 
+                    THEN (SUM(COALESCE(att_earned_reward, 0)) * 100.0 / SUM(COALESCE(att_earned_reward, 0) + COALESCE(att_missed_reward, 0)))
                     ELSE 0.0
                 END as validator_reward_percentage
             FROM validators_summary 
@@ -732,7 +732,7 @@ async def get_theoretical_performance(
             AND val_nos_name IS NOT NULL
             AND val_status NOT IN ('exited', 'withdrawal_possible', 'withdrawal_done')
             GROUP BY val_id, val_nos_name
-            HAVING COUNT(*) = 225  -- Must have data for all 225 epochs
+            HAVING COUNT(*) >= 1  -- Must have at least some data
         ),
         operator_performance AS (
             SELECT 
@@ -813,11 +813,11 @@ async def get_theoretical_performance_extended(
     limit: int = Query(100, description="Maximum number of operators to return")
 ) -> Union[List[Dict[str, Any]], Dict[str, Any]]:
     """
-    Get theoretical performance analysis for NodeSet operators over a configurable time period.
-    Shows the percentage of rewards operators have vs theoretical maximum, averaged across all validators they control.
+    Get theoretical attestation performance analysis for NodeSet operators over a configurable time period.
+    Shows the percentage of attestation rewards operators have vs theoretical maximum, averaged across all validators they control.
     Each day is counted as 225 epochs, with the first day back from the latest epoch stored.
     
-    Theoretical maximum rewards = sum of (earned + missed) rewards for attestations, proposals, and sync committee duties.
+    Theoretical maximum attestation rewards = (att_earned_reward + att_missed_reward).
     Results are aggregated by operator (val_nos_name) and averaged across all their validators.
     
     Args:
@@ -825,7 +825,7 @@ async def get_theoretical_performance_extended(
         limit: Maximum number of operators to return
         
     Returns:
-        List of operators with their averaged theoretical performance metrics
+        List of operators with their averaged theoretical attestation performance metrics
     """
     try:
         if not clickhouse_service.is_available():
@@ -874,10 +874,10 @@ async def get_theoretical_performance_extended(
                 val_id,
                 val_nos_name,
                 COUNT(*) as total_epochs,
-                -- Actual rewards earned per validator
-                SUM(COALESCE(att_earned_reward, 0) + COALESCE(propose_earned_reward, 0) + COALESCE(sync_earned_reward, 0)) as actual_rewards,
-                -- Theoretical maximum rewards per validator
-                SUM(COALESCE(att_earned_reward, 0) + COALESCE(att_missed_reward, 0) + COALESCE(propose_earned_reward, 0) + COALESCE(propose_missed_reward, 0) + COALESCE(sync_earned_reward, 0) + COALESCE(sync_missed_reward, 0)) as theoretical_max_rewards,
+                -- Actual attestation rewards earned per validator
+                SUM(COALESCE(att_earned_reward, 0)) as actual_rewards,
+                -- Theoretical maximum attestation rewards per validator
+                SUM(COALESCE(att_earned_reward, 0) + COALESCE(att_missed_reward, 0)) as theoretical_max_rewards,
                 -- Performance metrics per validator
                 SUM(CASE WHEN att_happened = 1 THEN 1 ELSE 0 END) as attestations_made,
                 SUM(CASE WHEN att_happened = 0 OR att_happened IS NULL THEN 1 ELSE 0 END) as attestations_missed,
@@ -885,12 +885,12 @@ async def get_theoretical_performance_extended(
                 SUM(CASE WHEN is_proposer = 1 AND (block_proposed = 0 OR block_proposed IS NULL) THEN 1 ELSE 0 END) as blocks_missed,
                 AVG(CASE WHEN sync_percent IS NOT NULL THEN sync_percent ELSE NULL END) as avg_sync_performance,
                 -- Recent day performance (most recent 225 epochs)
-                SUM(CASE WHEN epoch > {latest_epoch} - 225 THEN COALESCE(att_earned_reward, 0) + COALESCE(propose_earned_reward, 0) + COALESCE(sync_earned_reward, 0) ELSE 0 END) as recent_day_actual,
-                SUM(CASE WHEN epoch > {latest_epoch} - 225 THEN COALESCE(att_earned_reward, 0) + COALESCE(att_missed_reward, 0) + COALESCE(propose_earned_reward, 0) + COALESCE(propose_missed_reward, 0) + COALESCE(sync_earned_reward, 0) + COALESCE(sync_missed_reward, 0) ELSE 0 END) as recent_day_theoretical,
+                SUM(CASE WHEN epoch > {latest_epoch} - 225 THEN COALESCE(att_earned_reward, 0) ELSE 0 END) as recent_day_actual,
+                SUM(CASE WHEN epoch > {latest_epoch} - 225 THEN COALESCE(att_earned_reward, 0) + COALESCE(att_missed_reward, 0) ELSE 0 END) as recent_day_theoretical,
                 -- Calculate per-validator reward percentage
                 CASE 
-                    WHEN SUM(COALESCE(att_earned_reward, 0) + COALESCE(att_missed_reward, 0) + COALESCE(propose_earned_reward, 0) + COALESCE(propose_missed_reward, 0) + COALESCE(sync_earned_reward, 0) + COALESCE(sync_missed_reward, 0)) > 0 
-                    THEN (SUM(COALESCE(att_earned_reward, 0) + COALESCE(propose_earned_reward, 0) + COALESCE(sync_earned_reward, 0)) * 100.0 / SUM(COALESCE(att_earned_reward, 0) + COALESCE(att_missed_reward, 0) + COALESCE(propose_earned_reward, 0) + COALESCE(propose_missed_reward, 0) + COALESCE(sync_earned_reward, 0) + COALESCE(sync_missed_reward, 0)))
+                    WHEN SUM(COALESCE(att_earned_reward, 0) + COALESCE(att_missed_reward, 0)) > 0 
+                    THEN (SUM(COALESCE(att_earned_reward, 0)) * 100.0 / SUM(COALESCE(att_earned_reward, 0) + COALESCE(att_missed_reward, 0)))
                     ELSE 0.0
                 END as validator_reward_percentage
             FROM validators_summary 
@@ -899,7 +899,7 @@ async def get_theoretical_performance_extended(
             AND val_nos_name IS NOT NULL
             AND val_status NOT IN ('exited', 'withdrawal_possible', 'withdrawal_done')
             GROUP BY val_id, val_nos_name
-            HAVING COUNT(*) = {total_epochs}  -- Must have data for all epochs
+            HAVING COUNT(*) >= 1  -- Must have at least some data
         ),
         operator_performance AS (
             SELECT 
