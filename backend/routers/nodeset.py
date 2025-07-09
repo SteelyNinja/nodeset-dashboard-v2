@@ -806,24 +806,29 @@ async def get_theoretical_performance(
                     results.append({
                         'operator': str(row[0]),
                         'validator_count': int(float(row[1])) if row[1] is not None else 0,
+                        'total_actual_rewards': int(float(row[6])) if row[6] is not None else 0,
+                        'total_theoretical_max_rewards': int(float(row[13])) if row[13] is not None else 0,
+                        'operator_reward_percentage': float(row[14]) if row[14] is not None else 0.0,
+                        'avg_validator_reward_percentage': float(row[14]) if row[14] is not None else 0.0,
+                        'total_attestations_made': int(float(row[3])) if row[3] is not None else 0,
+                        'total_attestations_missed': int(float(row[4])) if row[4] is not None else 0,
+                        'total_blocks_proposed': 0,  # Not calculated in this query
+                        'total_blocks_missed': 0,    # Not calculated in this query
+                        'avg_sync_performance': 0.0, # Not calculated in this query
+                        'latest_epoch': latest_epoch,
+                        'start_epoch': start_epoch,
+                        'epochs_analyzed': int(float(row[10])) if row[10] is not None else 0,
+                        # Additional fields for debugging/monitoring
                         'active_duty_periods': int(float(row[2])) if row[2] is not None else 0,
                         'successful_attestations': int(float(row[3])) if row[3] is not None else 0,
                         'missed_attestations': int(float(row[4])) if row[4] is not None else 0,
                         'pending_periods': int(float(row[5])) if row[5] is not None else 0,
-                        'total_actual_rewards': int(float(row[6])) if row[6] is not None else 0,
                         'total_penalties': int(float(row[7])) if row[7] is not None else 0,
-                        'avg_reward_per_attestation': float(row[8]) if row[8] is not None else 0.0,
-                        'total_data_points': total_data_points,
-                        'epochs_analyzed': int(float(row[10])) if row[10] is not None else 0,
-                        'expected_total_epochs': expected_total_epochs,
                         'net_rewards': int(float(row[12])) if row[12] is not None else 0,
                         'max_possible_rewards': int(float(row[13])) if row[13] is not None else 0,
-                        'theoretical_performance': float(row[14]) if row[14] is not None else 0.0,
                         'attestation_success_rate': float(row[15]) if row[15] is not None else 0.0,
                         'data_coverage_percentage': float(row[16]) if row[16] is not None else 0.0,
-                        'missing_data_points': missing_data_points,
-                        'latest_epoch': latest_epoch,
-                        'start_epoch': start_epoch
+                        'missing_data_points': missing_data_points
                     })
                 except (ValueError, TypeError) as e:
                     logger.warning(f"Failed to parse row for operator {row[0]}: {e}")
