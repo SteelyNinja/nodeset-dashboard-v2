@@ -104,7 +104,8 @@ async def get_validators_down(
 @router.get("/validators_down/extended")
 async def get_validators_down_extended(
     epochs_back: int = Query(2, description="Number of consecutive epochs to check", ge=2, le=10),
-    limit: int = Query(100, description="Maximum number of validators to return")
+    limit: int = Query(100, description="Maximum number of validators to return"),
+    test_operator: Optional[str] = Query(None, description="Operator address for test data generation")
 ) -> Union[List[Dict[str, Any]], Dict[str, Any]]:
     """
     Get NodeSet validators that have missed attestations for N consecutive epochs.
@@ -113,11 +114,57 @@ async def get_validators_down_extended(
     Args:
         epochs_back: Number of consecutive epochs to check (default: 2)
         limit: Maximum number of validators to return
+        test_operator: Operator address for test data generation (optional)
         
     Returns:
         List of active validators with operator and validator_id that have missed N consecutive attestations
     """
     try:
+        # If test_operator is provided, return mock test data
+        if test_operator:
+            if not clickhouse_service.is_available():
+                raise HTTPException(status_code=503, detail="ClickHouse service unavailable for test data")
+            
+            # Get current epoch for realistic test data
+            epoch_query = "SELECT MAX(epoch) FROM validators_summary WHERE val_nos_name IS NOT NULL"
+            epoch_data = clickhouse_service.execute_query(epoch_query)
+            
+            if not epoch_data or not epoch_data[0][0]:
+                raise HTTPException(status_code=404, detail="No epoch data found for test data")
+            
+            latest_epoch = int(epoch_data[0][0])
+            start_epoch = latest_epoch - epochs_back + 1
+            
+            # Get real validator IDs for the test operator
+            validator_query = f"""
+            SELECT DISTINCT val_id
+            FROM validators_summary 
+            WHERE val_nos_name = '{test_operator}'
+            AND epoch = {latest_epoch}
+            AND val_status NOT IN ('exited', 'withdrawal_possible', 'withdrawal_done')
+            ORDER BY val_id
+            LIMIT {limit}
+            """
+            
+            validator_data = clickhouse_service.execute_query(validator_query)
+            
+            if not validator_data:
+                raise HTTPException(status_code=404, detail=f"No active validators found for operator {test_operator}")
+            
+            # Generate test data using real validator IDs
+            test_results = []
+            for row in validator_data:
+                validator_id = int(row[0])
+                test_results.append({
+                    'operator': test_operator,
+                    'validator_id': validator_id,
+                    'latest_epoch': latest_epoch,
+                    'start_epoch': start_epoch,
+                    'consecutive_misses': epochs_back
+                })
+            
+            logger.info(f"Generated {len(test_results)} test validators for operator {test_operator} using real validator IDs")
+            return test_results
         if not clickhouse_service.is_available():
             raise HTTPException(status_code=503, detail="ClickHouse service unavailable")
         
