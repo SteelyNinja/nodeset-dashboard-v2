@@ -8,7 +8,6 @@ from fastapi import APIRouter, HTTPException, Query
 from typing import List, Dict, Any, Optional, Union
 import logging
 from services.clickhouse_service import clickhouse_service
-from corrected_theoretical_performance import calculate_corrected_theoretical_performance
 
 logger = logging.getLogger(__name__)
 
@@ -657,16 +656,16 @@ async def get_theoretical_performance(
     limit: int = Query(100, description="Maximum number of operators to return")
 ) -> Union[List[Dict[str, Any]], Dict[str, Any]]:
     """
-    Get corrected theoretical attestation performance analysis for NodeSet operators over a 1 day period (225 epochs).
+    Get theoretical attestation performance analysis for NodeSet operators over a 1 day period (225 epochs).
     
-    CORRECTED CALCULATION:
+    Performance calculation:
     - Uses net rewards (actual rewards - penalties) vs theoretical maximum
     - Properly handles missing data points and pending validators
     - Includes penalties in the performance calculation
     - Distinguishes between data coverage issues and actual performance problems
     
     Returns:
-        List of operators with their corrected theoretical attestation performance metrics
+        List of operators with their theoretical attestation performance metrics
     """
     try:
         if not clickhouse_service.is_available():
@@ -706,61 +705,131 @@ async def get_theoretical_performance(
                 "data_completeness_percentage": round((epochs_available / epochs_requested) * 100, 2)
             }
         
-        # Get list of all operators first
-        operators_query = f"""
-        SELECT DISTINCT val_nos_name
-        FROM validators_summary 
-        WHERE epoch >= {start_epoch} 
-        AND epoch <= {latest_epoch}
-        AND val_nos_name IS NOT NULL
-        AND val_status NOT IN ('exited', 'withdrawal_possible', 'withdrawal_done')
-        ORDER BY val_nos_name
+        # Single bulk query for all operators with fixed calculation
+        query = f"""
+        WITH validator_data AS (
+            SELECT 
+                val_id,
+                val_nos_name,
+                epoch,
+                val_status,
+                att_happened,
+                att_earned_reward,
+                att_missed_reward,
+                att_penalty,
+                -- Flag active duty periods
+                CASE WHEN val_status = 'active_ongoing' THEN 1 ELSE 0 END as is_active_duty,
+                -- Flag pending periods
+                CASE WHEN val_status IN ('pending_initialized', 'pending_queued') THEN 1 ELSE 0 END as is_pending,
+                -- Flag successful attestations
+                CASE WHEN val_status = 'active_ongoing' AND att_happened = 1 THEN 1 ELSE 0 END as successful_attestation,
+                -- Flag missed attestations (active but no attestation)
+                CASE WHEN val_status = 'active_ongoing' AND (att_happened = 0 OR att_happened IS NULL) THEN 1 ELSE 0 END as missed_attestation
+            FROM validators_summary
+            WHERE epoch >= {start_epoch}
+            AND epoch <= {latest_epoch}
+            AND val_nos_name IS NOT NULL
+            AND val_status NOT IN ('exited', 'withdrawal_possible', 'withdrawal_done')
+        ),
+        operator_performance AS (
+            SELECT 
+                val_nos_name as operator,
+                COUNT(DISTINCT val_id) as validator_count,
+                -- Count duty periods and attestations
+                SUM(is_active_duty) as active_duty_periods,
+                SUM(successful_attestation) as successful_attestations,
+                SUM(missed_attestation) as missed_attestations,
+                SUM(is_pending) as pending_periods,
+                -- Sum rewards and penalties for active periods only
+                SUM(CASE WHEN is_active_duty = 1 THEN COALESCE(att_earned_reward, 0) ELSE 0 END) as total_actual_rewards,
+                SUM(CASE WHEN is_active_duty = 1 THEN COALESCE(att_penalty, 0) ELSE 0 END) as total_penalties,
+                -- Calculate average reward per successful attestation
+                AVG(CASE WHEN successful_attestation = 1 AND att_earned_reward IS NOT NULL THEN att_earned_reward END) as avg_reward_per_attestation,
+                -- Calculate validator coverage
+                COUNT(*) as total_data_points,
+                ({latest_epoch} - {start_epoch} + 1) as epochs_in_period
+            FROM validator_data
+            GROUP BY val_nos_name
+        )
+        SELECT 
+            operator,
+            validator_count,
+            active_duty_periods,
+            successful_attestations,
+            missed_attestations,
+            pending_periods,
+            total_actual_rewards,
+            total_penalties,
+            avg_reward_per_attestation,
+            total_data_points,
+            epochs_in_period,
+            -- Calculate expected total epochs for all validators
+            (validator_count * epochs_in_period) as expected_total_epochs,
+            -- Net rewards after penalties
+            (total_actual_rewards - total_penalties) as net_rewards,
+            -- Max possible rewards
+            (active_duty_periods * avg_reward_per_attestation) as max_possible_rewards,
+            -- Theoretical performance
+            CASE 
+                WHEN (active_duty_periods * avg_reward_per_attestation) > 0 
+                THEN ((total_actual_rewards - total_penalties) * 100.0 / (active_duty_periods * avg_reward_per_attestation))
+                ELSE 0.0
+            END as theoretical_performance,
+            -- Attestation success rate
+            CASE 
+                WHEN active_duty_periods > 0 
+                THEN (successful_attestations * 100.0 / active_duty_periods)
+                ELSE 0.0
+            END as attestation_success_rate,
+            -- Data coverage
+            CASE 
+                WHEN (validator_count * epochs_in_period) > 0 
+                THEN (total_data_points * 100.0 / (validator_count * epochs_in_period))
+                ELSE 0.0
+            END as data_coverage_percentage
+        FROM operator_performance
+        ORDER BY theoretical_performance DESC
         LIMIT {limit}
         """
         
-        operators_data = clickhouse_service.execute_query(operators_query)
+        raw_data = clickhouse_service.execute_query(query)
         
-        # Calculate corrected performance for each operator
+        # Transform to structured format
         results = []
-        for operator_row in operators_data:
-            operator_name = operator_row[0]
-            
-            # Get corrected calculation for this operator
-            corrected_result = calculate_corrected_theoretical_performance(
-                operator_name=operator_name,
-                start_epoch=start_epoch,
-                end_epoch=latest_epoch
-            )
-            
-            if 'error' not in corrected_result:
-                results.append({
-                    'operator': corrected_result['operator'],
-                    'validator_count': corrected_result['validator_count'],
-                    'total_actual_rewards': corrected_result['total_actual_rewards'],
-                    'total_penalties': corrected_result['total_penalties'],
-                    'net_rewards': corrected_result['net_rewards'],
-                    'max_possible_rewards': corrected_result['max_possible_rewards'],
-                    'corrected_theoretical_performance': corrected_result['corrected_theoretical_performance'],
-                    'attestation_success_rate': corrected_result['attestation_success_rate'],
-                    'data_coverage_percentage': corrected_result['data_coverage_percentage'],
-                    'active_duty_periods': corrected_result['active_duty_periods'],
-                    'successful_attestations': corrected_result['successful_attestations'],
-                    'missed_attestations': corrected_result['missed_attestations'],
-                    'pending_periods': corrected_result['pending_periods'],
-                    'missing_data_points': corrected_result['missing_data_points'],
-                    'avg_reward_per_attestation': corrected_result['avg_reward_per_attestation'],
-                    'latest_epoch': corrected_result['end_epoch'],
-                    'start_epoch': corrected_result['start_epoch'],
-                    'epochs_analyzed': corrected_result['epochs_analyzed'],
-                    # Include original calculation for comparison
-                    'original_flawed_percentage': corrected_result.get('original_flawed_percentage', 0.0),
-                    'improvement_vs_original': corrected_result.get('improvement_vs_original', 0.0)
-                })
+        for row in raw_data:
+            if len(row) >= 17:
+                try:
+                    expected_total_epochs = int(float(row[11])) if row[11] is not None else 0
+                    total_data_points = int(float(row[9])) if row[9] is not None else 0
+                    missing_data_points = expected_total_epochs - total_data_points
+                    
+                    results.append({
+                        'operator': str(row[0]),
+                        'validator_count': int(float(row[1])) if row[1] is not None else 0,
+                        'active_duty_periods': int(float(row[2])) if row[2] is not None else 0,
+                        'successful_attestations': int(float(row[3])) if row[3] is not None else 0,
+                        'missed_attestations': int(float(row[4])) if row[4] is not None else 0,
+                        'pending_periods': int(float(row[5])) if row[5] is not None else 0,
+                        'total_actual_rewards': int(float(row[6])) if row[6] is not None else 0,
+                        'total_penalties': int(float(row[7])) if row[7] is not None else 0,
+                        'avg_reward_per_attestation': float(row[8]) if row[8] is not None else 0.0,
+                        'total_data_points': total_data_points,
+                        'epochs_analyzed': int(float(row[10])) if row[10] is not None else 0,
+                        'expected_total_epochs': expected_total_epochs,
+                        'net_rewards': int(float(row[12])) if row[12] is not None else 0,
+                        'max_possible_rewards': int(float(row[13])) if row[13] is not None else 0,
+                        'theoretical_performance': float(row[14]) if row[14] is not None else 0.0,
+                        'attestation_success_rate': float(row[15]) if row[15] is not None else 0.0,
+                        'data_coverage_percentage': float(row[16]) if row[16] is not None else 0.0,
+                        'missing_data_points': missing_data_points,
+                        'latest_epoch': latest_epoch,
+                        'start_epoch': start_epoch
+                    })
+                except (ValueError, TypeError) as e:
+                    logger.warning(f"Failed to parse row for operator {row[0]}: {e}")
+                    continue
         
-        # Sort by corrected performance (descending)
-        results.sort(key=lambda x: x['corrected_theoretical_performance'], reverse=True)
-        
-        logger.info(f"Found corrected theoretical performance data for {len(results)} operators over 1 day period")
+        logger.info(f"Found theoretical performance data for {len(results)} operators over 1 day period")
         return results
         
     except Exception as e:
