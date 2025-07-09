@@ -8,6 +8,7 @@ from fastapi import APIRouter, HTTPException, Query
 from typing import List, Dict, Any, Optional, Union
 import logging
 from services.clickhouse_service import clickhouse_service
+from corrected_theoretical_performance import calculate_corrected_theoretical_performance
 
 logger = logging.getLogger(__name__)
 
@@ -656,14 +657,16 @@ async def get_theoretical_performance(
     limit: int = Query(100, description="Maximum number of operators to return")
 ) -> Union[List[Dict[str, Any]], Dict[str, Any]]:
     """
-    Get theoretical attestation performance analysis for NodeSet operators over a 1 day period (225 epochs).
-    Shows the percentage of attestation rewards operators have vs theoretical maximum, averaged across all validators they control.
+    Get corrected theoretical attestation performance analysis for NodeSet operators over a 1 day period (225 epochs).
     
-    Theoretical maximum attestation rewards = (att_earned_reward + att_missed_reward).
-    Results are aggregated by operator (val_nos_name) and averaged across all their validators.
+    CORRECTED CALCULATION:
+    - Uses net rewards (actual rewards - penalties) vs theoretical maximum
+    - Properly handles missing data points and pending validators
+    - Includes penalties in the performance calculation
+    - Distinguishes between data coverage issues and actual performance problems
     
     Returns:
-        List of operators with their averaged theoretical attestation performance metrics
+        List of operators with their corrected theoretical attestation performance metrics
     """
     try:
         if not clickhouse_service.is_available():
@@ -703,104 +706,61 @@ async def get_theoretical_performance(
                 "data_completeness_percentage": round((epochs_available / epochs_requested) * 100, 2)
             }
         
-        # Query to get operator-level theoretical performance
-        query = f"""
-        WITH validator_rewards AS (
-            SELECT 
-                val_id,
-                val_nos_name,
-                COUNT(*) as total_epochs,
-                -- Actual attestation rewards earned per validator
-                SUM(COALESCE(att_earned_reward, 0)) as actual_rewards,
-                -- Theoretical maximum attestation rewards per validator
-                SUM(COALESCE(att_earned_reward, 0) + COALESCE(att_missed_reward, 0)) as theoretical_max_rewards,
-                -- Performance metrics per validator
-                SUM(CASE WHEN att_happened = 1 THEN 1 ELSE 0 END) as attestations_made,
-                SUM(CASE WHEN att_happened = 0 OR att_happened IS NULL THEN 1 ELSE 0 END) as attestations_missed,
-                SUM(CASE WHEN is_proposer = 1 AND block_proposed = 1 THEN 1 ELSE 0 END) as blocks_proposed,
-                SUM(CASE WHEN is_proposer = 1 AND (block_proposed = 0 OR block_proposed IS NULL) THEN 1 ELSE 0 END) as blocks_missed,
-                AVG(CASE WHEN sync_percent IS NOT NULL THEN sync_percent ELSE NULL END) as avg_sync_performance,
-                -- Calculate per-validator reward percentage
-                CASE 
-                    WHEN SUM(COALESCE(att_earned_reward, 0) + COALESCE(att_missed_reward, 0)) > 0 
-                    THEN (SUM(COALESCE(att_earned_reward, 0)) * 100.0 / SUM(COALESCE(att_earned_reward, 0) + COALESCE(att_missed_reward, 0)))
-                    ELSE 0.0
-                END as validator_reward_percentage
-            FROM validators_summary 
-            WHERE epoch >= {start_epoch} 
-            AND epoch <= {latest_epoch}
-            AND val_nos_name IS NOT NULL
-            AND val_status NOT IN ('exited', 'withdrawal_possible', 'withdrawal_done')
-            GROUP BY val_id, val_nos_name
-            HAVING COUNT(*) >= 1  -- Must have at least some data
-        ),
-        operator_performance AS (
-            SELECT 
-                val_nos_name as operator,
-                COUNT(*) as validator_count,
-                -- Aggregate totals across all validators for this operator
-                SUM(total_epochs) as total_epochs_all_validators,
-                SUM(actual_rewards) as total_actual_rewards,
-                SUM(theoretical_max_rewards) as total_theoretical_max_rewards,
-                SUM(attestations_made) as total_attestations_made,
-                SUM(attestations_missed) as total_attestations_missed,
-                SUM(blocks_proposed) as total_blocks_proposed,
-                SUM(blocks_missed) as total_blocks_missed,
-                AVG(avg_sync_performance) as avg_sync_performance_all_validators,
-                -- Average reward percentage across all validators for this operator
-                AVG(validator_reward_percentage) as avg_reward_percentage,
-                -- Calculate operator-level reward percentage using totals
-                CASE 
-                    WHEN SUM(theoretical_max_rewards) > 0 THEN (SUM(actual_rewards) * 100.0 / SUM(theoretical_max_rewards))
-                    ELSE 0.0
-                END as operator_reward_percentage
-            FROM validator_rewards
-            GROUP BY val_nos_name
-        )
-        SELECT 
-            operator,
-            validator_count,
-            total_actual_rewards,
-            total_theoretical_max_rewards,
-            operator_reward_percentage,
-            avg_reward_percentage,
-            total_attestations_made,
-            total_attestations_missed,
-            total_blocks_proposed,
-            total_blocks_missed,
-            avg_sync_performance_all_validators,
-            {latest_epoch} as latest_epoch,
-            {start_epoch} as start_epoch,
-            225 as epochs_analyzed
-        FROM operator_performance
-        ORDER BY operator_reward_percentage DESC
+        # Get list of all operators first
+        operators_query = f"""
+        SELECT DISTINCT val_nos_name
+        FROM validators_summary 
+        WHERE epoch >= {start_epoch} 
+        AND epoch <= {latest_epoch}
+        AND val_nos_name IS NOT NULL
+        AND val_status NOT IN ('exited', 'withdrawal_possible', 'withdrawal_done')
+        ORDER BY val_nos_name
         LIMIT {limit}
         """
         
-        raw_data = clickhouse_service.execute_query(query)
+        operators_data = clickhouse_service.execute_query(operators_query)
         
-        # Transform to structured format
+        # Calculate corrected performance for each operator
         results = []
-        for row in raw_data:
-            if len(row) >= 14:
+        for operator_row in operators_data:
+            operator_name = operator_row[0]
+            
+            # Get corrected calculation for this operator
+            corrected_result = calculate_corrected_theoretical_performance(
+                operator_name=operator_name,
+                start_epoch=start_epoch,
+                end_epoch=latest_epoch
+            )
+            
+            if 'error' not in corrected_result:
                 results.append({
-                    'operator': row[0],
-                    'validator_count': int(row[1]),
-                    'total_actual_rewards': int(row[2]),
-                    'total_theoretical_max_rewards': int(row[3]),
-                    'operator_reward_percentage': float(row[4]),
-                    'avg_validator_reward_percentage': float(row[5]),
-                    'total_attestations_made': int(row[6]),
-                    'total_attestations_missed': int(row[7]),
-                    'total_blocks_proposed': int(row[8]),
-                    'total_blocks_missed': int(row[9]),
-                    'avg_sync_performance': float(row[10]) if row[10] not in ['\\N', None, ''] else 0.0,
-                    'latest_epoch': int(row[11]),
-                    'start_epoch': int(row[12]),
-                    'epochs_analyzed': int(row[13])
+                    'operator': corrected_result['operator'],
+                    'validator_count': corrected_result['validator_count'],
+                    'total_actual_rewards': corrected_result['total_actual_rewards'],
+                    'total_penalties': corrected_result['total_penalties'],
+                    'net_rewards': corrected_result['net_rewards'],
+                    'max_possible_rewards': corrected_result['max_possible_rewards'],
+                    'corrected_theoretical_performance': corrected_result['corrected_theoretical_performance'],
+                    'attestation_success_rate': corrected_result['attestation_success_rate'],
+                    'data_coverage_percentage': corrected_result['data_coverage_percentage'],
+                    'active_duty_periods': corrected_result['active_duty_periods'],
+                    'successful_attestations': corrected_result['successful_attestations'],
+                    'missed_attestations': corrected_result['missed_attestations'],
+                    'pending_periods': corrected_result['pending_periods'],
+                    'missing_data_points': corrected_result['missing_data_points'],
+                    'avg_reward_per_attestation': corrected_result['avg_reward_per_attestation'],
+                    'latest_epoch': corrected_result['end_epoch'],
+                    'start_epoch': corrected_result['start_epoch'],
+                    'epochs_analyzed': corrected_result['epochs_analyzed'],
+                    # Include original calculation for comparison
+                    'original_flawed_percentage': corrected_result.get('original_flawed_percentage', 0.0),
+                    'improvement_vs_original': corrected_result.get('improvement_vs_original', 0.0)
                 })
         
-        logger.info(f"Found theoretical performance data for {len(results)} operators over 1 day period")
+        # Sort by corrected performance (descending)
+        results.sort(key=lambda x: x['corrected_theoretical_performance'], reverse=True)
+        
+        logger.info(f"Found corrected theoretical performance data for {len(results)} operators over 1 day period")
         return results
         
     except Exception as e:
