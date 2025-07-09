@@ -278,9 +278,6 @@ const TheoreticalPerformancePage: React.FC = () => {
                   <GlassTableCell header>Max Rewards (Gwei)</GlassTableCell>
                   <GlassTableCell header>Attestations Made</GlassTableCell>
                   <GlassTableCell header>Attestations Missed</GlassTableCell>
-                  <GlassTableCell header>Blocks Proposed</GlassTableCell>
-                  <GlassTableCell header>Blocks Missed</GlassTableCell>
-                  <GlassTableCell header>Sync Performance</GlassTableCell>
                 </GlassTableRow>
               </GlassTableHeader>
               <GlassTableBody>
@@ -309,15 +306,6 @@ const TheoreticalPerformancePage: React.FC = () => {
                     </GlassTableCell>
                     <GlassTableCell className="text-center">
                       {operator.total_attestations_missed}
-                    </GlassTableCell>
-                    <GlassTableCell className="text-center">
-                      {operator.total_blocks_proposed}
-                    </GlassTableCell>
-                    <GlassTableCell className="text-center">
-                      {operator.total_blocks_missed}
-                    </GlassTableCell>
-                    <GlassTableCell className="text-center">
-                      {operator.avg_sync_performance > 0 ? `${operator.avg_sync_performance.toFixed(1)}%` : '-'}
                     </GlassTableCell>
                   </GlassTableRow>
                 ))}
