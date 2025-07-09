@@ -738,19 +738,13 @@ async def get_theoretical_performance(
         min_available_epoch = int(min_epoch_data[0][0])
         epochs_requested = 225
         
-        # Check if we have enough historical data
+        # Check if we have enough historical data, if not use available data
         if start_epoch < min_available_epoch:
             epochs_available = latest_epoch - min_available_epoch + 1
-            return {
-                "error": "Insufficient data available",
-                "message": f"Not enough historical data to perform {epochs_requested} epoch analysis",
-                "epochs_requested": epochs_requested,
-                "epochs_available": epochs_available,
-                "latest_epoch": latest_epoch,
-                "min_available_epoch": min_available_epoch,
-                "requested_start_epoch": start_epoch,
-                "data_completeness_percentage": round((epochs_available / epochs_requested) * 100, 2)
-            }
+            # Use available data instead of returning error
+            start_epoch = min_available_epoch
+            epochs_requested = epochs_available
+            logger.info(f"Using {epochs_available} epochs instead of 225 due to insufficient data")
         
         # Single bulk query for all operators with fixed calculation
         query = f"""
