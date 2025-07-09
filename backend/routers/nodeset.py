@@ -568,21 +568,14 @@ async def get_below_threshold_extended(
         
         min_available_epoch = int(min_epoch_data[0][0])
         
-        # Check if we have enough historical data
+        # Check if we have enough historical data, if not use available data
         if start_epoch < min_available_epoch:
             epochs_available = latest_epoch - min_available_epoch + 1
-            return {
-                "error": "Insufficient data available",
-                "message": f"Not enough historical data to perform {total_epochs} epoch analysis ({days} days)",
-                "epochs_requested": total_epochs,
-                "epochs_available": epochs_available,
-                "days_requested": days,
-                "days_available": round(epochs_available / 225, 2),
-                "latest_epoch": latest_epoch,
-                "min_available_epoch": min_available_epoch,
-                "requested_start_epoch": start_epoch,
-                "data_completeness_percentage": round((epochs_available / total_epochs) * 100, 2)
-            }
+            # Use available data instead of returning error
+            start_epoch = min_available_epoch
+            total_epochs = epochs_available
+            days = round(epochs_available / 225, 2)
+            logger.info(f"Using {epochs_available} epochs ({days} days) instead of requested due to insufficient data")
         
         # Query to find validators below threshold
         # Calculate theoretical maximum rewards vs actual rewards
