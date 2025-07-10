@@ -874,6 +874,117 @@ async def get_theoretical_performance(
         logger.error(f"Failed to get theoretical performance: {e}")
         raise HTTPException(status_code=500, detail=f"Database query failed: {str(e)}")
 
+@router.get("/validator-accuracy")
+async def get_validator_accuracy(
+    start_epoch: Optional[int] = Query(None, description="Start epoch (inclusive)"),
+    end_epoch: Optional[int] = Query(None, description="End epoch (inclusive)"),
+    operator: Optional[str] = Query(None, description="Filter by specific NodeSet operator address")
+) -> Dict[str, Any]:
+    """Get comprehensive validator accuracy metrics for NodeSet operators only"""
+    
+    if not clickhouse_service.is_available():
+        raise HTTPException(
+            status_code=503, 
+            detail="ClickHouse service is not available"
+        )
+    
+    try:
+        results = clickhouse_service.get_nodeset_validator_accuracy(start_epoch, end_epoch, operator)
+        
+        return {
+            "success": True,
+            "data": results,
+            "count": len(results),
+            "filters": {
+                "start_epoch": start_epoch,
+                "end_epoch": end_epoch,
+                "operator": operator
+            },
+            "source": "clickhouse",
+            "scope": "nodeset_validators_only"
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to get NodeSet validator accuracy: {e}")
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Database query failed: {str(e)}"
+        )
+
+@router.get("/performance-trends")
+async def get_performance_trends(
+    start_epoch: Optional[int] = Query(None, description="Start epoch (inclusive)"),
+    end_epoch: Optional[int] = Query(None, description="End epoch (inclusive)")
+) -> Dict[str, Any]:
+    """Get NodeSet performance trends across epochs"""
+    
+    if not clickhouse_service.is_available():
+        raise HTTPException(
+            status_code=503, 
+            detail="ClickHouse service is not available"
+        )
+    
+    try:
+        results = clickhouse_service.get_nodeset_performance_trends(start_epoch, end_epoch)
+        
+        return {
+            "success": True,
+            "data": results,
+            "count": len(results),
+            "filters": {
+                "start_epoch": start_epoch,
+                "end_epoch": end_epoch
+            },
+            "source": "clickhouse",
+            "scope": "nodeset_validators_only"
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to get NodeSet performance trends: {e}")
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Database query failed: {str(e)}"
+        )
+
+@router.get("/validator-details")
+async def get_validator_details(
+    validator_id: Optional[int] = Query(None, description="Specific NodeSet validator ID"),
+    start_epoch: Optional[int] = Query(None, description="Start epoch (inclusive)"),
+    end_epoch: Optional[int] = Query(None, description="End epoch (inclusive)"),
+    limit: int = Query(1000, description="Maximum number of records to return", le=10000)
+) -> Dict[str, Any]:
+    """Get detailed NodeSet validator performance data only"""
+    
+    if not clickhouse_service.is_available():
+        raise HTTPException(
+            status_code=503, 
+            detail="ClickHouse service is not available"
+        )
+    
+    try:
+        results = clickhouse_service.get_nodeset_validator_details(validator_id, start_epoch, end_epoch, limit)
+        
+        return {
+            "success": True,
+            "data": results,
+            "count": len(results),
+            "filters": {
+                "validator_id": validator_id,
+                "start_epoch": start_epoch,
+                "end_epoch": end_epoch,
+                "limit": limit
+            },
+            "source": "clickhouse",
+            "scope": "nodeset_validators_only"
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to get NodeSet validator details: {e}")
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Database query failed: {str(e)}"
+        )
+
 @router.get("/theoretical_performance/extended")
 async def get_theoretical_performance_extended(
     days: int = Query(1, description="Number of days to analyze (1-31)", ge=1, le=31),
