@@ -1302,7 +1302,7 @@ async def get_theoretical_performance_all(
                     
                     # Calculate individual efficiencies
                     attester_efficiency = (attester_actual * 100.0 / attester_ideal) if attester_ideal > 0 else 0.0
-                    proposer_efficiency = (proposer_actual * 100.0 / proposer_ideal) if proposer_ideal > 0 else 0.0
+                    proposer_efficiency = min(100.0, (proposer_actual * 100.0 / proposer_ideal)) if proposer_ideal > 0 else 0.0
                     sync_efficiency = (sync_actual * 100.0 / sync_ideal) if sync_ideal > 0 else 0.0
                     overall_efficiency = (total_actual * 100.0 / total_ideal) if total_ideal > 0 else 0.0
                     
@@ -1485,7 +1485,7 @@ async def get_theoretical_performance_all_extended(
                     
                     # Calculate individual efficiencies
                     attester_efficiency = (attester_actual * 100.0 / attester_ideal) if attester_ideal > 0 else 0.0
-                    proposer_efficiency = (proposer_actual * 100.0 / proposer_ideal) if proposer_ideal > 0 else 0.0
+                    proposer_efficiency = min(100.0, (proposer_actual * 100.0 / proposer_ideal)) if proposer_ideal > 0 else 0.0
                     sync_efficiency = (sync_actual * 100.0 / sync_ideal) if sync_ideal > 0 else 0.0
                     overall_efficiency = (total_actual * 100.0 / total_ideal) if total_ideal > 0 else 0.0
                     
