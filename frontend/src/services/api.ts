@@ -16,6 +16,7 @@ import {
   SyncCommitteeData,
   ENSSourcesData,
   TheoreticalPerformanceData,
+  TheoreticalPerformanceError,
 } from '../types/api';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL;
@@ -153,6 +154,12 @@ class ApiService {
   // NodeSet theoretical performance endpoint
   async getTheoreticalPerformance(): Promise<TheoreticalPerformanceData[]> {
     const response = await this.apiClient.get<TheoreticalPerformanceData[]>('/api/nodeset/theoretical_performance_all?limit=1000');
+    return response.data;
+  }
+
+  // NodeSet theoretical performance extended endpoint with configurable days
+  async getTheoreticalPerformanceExtended(days: number = 1): Promise<TheoreticalPerformanceData[] | TheoreticalPerformanceError> {
+    const response = await this.apiClient.get<TheoreticalPerformanceData[] | TheoreticalPerformanceError>(`/api/nodeset/theoretical_performance_all/extended?days=${days}&limit=1000`);
     return response.data;
   }
 

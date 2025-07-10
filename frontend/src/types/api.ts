@@ -423,4 +423,18 @@ export interface TheoreticalPerformanceData {
   latest_epoch: number;
   start_epoch: number;
   epochs_analyzed: number;
+  days_analyzed?: number;
+}
+
+export interface TheoreticalPerformanceError {
+  error: string;
+  message: string;
+  epochs_requested: number;
+  epochs_available: number;
+  days_requested?: number;
+  days_available?: number;
+  latest_epoch: number;
+  min_available_epoch: number;
+  requested_start_epoch: number;
+  data_completeness_percentage: number;
 }

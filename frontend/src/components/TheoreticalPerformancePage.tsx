@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { TheoreticalPerformanceData } from '../types/api';
+import { TheoreticalPerformanceData, TheoreticalPerformanceError } from '../types/api';
 import { apiService } from '../services/api';
 import LoadingSpinner from './common/LoadingSpinner';
 import Icon from './common/Icon';
@@ -9,32 +9,42 @@ const TheoreticalPerformancePage: React.FC = () => {
   const [data, setData] = useState<TheoreticalPerformanceData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [insufficientDataError, setInsufficientDataError] = useState<TheoreticalPerformanceError | null>(null);
+  const [days, setDays] = useState<number>(1);
+  const [inputDays, setInputDays] = useState<string>('1');
+
+  const fetchData = async (daysToFetch: number) => {
+    try {
+      setLoading(true);
+      setError(null);
+      setInsufficientDataError(null);
+      
+      // Ensure loading state is visible for at least 500ms
+      const [theoreticalData] = await Promise.all([
+        apiService.getTheoreticalPerformanceExtended(daysToFetch),
+        new Promise(resolve => setTimeout(resolve, 500))
+      ]);
+      
+      // Check if response is an error (insufficient data)
+      if (theoreticalData && 'error' in theoreticalData) {
+        setInsufficientDataError(theoreticalData as TheoreticalPerformanceError);
+        setData([]);
+      } else {
+        // Sort by overall_efficiency high to low
+        const sortedData = (theoreticalData as TheoreticalPerformanceData[]).sort((a, b) => b.overall_efficiency - a.overall_efficiency);
+        setData(sortedData);
+        setInsufficientDataError(null);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch theoretical performance data');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        
-        // Ensure loading state is visible for at least 500ms
-        const [theoreticalData] = await Promise.all([
-          apiService.getTheoreticalPerformance(),
-          new Promise(resolve => setTimeout(resolve, 500))
-        ]);
-        
-        // Sort by overall_efficiency high to low
-        const sortedData = theoreticalData.sort((a, b) => b.overall_efficiency - a.overall_efficiency);
-        
-        setData(sortedData);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to fetch theoretical performance data');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
+    fetchData(days);
+  }, [days]);
 
   // Helper function to format rewards
   const formatRewards = (rewards: number): string => {
@@ -111,6 +121,127 @@ const TheoreticalPerformancePage: React.FC = () => {
     );
   }
 
+  const handleDaysSubmit = () => {
+    const parsedDays = parseInt(inputDays);
+    if (parsedDays >= 1 && parsedDays <= 31) {
+      setDays(parsedDays);
+    } else {
+      setError('Days must be between 1 and 31');
+    }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInputDays(e.target.value);
+    setError(null);
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleDaysSubmit();
+    }
+  };
+
+  if (insufficientDataError) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 p-6">
+        <div className="max-w-7xl mx-auto">
+          {/* Header */}
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-3">
+              <Icon name="metrics" size="lg" color="primary" />
+              Theoretical Performance Analysis
+            </h1>
+          </div>
+
+          {/* Days Input */}
+          <div className="mb-8">
+            <div className="
+              bg-glass-light dark:bg-glass-dark 
+              backdrop-blur-glass dark:backdrop-blur-glass-dark dark:backdrop-saturate-140
+              border border-gray-200 dark:border-white/15
+              rounded-2xl 
+              shadow-glass-light dark:shadow-glass-dark
+              p-6
+            ">
+              <div className="flex items-center gap-4">
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Analysis Period (Days):</label>
+                <input
+                  type="number"
+                  min="1"
+                  max="31"
+                  value={inputDays}
+                  onChange={handleInputChange}
+                  onKeyPress={handleKeyPress}
+                  className="
+                    px-3 py-2 border border-gray-300 dark:border-gray-600 
+                    rounded-lg text-sm bg-white dark:bg-gray-800 
+                    text-gray-900 dark:text-white
+                    focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+                    w-20
+                  "
+                />
+                <button
+                  onClick={handleDaysSubmit}
+                  className="
+                    px-4 py-2 bg-blue-600 text-white rounded-lg text-sm
+                    hover:bg-blue-700 focus:ring-2 focus:ring-blue-500
+                    transition-colors
+                  "
+                >
+                  Update
+                </button>
+                <span className="text-sm text-gray-500 dark:text-gray-400">
+                  (1-31 days, each day = 225 epochs)
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Insufficient Data Error */}
+          <div className="
+            bg-glass-light dark:bg-glass-dark 
+            backdrop-blur-glass dark:backdrop-blur-glass-dark dark:backdrop-saturate-140
+            border border-yellow-200 dark:border-yellow-800/50
+            rounded-2xl 
+            shadow-glass-light dark:shadow-glass-dark
+            p-6
+            bg-yellow-50/50 dark:bg-yellow-900/20
+          ">
+            <div className="flex items-start">
+              <Icon name="warning" size="lg" color="warning" className="mr-3 mt-1" />
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-yellow-800 dark:text-yellow-200 mb-2">
+                  Insufficient Historical Data
+                </h3>
+                <p className="text-yellow-700 dark:text-yellow-300 mb-4">
+                  {insufficientDataError.message}
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-yellow-700 dark:text-yellow-300">
+                  <div className="space-y-2">
+                    <div><strong>Requested:</strong> {insufficientDataError.days_requested || insufficientDataError.epochs_requested} {insufficientDataError.days_requested ? 'days' : 'epochs'}</div>
+                    <div><strong>Available:</strong> {insufficientDataError.days_available || insufficientDataError.epochs_available} {insufficientDataError.days_available ? 'days' : 'epochs'}</div>
+                    <div><strong>Data Completeness:</strong> {insufficientDataError.data_completeness_percentage.toFixed(1)}%</div>
+                  </div>
+                  <div className="space-y-2">
+                    <div><strong>Latest Epoch:</strong> {insufficientDataError.latest_epoch}</div>
+                    <div><strong>Min Available Epoch:</strong> {insufficientDataError.min_available_epoch}</div>
+                    <div><strong>Requested Start Epoch:</strong> {insufficientDataError.requested_start_epoch}</div>
+                  </div>
+                </div>
+                <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                  <p className="text-sm text-blue-700 dark:text-blue-200">
+                    <Icon name="info" size="sm" color="primary" className="inline mr-1" />
+                    Try reducing the number of days to {insufficientDataError.days_available || Math.floor(insufficientDataError.epochs_available / 225)} or fewer to see available data.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (error) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 p-6">
@@ -161,11 +292,64 @@ const TheoreticalPerformancePage: React.FC = () => {
               </div>
               <div className="ml-3">
                 <p className="text-sm text-blue-700 dark:text-blue-200">
-                  Comprehensive efficiency analysis using industry-standard methodology over a 1 day period (225 epochs).
+                  Comprehensive efficiency analysis using industry-standard methodology over a configurable period ({days} day{days !== 1 ? 's' : ''} = {days * 225} epochs).
                   Shows attester, proposer, and sync committee efficiency with overall efficiency calculation.
                   Data is aggregated by operator and sorted by overall efficiency (high to low).
                 </p>
               </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Days Input Controls */}
+        <div className="mb-8">
+          <div className="
+            bg-glass-light dark:bg-glass-dark 
+            backdrop-blur-glass dark:backdrop-blur-glass-dark dark:backdrop-saturate-140
+            border border-gray-200 dark:border-white/15
+            rounded-2xl 
+            shadow-glass-light dark:shadow-glass-dark
+            p-6
+          ">
+            <div className="flex items-center gap-4 flex-wrap">
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Analysis Period (Days):
+              </label>
+              <input
+                type="number"
+                min="1"
+                max="31"
+                value={inputDays}
+                onChange={handleInputChange}
+                onKeyPress={handleKeyPress}
+                className="
+                  px-3 py-2 border border-gray-300 dark:border-gray-600 
+                  rounded-lg text-sm bg-white dark:bg-gray-800 
+                  text-gray-900 dark:text-white
+                  focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+                  w-20
+                "
+              />
+              <button
+                onClick={handleDaysSubmit}
+                disabled={loading}
+                className="
+                  px-4 py-2 bg-blue-600 text-white rounded-lg text-sm
+                  hover:bg-blue-700 focus:ring-2 focus:ring-blue-500
+                  disabled:opacity-50 disabled:cursor-not-allowed
+                  transition-colors
+                "
+              >
+                {loading ? 'Loading...' : 'Update'}
+              </button>
+              <span className="text-sm text-gray-500 dark:text-gray-400">
+                (1-31 days, each day = 225 epochs)
+              </span>
+              {error && (
+                <div className="text-sm text-red-600 dark:text-red-400">
+                  {error}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -334,7 +518,7 @@ const TheoreticalPerformancePage: React.FC = () => {
         {/* Footer Info */}
         <div className="mt-6 text-center text-sm text-gray-500 dark:text-gray-400">
           <p>
-            Analysis period: {data.length > 0 ? `${data[0].epochs_analyzed} epochs` : 'N/A'} | 
+            Analysis period: {data.length > 0 ? `${data[0].days_analyzed || days} day${(data[0].days_analyzed || days) !== 1 ? 's' : ''} (${data[0].epochs_analyzed} epochs)` : 'N/A'} | 
             Latest epoch: {data.length > 0 ? data[0].latest_epoch : 'N/A'} | 
             Start epoch: {data.length > 0 ? data[0].start_epoch : 'N/A'}
           </p>
