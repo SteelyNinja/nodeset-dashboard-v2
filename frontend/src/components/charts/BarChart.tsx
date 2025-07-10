@@ -139,7 +139,7 @@ const BarChartComponent: React.FC<BarChartProps> = ({
             top: 20,
             right: 30,
             left: 60,
-            bottom: 30,
+            bottom: 60,
           }}
         >
           <CartesianGrid 
@@ -156,7 +156,7 @@ const BarChartComponent: React.FC<BarChartProps> = ({
             }}
             axisLine={{ stroke: '#cbd5e1', strokeWidth: 1 }}
             interval={0}
-            height={35}
+            height={60}
             angle={-45}
           />
           <YAxis 
