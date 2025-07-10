@@ -1224,29 +1224,28 @@ async def get_theoretical_performance_all(
             epochs_requested = epochs_available
             logger.info(f"Using {epochs_available} epochs instead of 225 due to insufficient data")
         
-        # Calculate the period-wide average proposal reward for baseline comparison
-        baseline_query = f"""
-        SELECT AVG(propose_earned_reward) as period_avg_proposal_reward
-        FROM validators_summary
-        WHERE epoch >= {start_epoch} AND epoch <= {latest_epoch}
-        AND is_proposer = 1 AND block_proposed = 1
-        AND propose_earned_reward > 0
-        """
-        
-        baseline_data = clickhouse_service.execute_query(baseline_query)
-        period_avg_reward = float(baseline_data[0][0]) if baseline_data and baseline_data[0][0] else 47000000  # Fallback average
-        
-        # Query for comprehensive efficiency analysis with corrected proposer calculation
+        # Query for comprehensive efficiency analysis with epoch-specific median comparison
         query = f"""
+        WITH epoch_medians AS (
+            -- Calculate median proposal reward for each epoch (from other 31 proposals)
+            SELECT 
+                epoch,
+                median(propose_earned_reward) as epoch_median_reward
+            FROM validators_summary
+            WHERE epoch >= {start_epoch} AND epoch <= {latest_epoch}
+            AND is_proposer = 1 AND block_proposed = 1
+            AND propose_earned_reward > 0
+            GROUP BY epoch
+        )
         SELECT 
             val_nos_name as operator,
             COUNT(DISTINCT val_id) as validator_count,
             -- Attestation rewards (unchanged)
             SUM(COALESCE(att_earned_reward, 0)) as total_attester_actual_reward,
             SUM(COALESCE(att_earned_reward, 0) + COALESCE(att_missed_reward, 0)) as total_attester_ideal_reward,
-            -- Proposer rewards (corrected with baseline comparison)
+            -- Proposer rewards (corrected with epoch-specific median comparison)
             SUM(CASE WHEN is_proposer = 1 THEN COALESCE(propose_earned_reward, 0) ELSE 0 END) as total_proposer_actual_reward,
-            SUM(CASE WHEN is_proposer = 1 THEN {period_avg_reward} ELSE 0 END) as total_proposer_ideal_reward,
+            SUM(CASE WHEN is_proposer = 1 THEN COALESCE(em.epoch_median_reward, 47000000) ELSE 0 END) as total_proposer_ideal_reward,
             -- Sync committee rewards (unchanged)
             SUM(CASE WHEN is_sync = 1 THEN COALESCE(sync_earned_reward, 0) ELSE 0 END) as total_sync_actual_reward,
             SUM(CASE WHEN is_sync = 1 THEN COALESCE(sync_earned_reward, 0) + COALESCE(sync_missed_reward, 0) ELSE 0 END) as total_sync_ideal_reward,
@@ -1259,22 +1258,23 @@ async def get_theoretical_performance_all(
             SUM(CASE WHEN is_sync = 1 THEN 1 ELSE 0 END) as total_sync_duties,
             AVG(CASE WHEN is_sync = 1 AND sync_percent IS NOT NULL THEN sync_percent ELSE NULL END) as avg_sync_participation,
             COUNT(*) as total_epochs_data
-        FROM validators_summary
-        WHERE epoch >= {start_epoch}
-        AND epoch <= {latest_epoch}
-        AND val_nos_name IS NOT NULL
-        AND val_status NOT IN ('exited', 'withdrawal_possible', 'withdrawal_done')
-        GROUP BY val_nos_name
+        FROM validators_summary vs
+        LEFT JOIN epoch_medians em ON vs.epoch = em.epoch
+        WHERE vs.epoch >= {start_epoch}
+        AND vs.epoch <= {latest_epoch}
+        AND vs.val_nos_name IS NOT NULL
+        AND vs.val_status NOT IN ('exited', 'withdrawal_possible', 'withdrawal_done')
+        GROUP BY vs.val_nos_name
         ORDER BY (
             CASE 
                 WHEN (SUM(COALESCE(att_earned_reward, 0) + COALESCE(att_missed_reward, 0)) + 
-                      SUM(CASE WHEN is_proposer = 1 THEN {period_avg_reward} ELSE 0 END) + 
+                      SUM(CASE WHEN is_proposer = 1 THEN COALESCE(em.epoch_median_reward, 47000000) ELSE 0 END) + 
                       SUM(CASE WHEN is_sync = 1 THEN COALESCE(sync_earned_reward, 0) + COALESCE(sync_missed_reward, 0) ELSE 0 END)) > 0 
                 THEN ((SUM(COALESCE(att_earned_reward, 0)) + 
                        SUM(CASE WHEN is_proposer = 1 THEN COALESCE(propose_earned_reward, 0) ELSE 0 END) + 
                        SUM(CASE WHEN is_sync = 1 THEN COALESCE(sync_earned_reward, 0) ELSE 0 END)) * 100.0 / 
                       (SUM(COALESCE(att_earned_reward, 0) + COALESCE(att_missed_reward, 0)) + 
-                       SUM(CASE WHEN is_proposer = 1 THEN {period_avg_reward} ELSE 0 END) + 
+                       SUM(CASE WHEN is_proposer = 1 THEN COALESCE(em.epoch_median_reward, 47000000) ELSE 0 END) + 
                        SUM(CASE WHEN is_sync = 1 THEN COALESCE(sync_earned_reward, 0) + COALESCE(sync_missed_reward, 0) ELSE 0 END)))
                 ELSE 0.0
             END
@@ -1410,29 +1410,28 @@ async def get_theoretical_performance_all_extended(
             days_actual = round(epochs_available / 225, 2)
             logger.info(f"Using {epochs_available} epochs ({days_actual} days) instead of requested {days} days due to insufficient data")
         
-        # Calculate the period-wide average proposal reward for baseline comparison
-        baseline_query = f"""
-        SELECT AVG(propose_earned_reward) as period_avg_proposal_reward
-        FROM validators_summary
-        WHERE epoch >= {start_epoch} AND epoch <= {latest_epoch}
-        AND is_proposer = 1 AND block_proposed = 1
-        AND propose_earned_reward > 0
-        """
-        
-        baseline_data = clickhouse_service.execute_query(baseline_query)
-        period_avg_reward = float(baseline_data[0][0]) if baseline_data and baseline_data[0][0] else 47000000  # Fallback average
-        
-        # Query with corrected proposer calculation (same as regular _all endpoint but with configurable days)
+        # Query with epoch-specific median comparison (same as regular _all endpoint but with configurable days)
         query = f"""
+        WITH epoch_medians AS (
+            -- Calculate median proposal reward for each epoch (from other 31 proposals)
+            SELECT 
+                epoch,
+                median(propose_earned_reward) as epoch_median_reward
+            FROM validators_summary
+            WHERE epoch >= {start_epoch} AND epoch <= {latest_epoch}
+            AND is_proposer = 1 AND block_proposed = 1
+            AND propose_earned_reward > 0
+            GROUP BY epoch
+        )
         SELECT 
             val_nos_name as operator,
             COUNT(DISTINCT val_id) as validator_count,
             -- Attestation rewards (unchanged)
             SUM(COALESCE(att_earned_reward, 0)) as total_attester_actual_reward,
             SUM(COALESCE(att_earned_reward, 0) + COALESCE(att_missed_reward, 0)) as total_attester_ideal_reward,
-            -- Proposer rewards (corrected with baseline comparison)
+            -- Proposer rewards (corrected with epoch-specific median comparison)
             SUM(CASE WHEN is_proposer = 1 THEN COALESCE(propose_earned_reward, 0) ELSE 0 END) as total_proposer_actual_reward,
-            SUM(CASE WHEN is_proposer = 1 THEN {period_avg_reward} ELSE 0 END) as total_proposer_ideal_reward,
+            SUM(CASE WHEN is_proposer = 1 THEN COALESCE(em.epoch_median_reward, 47000000) ELSE 0 END) as total_proposer_ideal_reward,
             -- Sync committee rewards (only when is_sync = 1)
             SUM(CASE WHEN is_sync = 1 THEN COALESCE(sync_earned_reward, 0) ELSE 0 END) as total_sync_actual_reward,
             SUM(CASE WHEN is_sync = 1 THEN COALESCE(sync_earned_reward, 0) + COALESCE(sync_missed_reward, 0) ELSE 0 END) as total_sync_ideal_reward,
@@ -1445,22 +1444,23 @@ async def get_theoretical_performance_all_extended(
             SUM(CASE WHEN is_sync = 1 THEN 1 ELSE 0 END) as total_sync_duties,
             AVG(CASE WHEN is_sync = 1 AND sync_percent IS NOT NULL THEN sync_percent ELSE NULL END) as avg_sync_participation,
             COUNT(*) as total_epochs_data
-        FROM validators_summary
-        WHERE epoch >= {start_epoch}
-        AND epoch <= {latest_epoch}
-        AND val_nos_name IS NOT NULL
-        AND val_status NOT IN ('exited', 'withdrawal_possible', 'withdrawal_done')
-        GROUP BY val_nos_name
+        FROM validators_summary vs
+        LEFT JOIN epoch_medians em ON vs.epoch = em.epoch
+        WHERE vs.epoch >= {start_epoch}
+        AND vs.epoch <= {latest_epoch}
+        AND vs.val_nos_name IS NOT NULL
+        AND vs.val_status NOT IN ('exited', 'withdrawal_possible', 'withdrawal_done')
+        GROUP BY vs.val_nos_name
         ORDER BY (
             CASE 
                 WHEN (SUM(COALESCE(att_earned_reward, 0) + COALESCE(att_missed_reward, 0)) + 
-                      SUM(CASE WHEN is_proposer = 1 THEN {period_avg_reward} ELSE 0 END) + 
+                      SUM(CASE WHEN is_proposer = 1 THEN COALESCE(em.epoch_median_reward, 47000000) ELSE 0 END) + 
                       SUM(CASE WHEN is_sync = 1 THEN COALESCE(sync_earned_reward, 0) + COALESCE(sync_missed_reward, 0) ELSE 0 END)) > 0 
                 THEN ((SUM(COALESCE(att_earned_reward, 0)) + 
                        SUM(CASE WHEN is_proposer = 1 THEN COALESCE(propose_earned_reward, 0) ELSE 0 END) + 
                        SUM(CASE WHEN is_sync = 1 THEN COALESCE(sync_earned_reward, 0) ELSE 0 END)) * 100.0 / 
                       (SUM(COALESCE(att_earned_reward, 0) + COALESCE(att_missed_reward, 0)) + 
-                       SUM(CASE WHEN is_proposer = 1 THEN {period_avg_reward} ELSE 0 END) + 
+                       SUM(CASE WHEN is_proposer = 1 THEN COALESCE(em.epoch_median_reward, 47000000) ELSE 0 END) + 
                        SUM(CASE WHEN is_sync = 1 THEN COALESCE(sync_earned_reward, 0) + COALESCE(sync_missed_reward, 0) ELSE 0 END)))
                 ELSE 0.0
             END
