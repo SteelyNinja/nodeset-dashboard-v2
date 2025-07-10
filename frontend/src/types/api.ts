@@ -397,15 +397,29 @@ export interface ScatterChartData {
 export interface TheoreticalPerformanceData {
   operator: string;
   validator_count: number;
-  total_actual_rewards: number;
-  total_theoretical_max_rewards: number;
-  operator_reward_percentage: number;
-  avg_validator_reward_percentage: number;
-  total_attestations_made: number;
-  total_attestations_missed: number;
-  total_blocks_proposed: number;
-  total_blocks_missed: number;
-  avg_sync_performance: number;
+  // Reward components
+  attester_actual_reward: number;
+  proposer_actual_reward: number;
+  sync_actual_reward: number;
+  attester_ideal_reward: number;
+  proposer_ideal_reward: number;
+  sync_ideal_reward: number;
+  total_actual_reward: number;
+  total_ideal_reward: number;
+  // Efficiency metrics
+  overall_efficiency: number;
+  attester_efficiency: number;
+  proposer_efficiency: number;
+  sync_efficiency: number;
+  // Performance metrics
+  successful_attestations: number;
+  missed_attestations: number;
+  successful_proposals: number;
+  missed_proposals: number;
+  total_proposer_duties: number;
+  total_sync_duties: number;
+  avg_sync_participation: number;
+  total_epochs_data: number;
   latest_epoch: number;
   start_epoch: number;
   epochs_analyzed: number;

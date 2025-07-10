@@ -152,7 +152,7 @@ class ApiService {
 
   // NodeSet theoretical performance endpoint
   async getTheoreticalPerformance(): Promise<TheoreticalPerformanceData[]> {
-    const response = await this.apiClient.get<TheoreticalPerformanceData[]>('/api/nodeset/theoretical_performance?limit=1000');
+    const response = await this.apiClient.get<TheoreticalPerformanceData[]>('/api/nodeset/theoretical_performance_all?limit=1000');
     return response.data;
   }
 

@@ -22,8 +22,8 @@ const TheoreticalPerformancePage: React.FC = () => {
           new Promise(resolve => setTimeout(resolve, 500))
         ]);
         
-        // Sort by operator_reward_percentage high to low
-        const sortedData = theoreticalData.sort((a, b) => b.operator_reward_percentage - a.operator_reward_percentage);
+        // Sort by overall_efficiency high to low
+        const sortedData = theoreticalData.sort((a, b) => b.overall_efficiency - a.overall_efficiency);
         
         setData(sortedData);
       } catch (err) {
@@ -161,8 +161,9 @@ const TheoreticalPerformancePage: React.FC = () => {
               </div>
               <div className="ml-3">
                 <p className="text-sm text-blue-700 dark:text-blue-200">
-                  Theoretical performance analysis showing actual vs maximum possible attestation rewards over a 1 day period (225 epochs).
-                  Data is aggregated by operator and sorted by reward percentage (high to low).
+                  Comprehensive efficiency analysis using industry-standard methodology over a 1 day period (225 epochs).
+                  Shows attester, proposer, and sync committee efficiency with overall efficiency calculation.
+                  Data is aggregated by operator and sorted by overall efficiency (high to low).
                 </p>
               </div>
             </div>
@@ -211,10 +212,10 @@ const TheoreticalPerformancePage: React.FC = () => {
               p-4
             ">
               <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                {loading ? '...' : data.length > 0 ? (data.reduce((sum, op) => sum + op.operator_reward_percentage, 0) / data.length).toFixed(2) + '%' : '0.00%'}
+                {loading ? '...' : data.length > 0 ? (data.reduce((sum, op) => sum + op.overall_efficiency, 0) / data.length).toFixed(2) + '%' : '0.00%'}
               </div>
               <div className="text-sm text-gray-600 dark:text-gray-400">
-                Average Performance
+                Average Efficiency
               </div>
             </div>
             <div className="
@@ -226,10 +227,10 @@ const TheoreticalPerformancePage: React.FC = () => {
               p-4
             ">
               <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                {loading ? '...' : data.length > 0 ? data[0].operator_reward_percentage.toFixed(2) + '%' : '0.00%'}
+                {loading ? '...' : data.length > 0 ? data[0].overall_efficiency.toFixed(2) + '%' : '0.00%'}
               </div>
               <div className="text-sm text-gray-600 dark:text-gray-400">
-                Best Performance
+                Best Efficiency
               </div>
             </div>
           </div>
@@ -247,10 +248,10 @@ const TheoreticalPerformancePage: React.FC = () => {
           <div className="p-6 border-b border-gray-200 dark:border-gray-700">
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2">
               <Icon name="chart" size="lg" color="primary" />
-              Theoretical Performance Data
+              Efficiency Analysis
             </h2>
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-              {loading ? 'Loading data...' : `Showing ${data.length} operators sorted by reward percentage`}
+              {loading ? 'Loading data...' : `Showing ${data.length} operators sorted by overall efficiency`}
             </p>
           </div>
 
@@ -273,11 +274,13 @@ const TheoreticalPerformancePage: React.FC = () => {
                   <GlassTableCell header>Rank</GlassTableCell>
                   <GlassTableCell header>Operator</GlassTableCell>
                   <GlassTableCell header>Validators</GlassTableCell>
-                  <GlassTableCell header>Reward %</GlassTableCell>
-                  <GlassTableCell header>Actual Rewards (Gwei)</GlassTableCell>
-                  <GlassTableCell header>Max Rewards (Gwei)</GlassTableCell>
-                  <GlassTableCell header>Attestations Made</GlassTableCell>
-                  <GlassTableCell header>Attestations Missed</GlassTableCell>
+                  <GlassTableCell header>Overall Efficiency %</GlassTableCell>
+                  <GlassTableCell header>Attester %</GlassTableCell>
+                  <GlassTableCell header>Proposer %</GlassTableCell>
+                  <GlassTableCell header>Sync %</GlassTableCell>
+                  <GlassTableCell header>Total Rewards (Gwei)</GlassTableCell>
+                  <GlassTableCell header>Attestations</GlassTableCell>
+                  <GlassTableCell header>Proposals</GlassTableCell>
                 </GlassTableRow>
               </GlassTableHeader>
               <GlassTableBody>
@@ -292,20 +295,34 @@ const TheoreticalPerformancePage: React.FC = () => {
                     <GlassTableCell className="text-center">
                       {operator.validator_count}
                     </GlassTableCell>
-                    <GlassTableCell className={`font-bold ${getPerformanceColor(operator.operator_reward_percentage)}`}>
-                      {operator.operator_reward_percentage.toFixed(3)}%
+                    <GlassTableCell className={`font-bold ${getPerformanceColor(operator.overall_efficiency)}`}>
+                      {operator.overall_efficiency.toFixed(3)}%
+                    </GlassTableCell>
+                    <GlassTableCell className={`font-medium ${getPerformanceColor(operator.attester_efficiency)}`}>
+                      {operator.attester_efficiency.toFixed(2)}%
+                    </GlassTableCell>
+                    <GlassTableCell className={`font-medium ${operator.total_proposer_duties > 0 ? getPerformanceColor(operator.proposer_efficiency) : 'text-gray-400 dark:text-gray-500'}`}>
+                      {operator.total_proposer_duties > 0 ? `${operator.proposer_efficiency.toFixed(2)}%` : 'N/A'}
+                    </GlassTableCell>
+                    <GlassTableCell className={`font-medium ${operator.total_sync_duties > 0 ? getPerformanceColor(operator.sync_efficiency) : 'text-gray-400 dark:text-gray-500'}`}>
+                      {operator.total_sync_duties > 0 ? `${operator.sync_efficiency.toFixed(2)}%` : 'N/A'}
                     </GlassTableCell>
                     <GlassTableCell className="font-mono text-right">
-                      {formatRewards(operator.total_actual_rewards)}
+                      {formatRewards(operator.total_actual_reward)}
                     </GlassTableCell>
-                    <GlassTableCell className="font-mono text-right">
-                      {formatRewards(operator.total_theoretical_max_rewards)}
+                    <GlassTableCell className="text-center text-sm">
+                      <div className="text-green-600 dark:text-green-400">{operator.successful_attestations}</div>
+                      <div className="text-red-600 dark:text-red-400 text-xs">({operator.missed_attestations} missed)</div>
                     </GlassTableCell>
-                    <GlassTableCell className="text-center">
-                      {operator.total_attestations_made}
-                    </GlassTableCell>
-                    <GlassTableCell className="text-center">
-                      {operator.total_attestations_missed}
+                    <GlassTableCell className="text-center text-sm">
+                      {operator.total_proposer_duties > 0 ? (
+                        <div>
+                          <div className="text-green-600 dark:text-green-400">{operator.successful_proposals}</div>
+                          <div className="text-red-600 dark:text-red-400 text-xs">({operator.missed_proposals} missed)</div>
+                        </div>
+                      ) : (
+                        <span className="text-gray-400 dark:text-gray-500">N/A</span>
+                      )}
                     </GlassTableCell>
                   </GlassTableRow>
                 ))}

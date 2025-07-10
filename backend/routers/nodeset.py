@@ -692,6 +692,117 @@ async def get_below_threshold_extended(
         logger.error(f"Failed to get below threshold validators extended: {e}")
         raise HTTPException(status_code=500, detail=f"Database query failed: {str(e)}")
 
+@router.get("/validator-accuracy")
+async def get_validator_accuracy(
+    start_epoch: Optional[int] = Query(None, description="Start epoch (inclusive)"),
+    end_epoch: Optional[int] = Query(None, description="End epoch (inclusive)"),
+    operator: Optional[str] = Query(None, description="Filter by specific NodeSet operator address")
+) -> Dict[str, Any]:
+    """Get comprehensive validator accuracy metrics for NodeSet operators only"""
+    
+    if not clickhouse_service.is_available():
+        raise HTTPException(
+            status_code=503, 
+            detail="ClickHouse service is not available"
+        )
+    
+    try:
+        results = clickhouse_service.get_nodeset_validator_accuracy(start_epoch, end_epoch, operator)
+        
+        return {
+            "success": True,
+            "data": results,
+            "count": len(results),
+            "filters": {
+                "start_epoch": start_epoch,
+                "end_epoch": end_epoch,
+                "operator": operator
+            },
+            "source": "clickhouse",
+            "scope": "nodeset_validators_only"
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to get NodeSet validator accuracy: {e}")
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Database query failed: {str(e)}"
+        )
+
+@router.get("/performance-trends")
+async def get_performance_trends(
+    start_epoch: Optional[int] = Query(None, description="Start epoch (inclusive)"),
+    end_epoch: Optional[int] = Query(None, description="End epoch (inclusive)")
+) -> Dict[str, Any]:
+    """Get NodeSet performance trends across epochs"""
+    
+    if not clickhouse_service.is_available():
+        raise HTTPException(
+            status_code=503, 
+            detail="ClickHouse service is not available"
+        )
+    
+    try:
+        results = clickhouse_service.get_nodeset_performance_trends(start_epoch, end_epoch)
+        
+        return {
+            "success": True,
+            "data": results,
+            "count": len(results),
+            "filters": {
+                "start_epoch": start_epoch,
+                "end_epoch": end_epoch
+            },
+            "source": "clickhouse",
+            "scope": "nodeset_validators_only"
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to get NodeSet performance trends: {e}")
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Database query failed: {str(e)}"
+        )
+
+@router.get("/validator-details")
+async def get_validator_details(
+    validator_id: Optional[int] = Query(None, description="Specific NodeSet validator ID"),
+    start_epoch: Optional[int] = Query(None, description="Start epoch (inclusive)"),
+    end_epoch: Optional[int] = Query(None, description="End epoch (inclusive)"),
+    limit: int = Query(1000, description="Maximum number of records to return", le=10000)
+) -> Dict[str, Any]:
+    """Get detailed NodeSet validator performance data only"""
+    
+    if not clickhouse_service.is_available():
+        raise HTTPException(
+            status_code=503, 
+            detail="ClickHouse service is not available"
+        )
+    
+    try:
+        results = clickhouse_service.get_nodeset_validator_details(validator_id, start_epoch, end_epoch, limit)
+        
+        return {
+            "success": True,
+            "data": results,
+            "count": len(results),
+            "filters": {
+                "validator_id": validator_id,
+                "start_epoch": start_epoch,
+                "end_epoch": end_epoch,
+                "limit": limit
+            },
+            "source": "clickhouse",
+            "scope": "nodeset_validators_only"
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to get NodeSet validator details: {e}")
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Database query failed: {str(e)}"
+        )
+
 @router.get("/theoretical_performance")
 async def get_theoretical_performance(
     limit: int = Query(100, description="Maximum number of operators to return")
@@ -874,116 +985,6 @@ async def get_theoretical_performance(
         logger.error(f"Failed to get theoretical performance: {e}")
         raise HTTPException(status_code=500, detail=f"Database query failed: {str(e)}")
 
-@router.get("/validator-accuracy")
-async def get_validator_accuracy(
-    start_epoch: Optional[int] = Query(None, description="Start epoch (inclusive)"),
-    end_epoch: Optional[int] = Query(None, description="End epoch (inclusive)"),
-    operator: Optional[str] = Query(None, description="Filter by specific NodeSet operator address")
-) -> Dict[str, Any]:
-    """Get comprehensive validator accuracy metrics for NodeSet operators only"""
-    
-    if not clickhouse_service.is_available():
-        raise HTTPException(
-            status_code=503, 
-            detail="ClickHouse service is not available"
-        )
-    
-    try:
-        results = clickhouse_service.get_nodeset_validator_accuracy(start_epoch, end_epoch, operator)
-        
-        return {
-            "success": True,
-            "data": results,
-            "count": len(results),
-            "filters": {
-                "start_epoch": start_epoch,
-                "end_epoch": end_epoch,
-                "operator": operator
-            },
-            "source": "clickhouse",
-            "scope": "nodeset_validators_only"
-        }
-        
-    except Exception as e:
-        logger.error(f"Failed to get NodeSet validator accuracy: {e}")
-        raise HTTPException(
-            status_code=500, 
-            detail=f"Database query failed: {str(e)}"
-        )
-
-@router.get("/performance-trends")
-async def get_performance_trends(
-    start_epoch: Optional[int] = Query(None, description="Start epoch (inclusive)"),
-    end_epoch: Optional[int] = Query(None, description="End epoch (inclusive)")
-) -> Dict[str, Any]:
-    """Get NodeSet performance trends across epochs"""
-    
-    if not clickhouse_service.is_available():
-        raise HTTPException(
-            status_code=503, 
-            detail="ClickHouse service is not available"
-        )
-    
-    try:
-        results = clickhouse_service.get_nodeset_performance_trends(start_epoch, end_epoch)
-        
-        return {
-            "success": True,
-            "data": results,
-            "count": len(results),
-            "filters": {
-                "start_epoch": start_epoch,
-                "end_epoch": end_epoch
-            },
-            "source": "clickhouse",
-            "scope": "nodeset_validators_only"
-        }
-        
-    except Exception as e:
-        logger.error(f"Failed to get NodeSet performance trends: {e}")
-        raise HTTPException(
-            status_code=500, 
-            detail=f"Database query failed: {str(e)}"
-        )
-
-@router.get("/validator-details")
-async def get_validator_details(
-    validator_id: Optional[int] = Query(None, description="Specific NodeSet validator ID"),
-    start_epoch: Optional[int] = Query(None, description="Start epoch (inclusive)"),
-    end_epoch: Optional[int] = Query(None, description="End epoch (inclusive)"),
-    limit: int = Query(1000, description="Maximum number of records to return", le=10000)
-) -> Dict[str, Any]:
-    """Get detailed NodeSet validator performance data only"""
-    
-    if not clickhouse_service.is_available():
-        raise HTTPException(
-            status_code=503, 
-            detail="ClickHouse service is not available"
-        )
-    
-    try:
-        results = clickhouse_service.get_nodeset_validator_details(validator_id, start_epoch, end_epoch, limit)
-        
-        return {
-            "success": True,
-            "data": results,
-            "count": len(results),
-            "filters": {
-                "validator_id": validator_id,
-                "start_epoch": start_epoch,
-                "end_epoch": end_epoch,
-                "limit": limit
-            },
-            "source": "clickhouse",
-            "scope": "nodeset_validators_only"
-        }
-        
-    except Exception as e:
-        logger.error(f"Failed to get NodeSet validator details: {e}")
-        raise HTTPException(
-            status_code=500, 
-            detail=f"Database query failed: {str(e)}"
-        )
 
 @router.get("/theoretical_performance/extended")
 async def get_theoretical_performance_extended(
@@ -1167,3 +1168,342 @@ async def get_theoretical_performance_extended(
     except Exception as e:
         logger.error(f"Failed to get theoretical performance extended: {e}")
         raise HTTPException(status_code=500, detail=f"Database query failed: {str(e)}")
+@router.get("/theoretical_performance_all")
+async def get_theoretical_performance_all(
+    limit: int = Query(100, description="Maximum number of operators to return")
+) -> Union[List[Dict[str, Any]], Dict[str, Any]]:
+    """
+    Get comprehensive validator efficiency analysis using enhanced methodology.
+    
+    Calculates overall efficiency using the formula:
+    efficiency = (attester_actualReward + proposer_actualReward + sync_actualReward) / 
+                 (attester_idealReward + proposer_idealReward + sync_idealReward)
+    
+    Component calculations:
+    - Attester efficiency: Uses consensus layer attestation rewards only
+    - Proposer efficiency: Uses consensus layer proposal rewards with ideal calculation
+    - Sync efficiency: Uses consensus layer sync committee rewards only
+    
+    Enhanced with comprehensive efficiency breakdown showing individual component efficiencies
+    for attestation, block proposal, and sync committee duties.
+    
+    When a validator did not participate in a sync committee and/or did not propose a block,
+    the respective rewards & ideal rewards are set to 0.
+    
+    Returns:
+        List of operators with their comprehensive efficiency metrics over 1 day period (225 epochs)
+    """
+    try:
+        if not clickhouse_service.is_available():
+            raise HTTPException(status_code=503, detail="ClickHouse service unavailable")
+        
+        # Get the latest epoch first
+        epoch_query = "SELECT MAX(epoch) FROM validators_summary WHERE val_nos_name IS NOT NULL"
+        epoch_data = clickhouse_service.execute_query(epoch_query)
+        
+        if not epoch_data or not epoch_data[0][0]:
+            raise HTTPException(status_code=404, detail="No epoch data found")
+        
+        latest_epoch = int(epoch_data[0][0])
+        start_epoch = latest_epoch - 224  # 225 epochs total (1 day)
+        
+        # Check if we have sufficient data availability
+        min_epoch_query = "SELECT MIN(epoch) FROM validators_summary WHERE val_nos_name IS NOT NULL"
+        min_epoch_data = clickhouse_service.execute_query(min_epoch_query)
+        
+        if not min_epoch_data or not min_epoch_data[0][0]:
+            raise HTTPException(status_code=404, detail="No minimum epoch data found")
+        
+        min_available_epoch = int(min_epoch_data[0][0])
+        epochs_requested = 225
+        
+        # Check if we have enough historical data, if not use available data
+        if start_epoch < min_available_epoch:
+            epochs_available = latest_epoch - min_available_epoch + 1
+            start_epoch = min_available_epoch
+            epochs_requested = epochs_available
+            logger.info(f"Using {epochs_available} epochs instead of 225 due to insufficient data")
+        
+        # Query for comprehensive efficiency analysis
+        query = f"""
+        SELECT 
+            val_nos_name as operator,
+            COUNT(DISTINCT val_id) as validator_count,
+            -- Attestation rewards
+            SUM(COALESCE(att_earned_reward, 0)) as total_attester_actual_reward,
+            SUM(COALESCE(att_earned_reward, 0) + COALESCE(att_missed_reward, 0)) as total_attester_ideal_reward,
+            -- Proposer rewards (only when is_proposer = 1)
+            SUM(CASE WHEN is_proposer = 1 THEN COALESCE(propose_earned_reward, 0) ELSE 0 END) as total_proposer_actual_reward,
+            SUM(CASE WHEN is_proposer = 1 THEN COALESCE(propose_earned_reward, 0) + COALESCE(propose_missed_reward, 0) ELSE 0 END) as total_proposer_ideal_reward,
+            -- Sync committee rewards (only when is_sync = 1)
+            SUM(CASE WHEN is_sync = 1 THEN COALESCE(sync_earned_reward, 0) ELSE 0 END) as total_sync_actual_reward,
+            SUM(CASE WHEN is_sync = 1 THEN COALESCE(sync_earned_reward, 0) + COALESCE(sync_missed_reward, 0) ELSE 0 END) as total_sync_ideal_reward,
+            -- Performance metrics
+            SUM(CASE WHEN att_happened = 1 THEN 1 ELSE 0 END) as successful_attestations,
+            SUM(CASE WHEN att_happened = 0 OR att_happened IS NULL THEN 1 ELSE 0 END) as missed_attestations,
+            SUM(CASE WHEN is_proposer = 1 AND block_proposed = 1 THEN 1 ELSE 0 END) as successful_proposals,
+            SUM(CASE WHEN is_proposer = 1 AND (block_proposed = 0 OR block_proposed IS NULL) THEN 1 ELSE 0 END) as missed_proposals,
+            SUM(CASE WHEN is_proposer = 1 THEN 1 ELSE 0 END) as total_proposer_duties,
+            SUM(CASE WHEN is_sync = 1 THEN 1 ELSE 0 END) as total_sync_duties,
+            AVG(CASE WHEN is_sync = 1 AND sync_percent IS NOT NULL THEN sync_percent ELSE NULL END) as avg_sync_participation,
+            COUNT(*) as total_epochs_data
+        FROM validators_summary
+        WHERE epoch >= {start_epoch}
+        AND epoch <= {latest_epoch}
+        AND val_nos_name IS NOT NULL
+        AND val_status NOT IN ('exited', 'withdrawal_possible', 'withdrawal_done')
+        GROUP BY val_nos_name
+        ORDER BY (
+            CASE 
+                WHEN (SUM(COALESCE(att_earned_reward, 0) + COALESCE(att_missed_reward, 0)) + 
+                      SUM(CASE WHEN is_proposer = 1 THEN COALESCE(propose_earned_reward, 0) + COALESCE(propose_missed_reward, 0) ELSE 0 END) + 
+                      SUM(CASE WHEN is_sync = 1 THEN COALESCE(sync_earned_reward, 0) + COALESCE(sync_missed_reward, 0) ELSE 0 END)) > 0 
+                THEN ((SUM(COALESCE(att_earned_reward, 0)) + 
+                       SUM(CASE WHEN is_proposer = 1 THEN COALESCE(propose_earned_reward, 0) ELSE 0 END) + 
+                       SUM(CASE WHEN is_sync = 1 THEN COALESCE(sync_earned_reward, 0) ELSE 0 END)) * 100.0 / 
+                      (SUM(COALESCE(att_earned_reward, 0) + COALESCE(att_missed_reward, 0)) + 
+                       SUM(CASE WHEN is_proposer = 1 THEN COALESCE(propose_earned_reward, 0) + COALESCE(propose_missed_reward, 0) ELSE 0 END) + 
+                       SUM(CASE WHEN is_sync = 1 THEN COALESCE(sync_earned_reward, 0) + COALESCE(sync_missed_reward, 0) ELSE 0 END)))
+                ELSE 0.0
+            END
+        ) DESC
+        LIMIT {limit}
+        """
+        
+        raw_data = clickhouse_service.execute_query(query)
+        
+        # Transform to structured format
+        results = []
+        for row in raw_data:
+            if len(row) >= 16:
+                try:
+                    # Calculate efficiencies from raw data
+                    attester_actual = int(float(row[2])) if row[2] is not None else 0
+                    attester_ideal = int(float(row[3])) if row[3] is not None else 0
+                    proposer_actual = int(float(row[4])) if row[4] is not None else 0
+                    proposer_ideal = int(float(row[5])) if row[5] is not None else 0
+                    sync_actual = int(float(row[6])) if row[6] is not None else 0
+                    sync_ideal = int(float(row[7])) if row[7] is not None else 0
+                    
+                    total_actual = attester_actual + proposer_actual + sync_actual
+                    total_ideal = attester_ideal + proposer_ideal + sync_ideal
+                    
+                    # Calculate individual efficiencies
+                    attester_efficiency = (attester_actual * 100.0 / attester_ideal) if attester_ideal > 0 else 0.0
+                    proposer_efficiency = (proposer_actual * 100.0 / proposer_ideal) if proposer_ideal > 0 else 0.0
+                    sync_efficiency = (sync_actual * 100.0 / sync_ideal) if sync_ideal > 0 else 0.0
+                    overall_efficiency = (total_actual * 100.0 / total_ideal) if total_ideal > 0 else 0.0
+                    
+                    results.append({
+                        'operator': str(row[0]),
+                        'validator_count': int(float(row[1])) if row[1] is not None else 0,
+                        # Reward components
+                        'attester_actual_reward': attester_actual,
+                        'proposer_actual_reward': proposer_actual,
+                        'sync_actual_reward': sync_actual,
+                        'attester_ideal_reward': attester_ideal,
+                        'proposer_ideal_reward': proposer_ideal,
+                        'sync_ideal_reward': sync_ideal,
+                        'total_actual_reward': total_actual,
+                        'total_ideal_reward': total_ideal,
+                        # Efficiency metrics
+                        'overall_efficiency': overall_efficiency,
+                        'attester_efficiency': attester_efficiency,
+                        'proposer_efficiency': proposer_efficiency,
+                        'sync_efficiency': sync_efficiency,
+                        # Performance metrics
+                        'successful_attestations': int(float(row[8])) if row[8] is not None else 0,
+                        'missed_attestations': int(float(row[9])) if row[9] is not None else 0,
+                        'successful_proposals': int(float(row[10])) if row[10] is not None else 0,
+                        'missed_proposals': int(float(row[11])) if row[11] is not None else 0,
+                        'total_proposer_duties': int(float(row[12])) if row[12] is not None else 0,
+                        'total_sync_duties': int(float(row[13])) if row[13] is not None else 0,
+                        'avg_sync_participation': float(row[14]) if row[14] not in ['\\N', None, ''] else 0.0,
+                        'total_epochs_data': int(float(row[15])) if row[15] is not None else 0,
+                        'latest_epoch': latest_epoch,
+                        'start_epoch': start_epoch,
+                        'epochs_analyzed': epochs_requested
+                    })
+                except (ValueError, TypeError) as e:
+                    logger.warning(f"Failed to parse row for operator {row[0]}: {e}")
+                    continue
+        
+        logger.info(f"Found comprehensive efficiency data for {len(results)} operators over {epochs_requested} epochs")
+        return results
+        
+    except Exception as e:
+        logger.error(f"Failed to get comprehensive theoretical performance: {e}")
+        raise HTTPException(status_code=500, detail=f"Database query failed: {str(e)}")
+
+
+@router.get("/theoretical_performance_all/extended")
+async def get_theoretical_performance_all_extended(
+    days: int = Query(1, description="Number of days to analyze (1-31)", ge=1, le=31),
+    limit: int = Query(100, description="Maximum number of operators to return")
+) -> Union[List[Dict[str, Any]], Dict[str, Any]]:
+    """
+    Get comprehensive validator efficiency analysis using industry-standard methodology over configurable time period.
+    
+    Calculates overall efficiency using the formula:
+    efficiency = (attester_actualReward + proposer_actualReward + sync_actualReward) / 
+                 (attester_idealReward + proposer_idealReward + sync_idealReward)
+    
+    Component calculations:
+    - Attester efficiency: Uses consensus layer attestation rewards only
+    - Proposer efficiency: Uses max(actual_reward, epoch_median_reward) for ideal calculation  
+    - Sync efficiency: Uses consensus layer sync committee rewards only
+    
+    When a validator did not participate in a sync committee and/or did not propose a block,
+    the respective rewards & ideal rewards are set to 0.
+    
+    Args:
+        days: Number of days to analyze (1-31), each day = 225 epochs
+        limit: Maximum number of operators to return
+    
+    Returns:
+        List of operators with their comprehensive efficiency metrics over specified time period
+    """
+    try:
+        if not clickhouse_service.is_available():
+            raise HTTPException(status_code=503, detail="ClickHouse service unavailable")
+        
+        # Get the latest epoch first
+        epoch_query = "SELECT MAX(epoch) FROM validators_summary WHERE val_nos_name IS NOT NULL"
+        epoch_data = clickhouse_service.execute_query(epoch_query)
+        
+        if not epoch_data or not epoch_data[0][0]:
+            raise HTTPException(status_code=404, detail="No epoch data found")
+        
+        latest_epoch = int(epoch_data[0][0])
+        total_epochs = days * 225  # 225 epochs per day
+        start_epoch = latest_epoch - total_epochs + 1
+        
+        # Check if we have sufficient data availability
+        min_epoch_query = "SELECT MIN(epoch) FROM validators_summary WHERE val_nos_name IS NOT NULL"
+        min_epoch_data = clickhouse_service.execute_query(min_epoch_query)
+        
+        if not min_epoch_data or not min_epoch_data[0][0]:
+            raise HTTPException(status_code=404, detail="No minimum epoch data found")
+        
+        min_available_epoch = int(min_epoch_data[0][0])
+        
+        # Check if we have enough historical data, if not use available data
+        if start_epoch < min_available_epoch:
+            epochs_available = latest_epoch - min_available_epoch + 1
+            start_epoch = min_available_epoch
+            total_epochs = epochs_available
+            days_actual = round(epochs_available / 225, 2)
+            logger.info(f"Using {epochs_available} epochs ({days_actual} days) instead of requested {days} days due to insufficient data")
+        
+        # Simplified query using same approach as the regular _all endpoint but with configurable days
+        query = f"""
+        SELECT 
+            val_nos_name as operator,
+            COUNT(DISTINCT val_id) as validator_count,
+            -- Attestation rewards
+            SUM(COALESCE(att_earned_reward, 0)) as total_attester_actual_reward,
+            SUM(COALESCE(att_earned_reward, 0) + COALESCE(att_missed_reward, 0)) as total_attester_ideal_reward,
+            -- Proposer rewards (only when is_proposer = 1)
+            SUM(CASE WHEN is_proposer = 1 THEN COALESCE(propose_earned_reward, 0) ELSE 0 END) as total_proposer_actual_reward,
+            SUM(CASE WHEN is_proposer = 1 THEN COALESCE(propose_earned_reward, 0) + COALESCE(propose_missed_reward, 0) ELSE 0 END) as total_proposer_ideal_reward,
+            -- Sync committee rewards (only when is_sync = 1)
+            SUM(CASE WHEN is_sync = 1 THEN COALESCE(sync_earned_reward, 0) ELSE 0 END) as total_sync_actual_reward,
+            SUM(CASE WHEN is_sync = 1 THEN COALESCE(sync_earned_reward, 0) + COALESCE(sync_missed_reward, 0) ELSE 0 END) as total_sync_ideal_reward,
+            -- Performance metrics
+            SUM(CASE WHEN att_happened = 1 THEN 1 ELSE 0 END) as successful_attestations,
+            SUM(CASE WHEN att_happened = 0 OR att_happened IS NULL THEN 1 ELSE 0 END) as missed_attestations,
+            SUM(CASE WHEN is_proposer = 1 AND block_proposed = 1 THEN 1 ELSE 0 END) as successful_proposals,
+            SUM(CASE WHEN is_proposer = 1 AND (block_proposed = 0 OR block_proposed IS NULL) THEN 1 ELSE 0 END) as missed_proposals,
+            SUM(CASE WHEN is_proposer = 1 THEN 1 ELSE 0 END) as total_proposer_duties,
+            SUM(CASE WHEN is_sync = 1 THEN 1 ELSE 0 END) as total_sync_duties,
+            AVG(CASE WHEN is_sync = 1 AND sync_percent IS NOT NULL THEN sync_percent ELSE NULL END) as avg_sync_participation,
+            COUNT(*) as total_epochs_data
+        FROM validators_summary
+        WHERE epoch >= {start_epoch}
+        AND epoch <= {latest_epoch}
+        AND val_nos_name IS NOT NULL
+        AND val_status NOT IN ('exited', 'withdrawal_possible', 'withdrawal_done')
+        GROUP BY val_nos_name
+        ORDER BY (
+            CASE 
+                WHEN (SUM(COALESCE(att_earned_reward, 0) + COALESCE(att_missed_reward, 0)) + 
+                      SUM(CASE WHEN is_proposer = 1 THEN COALESCE(propose_earned_reward, 0) + COALESCE(propose_missed_reward, 0) ELSE 0 END) + 
+                      SUM(CASE WHEN is_sync = 1 THEN COALESCE(sync_earned_reward, 0) + COALESCE(sync_missed_reward, 0) ELSE 0 END)) > 0 
+                THEN ((SUM(COALESCE(att_earned_reward, 0)) + 
+                       SUM(CASE WHEN is_proposer = 1 THEN COALESCE(propose_earned_reward, 0) ELSE 0 END) + 
+                       SUM(CASE WHEN is_sync = 1 THEN COALESCE(sync_earned_reward, 0) ELSE 0 END)) * 100.0 / 
+                      (SUM(COALESCE(att_earned_reward, 0) + COALESCE(att_missed_reward, 0)) + 
+                       SUM(CASE WHEN is_proposer = 1 THEN COALESCE(propose_earned_reward, 0) + COALESCE(propose_missed_reward, 0) ELSE 0 END) + 
+                       SUM(CASE WHEN is_sync = 1 THEN COALESCE(sync_earned_reward, 0) + COALESCE(sync_missed_reward, 0) ELSE 0 END)))
+                ELSE 0.0
+            END
+        ) DESC
+        LIMIT {limit}
+        """
+        
+        raw_data = clickhouse_service.execute_query(query)
+        
+        # Transform to structured format
+        results = []
+        for row in raw_data:
+            if len(row) >= 16:
+                try:
+                    # Calculate efficiencies from raw data (same as regular _all endpoint)
+                    attester_actual = int(float(row[2])) if row[2] is not None else 0
+                    attester_ideal = int(float(row[3])) if row[3] is not None else 0
+                    proposer_actual = int(float(row[4])) if row[4] is not None else 0
+                    proposer_ideal = int(float(row[5])) if row[5] is not None else 0
+                    sync_actual = int(float(row[6])) if row[6] is not None else 0
+                    sync_ideal = int(float(row[7])) if row[7] is not None else 0
+                    
+                    total_actual = attester_actual + proposer_actual + sync_actual
+                    total_ideal = attester_ideal + proposer_ideal + sync_ideal
+                    
+                    # Calculate individual efficiencies
+                    attester_efficiency = (attester_actual * 100.0 / attester_ideal) if attester_ideal > 0 else 0.0
+                    proposer_efficiency = (proposer_actual * 100.0 / proposer_ideal) if proposer_ideal > 0 else 0.0
+                    sync_efficiency = (sync_actual * 100.0 / sync_ideal) if sync_ideal > 0 else 0.0
+                    overall_efficiency = (total_actual * 100.0 / total_ideal) if total_ideal > 0 else 0.0
+                    
+                    results.append({
+                        'operator': str(row[0]),
+                        'validator_count': int(float(row[1])) if row[1] is not None else 0,
+                        # Reward components
+                        'attester_actual_reward': attester_actual,
+                        'proposer_actual_reward': proposer_actual,
+                        'sync_actual_reward': sync_actual,
+                        'attester_ideal_reward': attester_ideal,
+                        'proposer_ideal_reward': proposer_ideal,
+                        'sync_ideal_reward': sync_ideal,
+                        'total_actual_reward': total_actual,
+                        'total_ideal_reward': total_ideal,
+                        # Efficiency metrics
+                        'overall_efficiency': overall_efficiency,
+                        'attester_efficiency': attester_efficiency,
+                        'proposer_efficiency': proposer_efficiency,
+                        'sync_efficiency': sync_efficiency,
+                        # Performance metrics
+                        'successful_attestations': int(float(row[8])) if row[8] is not None else 0,
+                        'missed_attestations': int(float(row[9])) if row[9] is not None else 0,
+                        'successful_proposals': int(float(row[10])) if row[10] is not None else 0,
+                        'missed_proposals': int(float(row[11])) if row[11] is not None else 0,
+                        'total_proposer_duties': int(float(row[12])) if row[12] is not None else 0,
+                        'total_sync_duties': int(float(row[13])) if row[13] is not None else 0,
+                        'avg_sync_participation': float(row[14]) if row[14] not in ['\\N', None, ''] else 0.0,
+                        'total_epochs_data': int(float(row[15])) if row[15] is not None else 0,
+                        'latest_epoch': latest_epoch,
+                        'start_epoch': start_epoch,
+                        'days_analyzed': days,
+                        'epochs_analyzed': total_epochs
+                    })
+                except (ValueError, TypeError) as e:
+                    logger.warning(f"Failed to parse row for operator {row[0]}: {e}")
+                    continue
+        
+        logger.info(f"Found comprehensive efficiency data for {len(results)} operators over {days} day(s) period")
+        return results
+        
+    except Exception as e:
+        logger.error(f"Failed to get comprehensive theoretical performance extended: {e}")
+        raise HTTPException(status_code=500, detail=f"Database query failed: {str(e)}")
+
