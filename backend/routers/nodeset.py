@@ -1297,14 +1297,17 @@ async def get_theoretical_performance_all(
                     sync_actual = int(float(row[6])) if row[6] is not None else 0
                     sync_ideal = int(float(row[7])) if row[7] is not None else 0
                     
-                    total_actual = attester_actual + proposer_actual + sync_actual
-                    total_ideal = attester_ideal + proposer_ideal + sync_ideal
-                    
                     # Calculate individual efficiencies
                     attester_efficiency = (attester_actual * 100.0 / attester_ideal) if attester_ideal > 0 else 0.0
                     proposer_efficiency = min(100.0, (proposer_actual * 100.0 / proposer_ideal)) if proposer_ideal > 0 else 0.0
                     sync_efficiency = (sync_actual * 100.0 / sync_ideal) if sync_ideal > 0 else 0.0
-                    overall_efficiency = (total_actual * 100.0 / total_ideal) if total_ideal > 0 else 0.0
+                    
+                    # Calculate capped proposer actual for overall efficiency (cap at baseline)
+                    proposer_actual_capped = min(proposer_actual, proposer_ideal) if proposer_ideal > 0 else proposer_actual
+                    total_actual_capped = attester_actual + proposer_actual_capped + sync_actual
+                    total_ideal = attester_ideal + proposer_ideal + sync_ideal
+                    
+                    overall_efficiency = (total_actual_capped * 100.0 / total_ideal) if total_ideal > 0 else 0.0
                     
                     results.append({
                         'operator': str(row[0]),
@@ -1316,7 +1319,7 @@ async def get_theoretical_performance_all(
                         'attester_ideal_reward': attester_ideal,
                         'proposer_ideal_reward': proposer_ideal,
                         'sync_ideal_reward': sync_ideal,
-                        'total_actual_reward': total_actual,
+                        'total_actual_reward': total_actual_capped,
                         'total_ideal_reward': total_ideal,
                         # Efficiency metrics
                         'overall_efficiency': overall_efficiency,
@@ -1480,14 +1483,17 @@ async def get_theoretical_performance_all_extended(
                     sync_actual = int(float(row[6])) if row[6] is not None else 0
                     sync_ideal = int(float(row[7])) if row[7] is not None else 0
                     
-                    total_actual = attester_actual + proposer_actual + sync_actual
-                    total_ideal = attester_ideal + proposer_ideal + sync_ideal
-                    
                     # Calculate individual efficiencies
                     attester_efficiency = (attester_actual * 100.0 / attester_ideal) if attester_ideal > 0 else 0.0
                     proposer_efficiency = min(100.0, (proposer_actual * 100.0 / proposer_ideal)) if proposer_ideal > 0 else 0.0
                     sync_efficiency = (sync_actual * 100.0 / sync_ideal) if sync_ideal > 0 else 0.0
-                    overall_efficiency = (total_actual * 100.0 / total_ideal) if total_ideal > 0 else 0.0
+                    
+                    # Calculate capped proposer actual for overall efficiency (cap at baseline)
+                    proposer_actual_capped = min(proposer_actual, proposer_ideal) if proposer_ideal > 0 else proposer_actual
+                    total_actual_capped = attester_actual + proposer_actual_capped + sync_actual
+                    total_ideal = attester_ideal + proposer_ideal + sync_ideal
+                    
+                    overall_efficiency = (total_actual_capped * 100.0 / total_ideal) if total_ideal > 0 else 0.0
                     
                     results.append({
                         'operator': str(row[0]),
@@ -1499,7 +1505,7 @@ async def get_theoretical_performance_all_extended(
                         'attester_ideal_reward': attester_ideal,
                         'proposer_ideal_reward': proposer_ideal,
                         'sync_ideal_reward': sync_ideal,
-                        'total_actual_reward': total_actual,
+                        'total_actual_reward': total_actual_capped,
                         'total_ideal_reward': total_ideal,
                         # Efficiency metrics
                         'overall_efficiency': overall_efficiency,
