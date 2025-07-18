@@ -535,21 +535,28 @@ class AnalyticsService:
                 return {"error": "Validator data not available"}
             
             operator_validators = self._get_operator_validators_from_data(validator_data)
+            exited_validators = validator_data.get('exited_validators', {})
             total_validators = sum(operator_validators.values())
             
             # Sort operators by validator count
             sorted_operators = sorted(operator_validators.items(), key=lambda x: x[1], reverse=True)
             
             top_operators = []
-            for i, (operator_addr, count) in enumerate(sorted_operators[:limit]):
+            for i, (operator_addr, total_count) in enumerate(sorted_operators[:limit]):
                 display_name = format_operator_display_plain(operator_addr, ens_names or {})
-                percentage = (count / total_validators) * 100 if total_validators > 0 else 0
+                exited_count = exited_validators.get(operator_addr, 0)
+                active_count = total_count - exited_count
+                percentage = (total_count / total_validators) * 100 if total_validators > 0 else 0
+                exit_rate = (exited_count / total_count) * 100 if total_count > 0 else 0
                 
                 top_operators.append({
                     'rank': i + 1,
                     'operator': display_name,
                     'full_address': operator_addr,
-                    'validator_count': count,
+                    'validator_count': total_count,
+                    'active_count': active_count,
+                    'exited_count': exited_count,
+                    'exit_rate': round(exit_rate, 2),
                     'percentage': round(percentage, 2)
                 })
             

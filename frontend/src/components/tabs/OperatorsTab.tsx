@@ -30,42 +30,24 @@ const OperatorsTab: React.FC = () => {
       setLoading(true);
       setError(null);
       
-      const [concentrationData, validatorData] = await Promise.all([
+      const [concentrationData, topOperatorsData] = await Promise.all([
         apiService.getConcentrationMetrics(),
-        apiService.getValidatorData()
+        apiService.getTopOperators(1000) // Get all operators
       ]);
       
       setConcentrationMetrics(concentrationData);
       
-      // Process validator data to match original table structure
-      const operatorValidators = validatorData.operator_validators || {};
-      const ensNames = validatorData.ens_names || {};
-      const totalActiveValidators = Object.values(operatorValidators).reduce((sum: number, count) => sum + count, 0);
-      
-      const operators = Object.entries(operatorValidators)
-        .map(([address, totalCount], index) => {
-          // For now, assume no exits (since we don't have exit data)
-          const exitedCount = 0;
-          const activeCount = totalCount;
-          const exitRate = 0;
-          const marketShare = (activeCount / totalActiveValidators) * 100;
-          
-          return {
-            rank: 0, // Will be set after sorting
-            address: address,
-            ens_name: ensNames[address] || '', // Look up ENS name from validator data
-            active: activeCount,
-            total: totalCount,
-            exited: exitedCount,
-            exit_rate: exitRate,
-            market_share: marketShare
-          } as OperatorData;
-        })
-        .sort((a, b) => b.active - a.active)
-        .map((operator, index) => ({
-          ...operator,
-          rank: index + 1
-        }));
+      // Process top operators data from backend
+      const operators = topOperatorsData.operators.map((op: any) => ({
+        rank: op.rank,
+        address: op.full_address,
+        ens_name: op.operator.replace(op.full_address, '').trim() || '', // Extract ENS name if present
+        active: op.active_count,
+        total: op.validator_count,
+        exited: op.exited_count,
+        exit_rate: op.exit_rate,
+        market_share: op.percentage
+      })) as OperatorData[];
       
       setOperatorData(operators);
     } catch (err) {

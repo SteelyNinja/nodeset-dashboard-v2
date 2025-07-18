@@ -145,6 +145,11 @@ class ApiService {
     return this.extractData(response);
   }
 
+  async getTopOperators(limit: number = 20): Promise<any> {
+    const response = await this.apiClient.get<ApiResponse<any>>(`/api/dashboard/top-operators?limit=${limit}`);
+    return this.extractData(response);
+  }
+
   // Generic data fetcher for any dataset
   async getData<T>(dataset: string): Promise<T> {
     const response = await this.apiClient.get<ApiResponse<T>>(`/api/data/${dataset}`);
