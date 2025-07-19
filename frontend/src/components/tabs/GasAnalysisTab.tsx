@@ -4,7 +4,6 @@ import LoadingSpinner from '../common/LoadingSpinner';
 import GlassCard from '../common/GlassCard';
 import GlassButton from '../common/GlassButton';
 import Icon from '../common/Icon';
-import { GlassTable, GlassTableHeader, GlassTableBody, GlassTableRow, GlassTableCell } from '../common/GlassTable';
 import PieChartComponent from '../charts/PieChart';
 import { GasAnalysis } from '../../types/api';
 

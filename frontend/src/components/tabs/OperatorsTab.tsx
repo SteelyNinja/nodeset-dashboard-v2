@@ -5,7 +5,6 @@ import LoadingSpinner from '../common/LoadingSpinner';
 import ErrorMessage from '../common/ErrorMessage';
 import GlassButton from '../common/GlassButton';
 import Icon from '../common/Icon';
-import { GlassTable, GlassTableHeader, GlassTableBody, GlassTableRow, GlassTableCell } from '../common/GlassTable';
 
 interface OperatorData {
   rank: number;

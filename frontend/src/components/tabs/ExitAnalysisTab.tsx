@@ -7,7 +7,6 @@ import ErrorMessage from '../common/ErrorMessage';
 import GlassCard from '../common/GlassCard';
 import GlassButton from '../common/GlassButton';
 import Icon from '../common/Icon';
-import { GlassTable, GlassTableHeader, GlassTableBody, GlassTableRow, GlassTableCell } from '../common/GlassTable';
 
 const ExitAnalysisTab: React.FC = () => {
   const [exitData, setExitData] = useState<ExitData | null>(null);

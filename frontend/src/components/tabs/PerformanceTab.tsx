@@ -4,7 +4,6 @@ import { apiService } from '../../services/api';
 import LoadingSpinner from '../common/LoadingSpinner';
 import GlassButton from '../common/GlassButton';
 import Icon from '../common/Icon';
-import { GlassTable, GlassTableHeader, GlassTableBody, GlassTableRow, GlassTableCell } from '../common/GlassTable';
 import ScatterChartComponent from '../charts/ScatterChart';
 import BarChartComponent from '../charts/BarChart';
 import PieChartComponent from '../charts/PieChart';

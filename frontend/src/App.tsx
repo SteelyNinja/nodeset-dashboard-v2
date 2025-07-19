@@ -22,7 +22,7 @@ function App() {
   const [activeTab, setActiveTab] = useState<TabId>('information');
   const [backendConnected, setBackendConnected] = useState<boolean | null>(null);
   const [cacheTimestamp, setCacheTimestamp] = useState<string | null>(null);
-  const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
+  const [, setIsRefreshing] = useState<boolean>(false);
 
   // Format timestamp for display in UTC
   const formatCacheTimestamp = (timestamp: string | null): string => {
