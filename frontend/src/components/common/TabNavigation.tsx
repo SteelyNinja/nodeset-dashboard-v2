@@ -135,16 +135,16 @@ const TabNavigation: React.FC<TabNavigationProps> = ({
                 `}
               >
               {/* Glass overlay */}
-              <div className="absolute inset-0 bg-white/10 dark:bg-white/5 rounded-lg sm:rounded-xl backdrop-blur-sm" />
+              <div className="absolute inset-0 bg-white/10 dark:bg-white/5 rounded-[inherit] backdrop-blur-sm" />
               
               {/* Shimmer effect */}
-              <div className="absolute inset-0 overflow-hidden rounded-lg sm:rounded-xl">
+              <div className="absolute inset-0 overflow-hidden rounded-[inherit]">
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 dark:via-white/10 to-transparent -skew-x-12 transform -translate-x-full group-hover:translate-x-full transition-transform duration-1500 ease-out" />
               </div>
               
               {/* Loading indicator */}
               {isLoading && (
-                <div className="absolute inset-0 bg-primary-500/20 dark:bg-primary-400/15 rounded-lg sm:rounded-xl flex items-center justify-center">
+                <div className="absolute inset-0 bg-primary-500/20 dark:bg-primary-400/15 rounded-[inherit] flex items-center justify-center">
                   <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                 </div>
               )}
