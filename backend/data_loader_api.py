@@ -75,6 +75,14 @@ ENS_NAMES_FILES = [
     '../json_data/manual_ens_names.json'
 ]
 
+VAULT_EVENTS_FILES = [
+    './vault_events.json',
+    './json_data/vault_events.json',
+    './data/vault_events.json',
+    '../vault_events.json',
+    '../json_data/vault_events.json'
+]
+
 DARK_LOGO_PATH = '../Nodeset_dark_mode.png'
 LIGHT_LOGO_PATH = '../Nodeset_light_mode.png'
 
@@ -295,6 +303,27 @@ def load_ens_names() -> Tuple[Optional[Dict], Optional[str]]:
         return None, None
     
     return _get_cached_or_load("ens_names", _load, 3600, ENS_NAMES_FILES)
+
+def load_vault_events_data() -> Tuple[Optional[Dict], Optional[str]]:
+    """Load vault events data from JSON file"""
+    def _load():
+        for path in VAULT_EVENTS_FILES:
+            try:
+                if os.path.exists(path):
+                    with open(path, 'r') as f:
+                        data = json.load(f)
+                    
+                    # Add last_updated timestamp based on file modification time
+                    file_mod_time = os.path.getmtime(path)
+                    if 'last_updated' not in data:
+                        data['last_updated'] = datetime.fromtimestamp(file_mod_time).isoformat() + '+00:00'
+                    
+                    return data, path
+            except Exception as e:
+                print(f"⚠ Error loading {path}: {str(e)}")
+        return None, None
+    
+    return _get_cached_or_load("vault_events_data", _load, 900, VAULT_EVENTS_FILES)
 
 def get_logo_base64(dark_mode: bool = False) -> Optional[str]:
     """Get logo as base64 string"""

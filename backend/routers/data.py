@@ -20,6 +20,7 @@ from data_loader_api import (
     load_exit_data,
     load_validator_performance_data,
     load_ens_names,
+    load_vault_events_data,
     get_logo_base64,
     clear_cache,
     get_cache_info
@@ -240,6 +241,23 @@ async def get_ens_names():
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to load ENS names data: {str(e)}")
+
+@router.get("/vault-events", response_model=DataResponse)
+async def get_vault_events():
+    """Get vault events data"""
+    try:
+        data, source_file = load_vault_events_data()
+        if data is None:
+            raise HTTPException(status_code=404, detail="Vault events data not found")
+        
+        return DataResponse(
+            data=data,
+            source_file=source_file,
+            success=True,
+            message="Vault events data loaded successfully"
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to load vault events data: {str(e)}")
 
 @router.get("/logo")
 async def get_logo(dark_mode: bool = False):
