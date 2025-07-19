@@ -334,7 +334,9 @@ const SyncCommitteeTab: React.FC = () => {
               {filteredOperatorData.map((operator, index) => (
                 <div 
                   key={index}
-                  className="grid px-4 py-3 hover:bg-primary-500/8 dark:hover:bg-primary-500/5 hover:shadow-sm transition-all duration-200 ease-in-out border-b border-white/5 dark:border-white/10 last:border-b-0 text-neutral-800 dark:text-neutral-200 text-body-medium"
+                  className={`grid px-4 py-3 hover:bg-primary-500/8 dark:hover:bg-primary-500/5 hover:shadow-sm transition-all duration-200 ease-in-out border-b border-white/5 dark:border-white/10 last:border-b-0 text-neutral-800 dark:text-neutral-200 text-body-medium ${
+                    index % 2 === 0 ? 'bg-gray-50/30 dark:bg-gray-800/15' : 'bg-transparent'
+                  }`}
                   style={{gridTemplateColumns: "0.7fr 2.8fr 2fr 1.8fr 1.5fr 1.5fr 1.2fr 1.2fr", gap: "12px"}}
                 >
                   <div className="font-medium">{operator.rank}</div>
@@ -402,7 +404,9 @@ const SyncCommitteeTab: React.FC = () => {
               {filteredPeriodData.map((period, index) => (
                 <div 
                   key={index}
-                  className="grid px-4 py-3 hover:bg-primary-500/8 dark:hover:bg-primary-500/5 hover:shadow-sm transition-all duration-200 ease-in-out border-b border-white/5 dark:border-white/10 last:border-b-0 text-neutral-800 dark:text-neutral-200 text-body-medium"
+                  className={`grid px-4 py-3 hover:bg-primary-500/8 dark:hover:bg-primary-500/5 hover:shadow-sm transition-all duration-200 ease-in-out border-b border-white/5 dark:border-white/10 last:border-b-0 text-neutral-800 dark:text-neutral-200 text-body-medium ${
+                    index % 2 === 0 ? 'bg-gray-50/30 dark:bg-gray-800/15' : 'bg-transparent'
+                  }`}
                   style={{gridTemplateColumns: "1.5fr 1.5fr 1.5fr 1.2fr 1.2fr 2fr", gap: "12px"}}
                 >
                   <div className="font-medium">{period.period}</div>
@@ -472,7 +476,9 @@ const SyncCommitteeTab: React.FC = () => {
               {filteredDetailedData.map((record, index) => (
                 <div 
                   key={index}
-                  className="grid px-4 py-3 hover:bg-primary-500/8 dark:hover:bg-primary-500/5 hover:shadow-sm transition-all duration-200 ease-in-out border-b border-white/5 dark:border-white/10 last:border-b-0 text-neutral-800 dark:text-neutral-200 text-body-medium"
+                  className={`grid px-4 py-3 hover:bg-primary-500/8 dark:hover:bg-primary-500/5 hover:shadow-sm transition-all duration-200 ease-in-out border-b border-white/5 dark:border-white/10 last:border-b-0 text-neutral-800 dark:text-neutral-200 text-body-medium ${
+                    index % 2 === 0 ? 'bg-gray-50/30 dark:bg-gray-800/15' : 'bg-transparent'
+                  }`}
                   style={{gridTemplateColumns: "1fr 2fr 1.5fr 1.8fr 1.2fr 1.2fr 1.2fr 1.3fr 1.3fr 1.5fr", gap: "12px"}}
                 >
                   <div className="font-medium">{record.period}</div>

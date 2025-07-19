@@ -15,6 +15,7 @@ import {
   ClientDiversity,
   SyncCommitteeData,
   ENSSourcesData,
+  VaultEventsData,
   TheoreticalPerformanceData,
   TheoreticalPerformanceError,
 } from '../types/api';
@@ -111,6 +112,11 @@ class ApiService {
 
   async getENSSourcesData(): Promise<ENSSourcesData> {
     const response = await this.apiClient.get<ApiResponse<ENSSourcesData>>('/api/data/ens-sources');
+    return this.extractData(response);
+  }
+
+  async getVaultEventsData(): Promise<VaultEventsData> {
+    const response = await this.apiClient.get<ApiResponse<VaultEventsData>>('/api/data/vault-events');
     return this.extractData(response);
   }
 

@@ -1080,7 +1080,7 @@ const PerformanceTab: React.FC = () => {
               {/* Scrollable Body */}
               <div style={{ maxHeight: '400px', overflow: 'auto' }}>
                 <div className="divide-y divide-white/5 dark:divide-white/10">
-                  {filteredAndSortedData.map((operator) => {
+                  {filteredAndSortedData.map((operator, index) => {
                     // Find original rank from the full unfiltered sorted data
                     const originalRank = performanceData
                       .slice()
@@ -1090,7 +1090,9 @@ const PerformanceTab: React.FC = () => {
                     return (
                       <div 
                         key={operator.address}
-                        className="grid px-4 py-3 hover:bg-primary-500/8 dark:hover:bg-primary-500/5 hover:shadow-sm transition-all duration-200 ease-in-out border-b border-white/5 dark:border-white/10 last:border-b-0 text-neutral-800 dark:text-neutral-200 text-body-medium"
+                        className={`grid px-4 py-3 hover:bg-primary-500/8 dark:hover:bg-primary-500/5 hover:shadow-sm transition-all duration-200 ease-in-out border-b border-white/5 dark:border-white/10 last:border-b-0 text-neutral-800 dark:text-neutral-200 text-body-medium ${
+                          index % 2 === 0 ? 'bg-gray-50/30 dark:bg-gray-800/15' : 'bg-transparent'
+                        }`}
                         style={{gridTemplateColumns: "0.7fr 2.8fr 2fr 1.2fr 1.2fr 0.8fr 0.8fr 0.8fr", gap: "12px"}}
                       >
                         <div className="font-medium">
@@ -1234,14 +1236,16 @@ const PerformanceTab: React.FC = () => {
                     {/* Scrollable Body */}
                     <div style={{ maxHeight: '400px', overflow: 'auto' }}>
                       <div className="divide-y divide-white/5 dark:divide-white/10">
-                        {filtered7dData.map((operator) => {
+                        {filtered7dData.map((operator, index) => {
                           // Find original rank from the full unfiltered sorted data
                           const originalRank = attestation7dData.findIndex(op => op.address === operator.address) + 1;
                           
                           return (
                             <div 
                               key={operator.address}
-                              className="grid px-4 py-3 hover:bg-primary-500/8 dark:hover:bg-primary-500/5 hover:shadow-sm transition-all duration-200 ease-in-out border-b border-white/5 dark:border-white/10 last:border-b-0 text-neutral-800 dark:text-neutral-200 text-body-medium"
+                              className={`grid px-4 py-3 hover:bg-primary-500/8 dark:hover:bg-primary-500/5 hover:shadow-sm transition-all duration-200 ease-in-out border-b border-white/5 dark:border-white/10 last:border-b-0 text-neutral-800 dark:text-neutral-200 text-body-medium ${
+                                index % 2 === 0 ? 'bg-gray-50/30 dark:bg-gray-800/15' : 'bg-transparent'
+                              }`}
                               style={{gridTemplateColumns: "0.7fr 2.8fr 2fr 1.5fr 1.8fr 2fr 1.5fr 1.7fr", gap: "12px"}}
                             >
                               <div className="font-medium">
@@ -1331,14 +1335,16 @@ const PerformanceTab: React.FC = () => {
                     {/* Scrollable Body */}
                     <div style={{ maxHeight: '400px', overflow: 'auto' }}>
                       <div className="divide-y divide-white/5 dark:divide-white/10">
-                        {filtered31dData.map((operator) => {
+                        {filtered31dData.map((operator, index) => {
                           // Find original rank from the full unfiltered sorted data
                           const originalRank = attestation31dData.findIndex(op => op.address === operator.address) + 1;
                           
                           return (
                             <div 
                               key={operator.address}
-                              className="grid px-4 py-3 hover:bg-primary-500/8 dark:hover:bg-primary-500/5 hover:shadow-sm transition-all duration-200 ease-in-out border-b border-white/5 dark:border-white/10 last:border-b-0 text-neutral-800 dark:text-neutral-200 text-body-medium"
+                              className={`grid px-4 py-3 hover:bg-primary-500/8 dark:hover:bg-primary-500/5 hover:shadow-sm transition-all duration-200 ease-in-out border-b border-white/5 dark:border-white/10 last:border-b-0 text-neutral-800 dark:text-neutral-200 text-body-medium ${
+                                index % 2 === 0 ? 'bg-gray-50/30 dark:bg-gray-800/15' : 'bg-transparent'
+                              }`}
                               style={{gridTemplateColumns: "0.7fr 2.8fr 2fr 1.5fr 1.8fr 2fr 1.5fr 1.7fr", gap: "12px"}}
                             >
                               <div className="font-medium">

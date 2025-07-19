@@ -154,10 +154,10 @@ const LineChartComponent: React.FC<LineChartProps> = ({
         <LineChart 
           data={data}
           margin={{
-            top: 20,
+            top: 40,
             right: 30,
             left: 60,
-            bottom: 60,
+            bottom: 20,
           }}
         >
           <CartesianGrid 
@@ -169,14 +169,9 @@ const LineChartComponent: React.FC<LineChartProps> = ({
             dataKey={xAxisDataKey}
             type={xAxisType}
             domain={xDomain}
-            tick={CHART_THEME.axis.tick}
+            tick={false}
             axisLine={CHART_THEME.axis.line}
-            label={xAxisLabel ? { 
-              value: xAxisLabel, 
-              position: 'insideBottom', 
-              offset: -10,
-              style: CHART_THEME.axis.label
-            } : undefined}
+            label={undefined}
           />
           <YAxis 
             type={yAxisType}
@@ -197,7 +192,8 @@ const LineChartComponent: React.FC<LineChartProps> = ({
             <Legend 
               iconType="line"
               iconSize={12}
-              wrapperStyle={CHART_THEME.legend.wrapperStyle}
+              wrapperStyle={{...CHART_THEME.legend.wrapperStyle, marginTop: '20px', paddingTop: '10px'}}
+              verticalAlign="bottom"
             />
           )}
           {lines.map((lineConfig, index) => (

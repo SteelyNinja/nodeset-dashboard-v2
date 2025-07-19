@@ -17,6 +17,7 @@ import ExitAnalysisTab from './components/tabs/ExitAnalysisTab';
 import CostsTab from './components/tabs/CostsTab';
 import ClientDiversityTab from './components/tabs/ClientDiversityTab';
 import GasAnalysisTab from './components/tabs/GasAnalysisTab';
+import VaultActivityTab from './components/tabs/VaultActivityTab';
 
 function App() {
   const [activeTab, setActiveTab] = useState<TabId>('information');
@@ -126,6 +127,8 @@ function App() {
         return <ClientDiversityTab />;
       case 'gas-analysis':
         return <GasAnalysisTab />;
+      case 'vault-activity':
+        return <VaultActivityTab />;
       default:
         return <InformationTab />;
     }

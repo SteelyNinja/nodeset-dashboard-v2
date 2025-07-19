@@ -118,6 +118,7 @@ export const IconMap = {
   
   // Business & Finance
   building: BuildingOfficeIcon,
+  vault: BuildingOfficeIcon,
   creditCard: CreditCardIcon,
   money: BanknotesIcon,
   scale: ScaleIcon,

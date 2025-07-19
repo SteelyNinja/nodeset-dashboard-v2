@@ -359,6 +359,33 @@ export interface ENSSourcesData {
   raw_sources: Record<string, string>;
 }
 
+export interface VaultEvent {
+  type: 'deposit' | 'withdrawal' | 'validator_registration';
+  block_number: number;
+  transaction_hash: string;
+  transaction_index: number;
+  timestamp: number;
+  // Deposit fields
+  caller?: string;
+  receiver?: string;
+  assets?: string;
+  assets_eth?: number;
+  shares?: string;
+  referrer?: string;
+  // Withdrawal fields
+  owner?: string;
+  position_ticket?: string;
+  estimated_assets?: string;
+  estimated_assets_eth?: number; // Note: This field is often 0 in the data, use estimated_assets instead
+}
+
+export interface VaultEventsData {
+  vault_address: string;
+  last_update: string;
+  total_events: number;
+  events: VaultEvent[];
+}
+
 // Tab identifiers
 export type TabId = 
   | 'information'
@@ -371,7 +398,8 @@ export type TabId =
   | 'exit-analysis'
   | 'costs'
   | 'client-diversity'
-  | 'gas-analysis';
+  | 'gas-analysis'
+  | 'vault-activity';
 
 // Chart data types
 export interface ChartData {
