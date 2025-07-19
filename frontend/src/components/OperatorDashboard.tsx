@@ -424,7 +424,8 @@ const OperatorDashboard: React.FC<OperatorDashboardProps> = ({ operatorAddress: 
   const performanceStatus = getPerformanceStatus(summaryMetrics.latestPerformance);
 
   return (
-    <div className="space-y-6">
+    <div className="p-6">
+      <div className="space-y-6">
 
       {/* Header */}
       <div className="flex items-center justify-between">
@@ -438,10 +439,11 @@ const OperatorDashboard: React.FC<OperatorDashboardProps> = ({ operatorAddress: 
             Back to Rankings
           </GlassButton>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            <h1 className="text-headline-large font-semibold text-neutral-900 dark:text-neutral-100 mb-2 flex items-center gap-3">
+              <Icon name="chart" size="lg" color="primary" />
               Operator Dashboard
             </h1>
-            <p className="text-gray-600 dark:text-gray-400">
+            <p className="text-body-medium text-neutral-600 dark:text-neutral-400">
               {getOperatorDisplayName(operatorAddress!)}
             </p>
           </div>
@@ -686,45 +688,54 @@ const OperatorDashboard: React.FC<OperatorDashboardProps> = ({ operatorAddress: 
           </GlassButton>
         </div>
         
-        <div className="overflow-x-auto" title="">
-          <table className="min-w-full" style={{cursor: 'default'}} title="">
-            <thead>
-              <tr className="border-b border-gray-200 dark:border-gray-700">
-                <th className="text-left py-3 px-4 text-sm font-medium text-gray-900 dark:text-white" title="">Date</th>
-                <th className="text-right py-3 px-4 text-sm font-medium text-gray-900 dark:text-white" title="">Performance</th>
-                <th className="text-right py-3 px-4 text-sm font-medium text-gray-900 dark:text-white" title="">Head</th>
-                <th className="text-right py-3 px-4 text-sm font-medium text-gray-900 dark:text-white" title="">Target</th>
-                <th className="text-right py-3 px-4 text-sm font-medium text-gray-900 dark:text-white" title="">Source</th>
-                <th className="text-right py-3 px-4 text-sm font-medium text-gray-900 dark:text-white" title="">Delay</th>
-                <th className="text-right py-3 px-4 text-sm font-medium text-gray-900 dark:text-white" title="">Net Rewards</th>
-              </tr>
-            </thead>
-            <tbody>
+        <div className="bg-white/5 dark:bg-white/2 backdrop-blur-sm rounded-xl border border-white/10 dark:border-white/15 shadow-sm overflow-hidden">
+          {/* Sticky Header */}
+          <div className="sticky top-0 z-10 bg-white/10 dark:bg-white/5 backdrop-blur-sm border-b border-white/10 dark:border-white/15">
+            <div className="grid px-4 py-4 font-semibold text-neutral-900 dark:text-neutral-100 text-body-medium" style={{gridTemplateColumns: "1.2fr 1.2fr 1fr 1fr 1fr 1fr 1.4fr", gap: "12px"}}>
+              <div>Date</div>
+              <div className="text-right">Performance</div>
+              <div className="text-right">Head</div>
+              <div className="text-right">Target</div>
+              <div className="text-right">Source</div>
+              <div className="text-right">Delay</div>
+              <div className="text-right">Net Rewards</div>
+            </div>
+          </div>
+          
+          {/* Scrollable Body */}
+          <div style={{ maxHeight: '400px', overflow: 'auto' }}>
+            <div className="divide-y divide-white/5 dark:divide-white/10">
               {performanceData.daily_performance.slice(0, 7).map((day, index) => (
-                <tr key={day.date} className="border-b border-gray-100 dark:border-gray-800" style={{cursor: 'default'}} title="" onMouseEnter={(e) => e.preventDefault()} onMouseOver={(e) => e.preventDefault()}>
-                  <td className="py-3 px-4 text-sm text-gray-900 dark:text-white" title="">{day.date}</td>
-                  <td className="py-3 px-4 text-sm text-right text-gray-900 dark:text-white" title="">
+                <div 
+                  key={day.date}
+                  className={`grid px-4 py-3 hover:bg-primary-500/8 dark:hover:bg-primary-500/5 hover:shadow-sm transition-all duration-200 ease-in-out border-b border-white/5 dark:border-white/10 last:border-b-0 text-neutral-800 dark:text-neutral-200 text-body-medium ${
+                    index % 2 === 0 ? 'bg-gray-50/30 dark:bg-gray-800/15' : 'bg-transparent'
+                  }`}
+                  style={{gridTemplateColumns: "1.2fr 1.2fr 1fr 1fr 1fr 1fr 1.4fr", gap: "12px"}}
+                >
+                  <div>{day.date}</div>
+                  <div className="text-right font-medium">
                     {formatPerformanceMetric(day.attestation_performance)}%
-                  </td>
-                  <td className="py-3 px-4 text-sm text-right text-gray-900 dark:text-white" title="">
+                  </div>
+                  <div className="text-right">
                     {formatPerformanceMetric(day.head_accuracy)}%
-                  </td>
-                  <td className="py-3 px-4 text-sm text-right text-gray-900 dark:text-white" title="">
+                  </div>
+                  <div className="text-right">
                     {formatPerformanceMetric(day.target_accuracy)}%
-                  </td>
-                  <td className="py-3 px-4 text-sm text-right text-gray-900 dark:text-white" title="">
+                  </div>
+                  <div className="text-right">
                     {formatPerformanceMetric(day.source_accuracy)}%
-                  </td>
-                  <td className="py-3 px-4 text-sm text-right text-gray-900 dark:text-white" title="">
+                  </div>
+                  <div className="text-right">
                     {day.avg_inclusion_delay.toFixed(2)}s
-                  </td>
-                  <td className="py-3 px-4 text-sm text-right text-gray-900 dark:text-white" title="">
+                  </div>
+                  <div className="text-right">
                     {(day.net_rewards / 1e9).toFixed(6)} ETH
-                  </td>
-                </tr>
+                  </div>
+                </div>
               ))}
-            </tbody>
-          </table>
+            </div>
+          </div>
         </div>
       </GlassCard>
 
@@ -739,49 +750,59 @@ const OperatorDashboard: React.FC<OperatorDashboardProps> = ({ operatorAddress: 
           </GlassButton>
         </div>
         
-        <div className="overflow-x-auto" title="">
-          <table className="min-w-full" style={{cursor: 'default'}} title="">
-            <thead>
-              <tr className="border-b border-gray-200 dark:border-gray-700">
-                <th className="text-left py-3 px-4 text-sm font-medium text-gray-900 dark:text-white" title="">Validator Index</th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-gray-900 dark:text-white" title="">Public Key</th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-gray-900 dark:text-white" title="">Status</th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-gray-900 dark:text-white" title="">Activation Date</th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-gray-900 dark:text-white" title="">Exit Date</th>
-              </tr>
-            </thead>
-            <tbody>
+        <div className="bg-white/5 dark:bg-white/2 backdrop-blur-sm rounded-xl border border-white/10 dark:border-white/15 shadow-sm overflow-hidden">
+          {/* Sticky Header */}
+          <div className="sticky top-0 z-10 bg-white/10 dark:bg-white/5 backdrop-blur-sm border-b border-white/10 dark:border-white/15">
+            <div className="grid px-4 py-4 font-semibold text-neutral-900 dark:text-neutral-100 text-body-medium" style={{gridTemplateColumns: "1fr 2.5fr 1.2fr 1.5fr 1.5fr", gap: "12px"}}>
+              <div>Validator Index</div>
+              <div>Public Key</div>
+              <div>Status</div>
+              <div>Activation Date</div>
+              <div>Exit Date</div>
+            </div>
+          </div>
+          
+          {/* Scrollable Body */}
+          <div style={{ maxHeight: '400px', overflow: 'auto' }}>
+            <div className="divide-y divide-white/5 dark:divide-white/10">
               {validatorsList.map((validator, index) => (
-                <tr key={validator.validator_index} className="border-b border-gray-100 dark:border-gray-800" style={{cursor: 'default'}} title="" onMouseEnter={(e) => e.preventDefault()} onMouseOver={(e) => e.preventDefault()}>
-                  <td className="py-3 px-4 text-sm text-gray-900 dark:text-white font-mono" title="">
+                <div 
+                  key={validator.validator_index}
+                  className={`grid px-4 py-3 hover:bg-primary-500/8 dark:hover:bg-primary-500/5 hover:shadow-sm transition-all duration-200 ease-in-out border-b border-white/5 dark:border-white/10 last:border-b-0 text-neutral-800 dark:text-neutral-200 text-body-medium ${
+                    index % 2 === 0 ? 'bg-gray-50/30 dark:bg-gray-800/15' : 'bg-transparent'
+                  }`}
+                  style={{gridTemplateColumns: "1fr 2.5fr 1.2fr 1.5fr 1.5fr", gap: "12px"}}
+                >
+                  <div className="font-mono">
                     {validator.validator_index}
-                  </td>
-                  <td className="py-3 px-4 text-sm text-gray-900 dark:text-white font-mono" title="">
+                  </div>
+                  <div className="font-mono text-xs">
                     {validator.public_key ? `${validator.public_key.slice(0, 12)}...${validator.public_key.slice(-8)}` : '-'}
-                  </td>
-                  <td className="py-3 px-4 text-sm text-gray-900 dark:text-white" title="">
+                  </div>
+                  <div>
                     <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
                       validator.status?.toLowerCase().includes('active') 
                         ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
                         : validator.status?.toLowerCase().includes('exit') || validator.status?.toLowerCase().includes('slashed')
                         ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
                         : 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
-                    }`} title="">
+                    }`}>
                       {validator.status}
                     </span>
-                  </td>
-                  <td className="py-3 px-4 text-sm text-gray-900 dark:text-white" title="">
+                  </div>
+                  <div>
                     {validator.activation_date || '-'}
-                  </td>
-                  <td className="py-3 px-4 text-sm text-gray-900 dark:text-white" title="">
+                  </div>
+                  <div>
                     {validator.exit_date || '-'}
-                  </td>
-                </tr>
+                  </div>
+                </div>
               ))}
-            </tbody>
-          </table>
+            </div>
+          </div>
         </div>
       </GlassCard>
+      </div>
     </div>
   );
 };
