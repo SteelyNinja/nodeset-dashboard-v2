@@ -593,32 +593,37 @@ const ProposalsTab: React.FC = () => {
           )}
 
           {filteredMissedProposals.length > 0 ? (
-            <div className="overflow-x-auto">
+            <div className="bg-white/5 dark:bg-white/2 backdrop-blur-sm rounded-xl border border-white/10 dark:border-white/15 shadow-sm overflow-hidden">
+              {/* Sticky Header */}
+              <div className="sticky top-0 z-10 bg-white/10 dark:bg-white/5 backdrop-blur-sm border-b border-white/10 dark:border-white/15">
+                <div className="grid px-4 py-4 font-semibold text-neutral-900 dark:text-neutral-100 text-body-medium" style={{gridTemplateColumns: "2fr 1.5fr 2.5fr 1.5fr 1.8fr 1.2fr", gap: "12px"}}>
+                  <div>Date & Time</div>
+                  <div>Slot Number</div>
+                  <div>Operator Name</div>
+                  <div>Total Missed</div>
+                  <div>Total Successful</div>
+                  <div>Missed %</div>
+                </div>
+              </div>
+              
+              {/* Scrollable Body */}
               <div style={{ maxHeight: '400px', overflow: 'auto' }}>
-                <GlassTable>
-                  <GlassTableHeader>
-                    <GlassTableRow>
-                      <GlassTableCell>Date & Time</GlassTableCell>
-                      <GlassTableCell>Slot Number</GlassTableCell>
-                      <GlassTableCell>Operator Name</GlassTableCell>
-                      <GlassTableCell>Total Missed</GlassTableCell>
-                      <GlassTableCell>Total Successful</GlassTableCell>
-                      <GlassTableCell>Missed %</GlassTableCell>
-                    </GlassTableRow>
-                  </GlassTableHeader>
-                  <GlassTableBody>
-                    {filteredMissedProposals.map((missed, index) => (
-                      <GlassTableRow key={index}>
-                        <GlassTableCell>{missed.dateTime}</GlassTableCell>
-                        <GlassTableCell>{missed.slotNumber}</GlassTableCell>
-                        <GlassTableCell>{missed.operatorName}</GlassTableCell>
-                        <GlassTableCell className="text-red-600 font-medium">{missed.totalMissed}</GlassTableCell>
-                        <GlassTableCell className="text-green-600 font-medium">{missed.totalSuccessful}</GlassTableCell>
-                        <GlassTableCell>{missed.missedPercentage}</GlassTableCell>
-                      </GlassTableRow>
-                    ))}
-                  </GlassTableBody>
-                </GlassTable>
+                <div className="divide-y divide-white/5 dark:divide-white/10">
+                  {filteredMissedProposals.map((missed, index) => (
+                    <div 
+                      key={index}
+                      className="grid px-4 py-3 hover:bg-primary-500/8 dark:hover:bg-primary-500/5 hover:shadow-sm transition-all duration-200 ease-in-out border-b border-white/5 dark:border-white/10 last:border-b-0 text-neutral-800 dark:text-neutral-200 text-body-medium"
+                      style={{gridTemplateColumns: "2fr 1.5fr 2.5fr 1.5fr 1.8fr 1.2fr", gap: "12px"}}
+                    >
+                      <div>{missed.dateTime}</div>
+                      <div>{missed.slotNumber}</div>
+                      <div>{missed.operatorName}</div>
+                      <div className="text-red-600 font-medium">{missed.totalMissed}</div>
+                      <div className="text-green-600 font-medium">{missed.totalSuccessful}</div>
+                      <div>{missed.missedPercentage}</div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           ) : missedProposalsTable.length > 0 ? (

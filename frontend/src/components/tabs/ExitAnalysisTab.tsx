@@ -162,34 +162,39 @@ const ExitAnalysisTab: React.FC = () => {
             )}
           </div>
           
-          <div className="overflow-x-auto">
+          <div className="bg-white/5 dark:bg-white/2 backdrop-blur-sm rounded-xl border border-white/10 dark:border-white/15 shadow-sm overflow-hidden">
+            {/* Sticky Header */}
+            <div className="sticky top-0 z-10 bg-white/10 dark:bg-white/5 backdrop-blur-sm border-b border-white/10 dark:border-white/15">
+              <div className="grid px-4 py-4 font-semibold text-neutral-900 dark:text-neutral-100 text-body-medium" style={{gridTemplateColumns: "2.5fr 2fr 1fr 1.3fr 1.3fr 1.3fr 1.8fr", gap: "12px"}}>
+                <div>Address</div>
+                <div>ENS / Discord Name</div>
+                <div>Exits</div>
+                <div>Still Active</div>
+                <div>Total Ever</div>
+                <div>Exit Rate</div>
+                <div>Latest Exit</div>
+              </div>
+            </div>
+            
+            {/* Scrollable Body */}
             <div style={{ maxHeight: '400px', overflow: 'auto' }}>
-              <GlassTable>
-                <GlassTableHeader>
-                  <GlassTableRow>
-                    <GlassTableCell>Address</GlassTableCell>
-                    <GlassTableCell>ENS / Discord Name</GlassTableCell>
-                    <GlassTableCell>Exits</GlassTableCell>
-                    <GlassTableCell>Still Active</GlassTableCell>
-                    <GlassTableCell>Total Ever</GlassTableCell>
-                    <GlassTableCell>Exit Rate</GlassTableCell>
-                    <GlassTableCell>Latest Exit</GlassTableCell>
-                  </GlassTableRow>
-                </GlassTableHeader>
-                <GlassTableBody>
-                  {filteredOperatorData.map((operator, index) => (
-                    <GlassTableRow key={index}>
-                      <GlassTableCell className="font-mono text-xs">{operator.operator}</GlassTableCell>
-                      <GlassTableCell>{operator.operator_name || '-'}</GlassTableCell>
-                      <GlassTableCell className="text-red-600 font-medium">{operator.exits}</GlassTableCell>
-                      <GlassTableCell className="text-green-600">{operator.still_active}</GlassTableCell>
-                      <GlassTableCell className="font-medium">{operator.total_ever}</GlassTableCell>
-                      <GlassTableCell className="text-orange-600">{operator.exit_rate.toFixed(2)}%</GlassTableCell>
-                      <GlassTableCell>{operator.latest_exit_date}</GlassTableCell>
-                    </GlassTableRow>
-                  ))}
-                </GlassTableBody>
-              </GlassTable>
+              <div className="divide-y divide-white/5 dark:divide-white/10">
+                {filteredOperatorData.map((operator, index) => (
+                  <div 
+                    key={index}
+                    className="grid px-4 py-3 hover:bg-primary-500/8 dark:hover:bg-primary-500/5 hover:shadow-sm transition-all duration-200 ease-in-out border-b border-white/5 dark:border-white/10 last:border-b-0 text-neutral-800 dark:text-neutral-200 text-body-medium"
+                    style={{gridTemplateColumns: "2.5fr 2fr 1fr 1.3fr 1.3fr 1.3fr 1.8fr", gap: "12px"}}
+                  >
+                    <div className="font-mono text-xs">{operator.operator}</div>
+                    <div>{operator.operator_name || '-'}</div>
+                    <div className="text-red-600 font-medium">{operator.exits}</div>
+                    <div className="text-green-600">{operator.still_active}</div>
+                    <div className="font-medium">{operator.total_ever}</div>
+                    <div className="text-orange-600">{operator.exit_rate.toFixed(2)}%</div>
+                    <div>{operator.latest_exit_date}</div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </GlassCard>
@@ -225,46 +230,51 @@ const ExitAnalysisTab: React.FC = () => {
             )}
           </div>
           
-          <div className="overflow-x-auto">
+          <div className="bg-white/5 dark:bg-white/2 backdrop-blur-sm rounded-xl border border-white/10 dark:border-white/15 shadow-sm overflow-hidden">
+            {/* Sticky Header */}
+            <div className="sticky top-0 z-10 bg-white/10 dark:bg-white/5 backdrop-blur-sm border-b border-white/10 dark:border-white/15">
+              <div className="grid px-4 py-4 font-semibold text-neutral-900 dark:text-neutral-100 text-body-medium" style={{gridTemplateColumns: "1.5fr 2.5fr 2fr 1.8fr 1.3fr 1.3fr 1.5fr", gap: "12px"}}>
+                <div>Validator Index</div>
+                <div>Operator</div>
+                <div>Name</div>
+                <div>Exit Date</div>
+                <div>Status</div>
+                <div>Slashed</div>
+                <div>Exit Epoch</div>
+              </div>
+            </div>
+            
+            {/* Scrollable Body */}
             <div style={{ maxHeight: '400px', overflow: 'auto' }}>
-              <GlassTable>
-                <GlassTableHeader>
-                  <GlassTableRow>
-                    <GlassTableCell>Validator Index</GlassTableCell>
-                    <GlassTableCell>Operator</GlassTableCell>
-                    <GlassTableCell>Name</GlassTableCell>
-                    <GlassTableCell>Exit Date</GlassTableCell>
-                    <GlassTableCell>Status</GlassTableCell>
-                    <GlassTableCell>Slashed</GlassTableCell>
-                    <GlassTableCell>Exit Epoch</GlassTableCell>
-                  </GlassTableRow>
-                </GlassTableHeader>
-                <GlassTableBody>
-                  {filteredExitData.map((exit, index) => (
-                    <GlassTableRow key={index}>
-                      <GlassTableCell className="font-medium">{exit.validator_index}</GlassTableCell>
-                      <GlassTableCell className="font-mono text-xs">{exit.operator}</GlassTableCell>
-                      <GlassTableCell>{exit.operator_name}</GlassTableCell>
-                      <GlassTableCell>{exit.exit_date}</GlassTableCell>
-                      <GlassTableCell>
-                        <span className={`px-2 py-1 rounded-full text-xs ${
-                          exit.status === 'exited' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'
-                        }`}>
-                          {exit.status}
-                        </span>
-                      </GlassTableCell>
-                      <GlassTableCell>
-                        <span className={`px-2 py-1 rounded-full text-xs ${
-                          exit.slashed ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'
-                        }`}>
-                          {exit.slashed ? 'Yes' : 'No'}
-                        </span>
-                      </GlassTableCell>
-                      <GlassTableCell>{exit.exit_epoch}</GlassTableCell>
-                    </GlassTableRow>
-                  ))}
-                </GlassTableBody>
-              </GlassTable>
+              <div className="divide-y divide-white/5 dark:divide-white/10">
+                {filteredExitData.map((exit, index) => (
+                  <div 
+                    key={index}
+                    className="grid px-4 py-3 hover:bg-primary-500/8 dark:hover:bg-primary-500/5 hover:shadow-sm transition-all duration-200 ease-in-out border-b border-white/5 dark:border-white/10 last:border-b-0 text-neutral-800 dark:text-neutral-200 text-body-medium"
+                    style={{gridTemplateColumns: "1.5fr 2.5fr 2fr 1.8fr 1.3fr 1.3fr 1.5fr", gap: "12px"}}
+                  >
+                    <div className="font-medium">{exit.validator_index}</div>
+                    <div className="font-mono text-xs">{exit.operator}</div>
+                    <div>{exit.operator_name}</div>
+                    <div>{exit.exit_date}</div>
+                    <div>
+                      <span className={`px-2 py-1 rounded-full text-xs ${
+                        exit.status === 'exited' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'
+                      }`}>
+                        {exit.status}
+                      </span>
+                    </div>
+                    <div>
+                      <span className={`px-2 py-1 rounded-full text-xs ${
+                        exit.slashed ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'
+                      }`}>
+                        {exit.slashed ? 'Yes' : 'No'}
+                      </span>
+                    </div>
+                    <div>{exit.exit_epoch}</div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </GlassCard>

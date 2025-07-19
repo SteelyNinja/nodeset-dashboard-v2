@@ -1063,21 +1063,24 @@ const PerformanceTab: React.FC = () => {
             <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">
               Showing {filteredAndSortedData.length} of {performanceData.length} operators (sorted by performance)
             </div>
-            <div style={{ maxHeight: '400px', overflow: 'auto' }}>
-              <GlassTable>
-                <GlassTableHeader>
-                  <GlassTableRow>
-                    <GlassTableCell header>Rank</GlassTableCell>
-                    <GlassTableCell header>Address</GlassTableCell>
-                    <GlassTableCell header>ENS / Discord Name</GlassTableCell>
-                    <GlassTableCell header>Performance</GlassTableCell>
-                    <GlassTableCell header>Category</GlassTableCell>
-                    <GlassTableCell header>Active</GlassTableCell>
-                    <GlassTableCell header>Total</GlassTableCell>
-                    <GlassTableCell header>Exited</GlassTableCell>
-                  </GlassTableRow>
-                </GlassTableHeader>
-                <GlassTableBody>
+            <div className="bg-white/5 dark:bg-white/2 backdrop-blur-sm rounded-xl border border-white/10 dark:border-white/15 shadow-sm overflow-hidden">
+              {/* Sticky Header */}
+              <div className="sticky top-0 z-10 bg-white/10 dark:bg-white/5 backdrop-blur-sm border-b border-white/10 dark:border-white/15">
+                <div className="grid px-4 py-4 font-semibold text-neutral-900 dark:text-neutral-100 text-body-medium" style={{gridTemplateColumns: "0.7fr 2.8fr 2fr 1.2fr 1.2fr 0.8fr 0.8fr 0.8fr", gap: "12px"}}>
+                  <div>Rank</div>
+                  <div>Address</div>
+                  <div>ENS / Discord Name</div>
+                  <div>Performance</div>
+                  <div>Category</div>
+                  <div>Active</div>
+                  <div>Total</div>
+                  <div>Exited</div>
+                </div>
+              </div>
+              
+              {/* Scrollable Body */}
+              <div style={{ maxHeight: '400px', overflow: 'auto' }}>
+                <div className="divide-y divide-white/5 dark:divide-white/10">
                   {filteredAndSortedData.map((operator) => {
                     // Find original rank from the full unfiltered sorted data
                     const originalRank = performanceData
@@ -1086,46 +1089,50 @@ const PerformanceTab: React.FC = () => {
                       .findIndex(op => op.address === operator.address) + 1;
                     
                     return (
-                      <GlassTableRow key={operator.address} hoverable>
-                        <GlassTableCell className="font-medium">
+                      <div 
+                        key={operator.address}
+                        className="grid px-4 py-3 hover:bg-primary-500/8 dark:hover:bg-primary-500/5 hover:shadow-sm transition-all duration-200 ease-in-out border-b border-white/5 dark:border-white/10 last:border-b-0 text-neutral-800 dark:text-neutral-200 text-body-medium"
+                        style={{gridTemplateColumns: "0.7fr 2.8fr 2fr 1.2fr 1.2fr 0.8fr 0.8fr 0.8fr", gap: "12px"}}
+                      >
+                        <div className="font-medium">
                           {originalRank}
-                        </GlassTableCell>
-                      <GlassTableCell className="font-mono text-xs">
-                        {operator.address}
-                      </GlassTableCell>
-                      <GlassTableCell>
-                        {operator.ens_name || '-'}
-                      </GlassTableCell>
-                      <GlassTableCell>
-                        {operator.performance.toFixed(2)}%
-                      </GlassTableCell>
-                      <GlassTableCell>
-                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                          operator.category === 'Excellent' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' :
-                          operator.category === 'Good' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
-                          operator.category === 'Average' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
-                          'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-                        }`}>
-                          {operator.category === 'Excellent' ? 'Excellent' :
-                           operator.category === 'Good' ? 'Good' :
-                           operator.category === 'Average' ? 'Average' :
-                           'Poor'}
-                        </span>
-                      </GlassTableCell>
-                      <GlassTableCell>
-                        {operator.active}
-                      </GlassTableCell>
-                      <GlassTableCell>
-                        {operator.total}
-                      </GlassTableCell>
-                      <GlassTableCell>
-                        {operator.exited}
-                      </GlassTableCell>
-                    </GlassTableRow>
+                        </div>
+                        <div className="font-mono text-xs">
+                          {operator.address}
+                        </div>
+                        <div>
+                          {operator.ens_name || '-'}
+                        </div>
+                        <div>
+                          {operator.performance.toFixed(2)}%
+                        </div>
+                        <div>
+                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                            operator.category === 'Excellent' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' :
+                            operator.category === 'Good' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
+                            operator.category === 'Average' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
+                            'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                          }`}>
+                            {operator.category === 'Excellent' ? 'Excellent' :
+                             operator.category === 'Good' ? 'Good' :
+                             operator.category === 'Average' ? 'Average' :
+                             'Poor'}
+                          </span>
+                        </div>
+                        <div>
+                          {operator.active}
+                        </div>
+                        <div>
+                          {operator.total}
+                        </div>
+                        <div>
+                          {operator.exited}
+                        </div>
+                      </div>
                     );
                   })}
-                </GlassTableBody>
-              </GlassTable>
+                </div>
+              </div>
             </div>
             
             {/* Download CSV Button */}
@@ -1210,56 +1217,63 @@ const PerformanceTab: React.FC = () => {
                       />
                     </div>
                   </div>
-                  <div style={{ maxHeight: '400px', overflow: 'auto' }}>
-                    <GlassTable>
-                      <GlassTableHeader>
-                        <GlassTableRow>
-                          <GlassTableCell header>Rank</GlassTableCell>
-                          <GlassTableCell header>Address</GlassTableCell>
-                          <GlassTableCell header>ENS/Discord Name</GlassTableCell>
-                          <GlassTableCell header>Avg Performance</GlassTableCell>
-                          <GlassTableCell header>Attestation Validators</GlassTableCell>
-                          <GlassTableCell header>Excluded (Proposals/Sync)</GlassTableCell>
-                          <GlassTableCell header>Total Validators</GlassTableCell>
-                          <GlassTableCell header>Relative Score (%)</GlassTableCell>
-                        </GlassTableRow>
-                      </GlassTableHeader>
-                      <GlassTableBody>
+                  <div className="bg-white/5 dark:bg-white/2 backdrop-blur-sm rounded-xl border border-white/10 dark:border-white/15 shadow-sm overflow-hidden">
+                    {/* Sticky Header */}
+                    <div className="sticky top-0 z-10 bg-white/10 dark:bg-white/5 backdrop-blur-sm border-b border-white/10 dark:border-white/15">
+                      <div className="grid px-4 py-4 font-semibold text-neutral-900 dark:text-neutral-100 text-body-medium" style={{gridTemplateColumns: "0.7fr 2.8fr 2fr 1.5fr 1.8fr 2fr 1.5fr 1.7fr", gap: "12px"}}>
+                        <div>Rank</div>
+                        <div>Address</div>
+                        <div>ENS/Discord Name</div>
+                        <div>Avg Performance</div>
+                        <div>Attestation Validators</div>
+                        <div>Excluded (Proposals/Sync)</div>
+                        <div>Total Validators</div>
+                        <div>Relative Score (%)</div>
+                      </div>
+                    </div>
+                    
+                    {/* Scrollable Body */}
+                    <div style={{ maxHeight: '400px', overflow: 'auto' }}>
+                      <div className="divide-y divide-white/5 dark:divide-white/10">
                         {filtered7dData.map((operator) => {
                           // Find original rank from the full unfiltered sorted data
                           const originalRank = attestation7dData.findIndex(op => op.address === operator.address) + 1;
                           
                           return (
-                            <GlassTableRow key={operator.address} hoverable>
-                              <GlassTableCell className="font-medium">
+                            <div 
+                              key={operator.address}
+                              className="grid px-4 py-3 hover:bg-primary-500/8 dark:hover:bg-primary-500/5 hover:shadow-sm transition-all duration-200 ease-in-out border-b border-white/5 dark:border-white/10 last:border-b-0 text-neutral-800 dark:text-neutral-200 text-body-medium"
+                              style={{gridTemplateColumns: "0.7fr 2.8fr 2fr 1.5fr 1.8fr 2fr 1.5fr 1.7fr", gap: "12px"}}
+                            >
+                              <div className="font-medium">
                                 {originalRank}
-                              </GlassTableCell>
-                            <GlassTableCell className="font-mono text-xs">
-                              {operator.operator}
-                            </GlassTableCell>
-                            <GlassTableCell>
-                              {operator.ens_name || '-'}
-                            </GlassTableCell>
-                            <GlassTableCell className="font-mono">
-                              {Math.round(operator.regular_performance_gwei).toLocaleString()}
-                            </GlassTableCell>
-                            <GlassTableCell>
-                              {operator.attestation_validators}
-                            </GlassTableCell>
-                            <GlassTableCell>
-                              {operator.excluded_validators}
-                            </GlassTableCell>
-                            <GlassTableCell>
-                              {operator.total_validators}
-                            </GlassTableCell>
-                            <GlassTableCell className="font-mono">
-                              {operator.relative_score.toFixed(2)}%
-                            </GlassTableCell>
-                          </GlassTableRow>
+                              </div>
+                              <div className="font-mono text-xs">
+                                {operator.operator}
+                              </div>
+                              <div>
+                                {operator.ens_name || '-'}
+                              </div>
+                              <div className="font-mono">
+                                {Math.round(operator.regular_performance_gwei).toLocaleString()}
+                              </div>
+                              <div>
+                                {operator.attestation_validators}
+                              </div>
+                              <div>
+                                {operator.excluded_validators}
+                              </div>
+                              <div>
+                                {operator.total_validators}
+                              </div>
+                              <div className="font-mono">
+                                {operator.relative_score.toFixed(2)}%
+                              </div>
+                            </div>
                           );
                         })}
-                      </GlassTableBody>
-                    </GlassTable>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -1300,56 +1314,63 @@ const PerformanceTab: React.FC = () => {
                       />
                     </div>
                   </div>
-                  <div style={{ maxHeight: '400px', overflow: 'auto' }}>
-                    <GlassTable>
-                      <GlassTableHeader>
-                        <GlassTableRow>
-                          <GlassTableCell header>Rank</GlassTableCell>
-                          <GlassTableCell header>Address</GlassTableCell>
-                          <GlassTableCell header>ENS/Discord Name</GlassTableCell>
-                          <GlassTableCell header>Avg Performance</GlassTableCell>
-                          <GlassTableCell header>Attestation Validators</GlassTableCell>
-                          <GlassTableCell header>Excluded (Proposals/Sync)</GlassTableCell>
-                          <GlassTableCell header>Total Validators</GlassTableCell>
-                          <GlassTableCell header>Relative Score (%)</GlassTableCell>
-                        </GlassTableRow>
-                      </GlassTableHeader>
-                      <GlassTableBody>
+                  <div className="bg-white/5 dark:bg-white/2 backdrop-blur-sm rounded-xl border border-white/10 dark:border-white/15 shadow-sm overflow-hidden">
+                    {/* Sticky Header */}
+                    <div className="sticky top-0 z-10 bg-white/10 dark:bg-white/5 backdrop-blur-sm border-b border-white/10 dark:border-white/15">
+                      <div className="grid px-4 py-4 font-semibold text-neutral-900 dark:text-neutral-100 text-body-medium" style={{gridTemplateColumns: "0.7fr 2.8fr 2fr 1.5fr 1.8fr 2fr 1.5fr 1.7fr", gap: "12px"}}>
+                        <div>Rank</div>
+                        <div>Address</div>
+                        <div>ENS/Discord Name</div>
+                        <div>Avg Performance</div>
+                        <div>Attestation Validators</div>
+                        <div>Excluded (Proposals/Sync)</div>
+                        <div>Total Validators</div>
+                        <div>Relative Score (%)</div>
+                      </div>
+                    </div>
+                    
+                    {/* Scrollable Body */}
+                    <div style={{ maxHeight: '400px', overflow: 'auto' }}>
+                      <div className="divide-y divide-white/5 dark:divide-white/10">
                         {filtered31dData.map((operator) => {
                           // Find original rank from the full unfiltered sorted data
                           const originalRank = attestation31dData.findIndex(op => op.address === operator.address) + 1;
                           
                           return (
-                            <GlassTableRow key={operator.address} hoverable>
-                              <GlassTableCell className="font-medium">
+                            <div 
+                              key={operator.address}
+                              className="grid px-4 py-3 hover:bg-primary-500/8 dark:hover:bg-primary-500/5 hover:shadow-sm transition-all duration-200 ease-in-out border-b border-white/5 dark:border-white/10 last:border-b-0 text-neutral-800 dark:text-neutral-200 text-body-medium"
+                              style={{gridTemplateColumns: "0.7fr 2.8fr 2fr 1.5fr 1.8fr 2fr 1.5fr 1.7fr", gap: "12px"}}
+                            >
+                              <div className="font-medium">
                                 {originalRank}
-                              </GlassTableCell>
-                            <GlassTableCell className="font-mono text-xs">
-                              {operator.operator}
-                            </GlassTableCell>
-                            <GlassTableCell>
-                              {operator.ens_name || '-'}
-                            </GlassTableCell>
-                            <GlassTableCell className="font-mono">
-                              {Math.round(operator.regular_performance_gwei).toLocaleString()}
-                            </GlassTableCell>
-                            <GlassTableCell>
-                              {operator.attestation_validators}
-                            </GlassTableCell>
-                            <GlassTableCell>
-                              {operator.excluded_validators}
-                            </GlassTableCell>
-                            <GlassTableCell>
-                              {operator.total_validators}
-                            </GlassTableCell>
-                            <GlassTableCell className="font-mono">
-                              {operator.relative_score.toFixed(2)}%
-                            </GlassTableCell>
-                          </GlassTableRow>
+                              </div>
+                              <div className="font-mono text-xs">
+                                {operator.operator}
+                              </div>
+                              <div>
+                                {operator.ens_name || '-'}
+                              </div>
+                              <div className="font-mono">
+                                {Math.round(operator.regular_performance_gwei).toLocaleString()}
+                              </div>
+                              <div>
+                                {operator.attestation_validators}
+                              </div>
+                              <div>
+                                {operator.excluded_validators}
+                              </div>
+                              <div>
+                                {operator.total_validators}
+                              </div>
+                              <div className="font-mono">
+                                {operator.relative_score.toFixed(2)}%
+                              </div>
+                            </div>
                           );
                         })}
-                      </GlassTableBody>
-                    </GlassTable>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>

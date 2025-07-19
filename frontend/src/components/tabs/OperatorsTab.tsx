@@ -140,60 +140,65 @@ const OperatorsTab: React.FC = () => {
             />
           </div>
           
-          {/* Glass Table with fixed height and scroll */}
-          <div style={{ maxHeight: '600px', overflow: 'auto' }}>
-            <GlassTable>
-              <GlassTableHeader>
-                <GlassTableRow>
-                  <GlassTableCell header>Rank</GlassTableCell>
-                  <GlassTableCell header>Address</GlassTableCell>
-                  <GlassTableCell header>ENS / Discord Name</GlassTableCell>
-                  <GlassTableCell header>Active</GlassTableCell>
-                  <GlassTableCell header>Total</GlassTableCell>
-                  <GlassTableCell header>Exited</GlassTableCell>
-                  <GlassTableCell header>Exit Rate</GlassTableCell>
-                  <GlassTableCell header>Market Share</GlassTableCell>
-                </GlassTableRow>
-              </GlassTableHeader>
-              <GlassTableBody>
+          {/* Glass Table with sticky header */}
+          <div className="bg-white/5 dark:bg-white/2 backdrop-blur-sm rounded-xl border border-white/10 dark:border-white/15 shadow-sm overflow-hidden">
+            {/* Sticky Header */}
+            <div className="sticky top-0 z-10 bg-white/10 dark:bg-white/5 backdrop-blur-sm border-b border-white/10 dark:border-white/15">
+              <div className="grid px-4 py-4 font-semibold text-neutral-900 dark:text-neutral-100 text-body-medium" style={{gridTemplateColumns: "0.7fr 2.8fr 2fr 1.2fr 1.2fr 1.2fr 1.5fr 1.5fr", gap: "12px"}}>
+                <div>Rank</div>
+                <div>Address</div>
+                <div>ENS / Discord Name</div>
+                <div>Active</div>
+                <div>Total</div>
+                <div>Exited</div>
+                <div>Exit Rate</div>
+                <div>Market Share</div>
+              </div>
+            </div>
+            
+            {/* Scrollable Body */}
+            <div style={{ maxHeight: '600px', overflow: 'auto' }}>
+              <div className="divide-y divide-white/5 dark:divide-white/10">
                 {filteredOperators.length > 0 ? (
                   filteredOperators.map((operator) => (
-                    <GlassTableRow key={operator.address}>
-                      <GlassTableCell className="font-medium">
+                    <div 
+                      key={operator.address}
+                      className="grid px-4 py-3 hover:bg-primary-500/8 dark:hover:bg-primary-500/5 hover:shadow-sm transition-all duration-200 ease-in-out border-b border-white/5 dark:border-white/10 last:border-b-0 text-neutral-800 dark:text-neutral-200 text-body-medium"
+                      style={{gridTemplateColumns: "0.7fr 2.8fr 2fr 1.2fr 1.2fr 1.2fr 1.5fr 1.5fr", gap: "12px"}}
+                    >
+                      <div className="font-medium">
                         {operator.rank}
-                      </GlassTableCell>
-                      <GlassTableCell className="font-mono text-xs">
+                      </div>
+                      <div className="font-mono text-xs">
                         {operator.address}
-                      </GlassTableCell>
-                      <GlassTableCell>
+                      </div>
+                      <div>
                         {operator.ens_name || '-'}
-                      </GlassTableCell>
-                      <GlassTableCell>
+                      </div>
+                      <div>
                         {operator.active}
-                      </GlassTableCell>
-                      <GlassTableCell>
+                      </div>
+                      <div>
                         {operator.total}
-                      </GlassTableCell>
-                      <GlassTableCell>
+                      </div>
+                      <div>
                         {operator.exited}
-                      </GlassTableCell>
-                      <GlassTableCell>
+                      </div>
+                      <div>
                         {operator.exit_rate.toFixed(1)}%
-                      </GlassTableCell>
-                      <GlassTableCell>
+                      </div>
+                      <div>
                         {operator.market_share.toFixed(2)}%
-                      </GlassTableCell>
-                    </GlassTableRow>
+                      </div>
+                    </div>
                   ))
                 ) : (
-                  <GlassTableRow>
-                    <GlassTableCell colSpan={8} className="text-center py-8 text-gray-500 dark:text-gray-400">
-                      No operators found matching "{searchTerm}"
-                    </GlassTableCell>
-                  </GlassTableRow>
+                  <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                    No operators found matching "{searchTerm}"
+                  </div>
                 )}
-              </GlassTableBody>
-            </GlassTable>
+              </div>
+            </div>
           </div>
         </div>
       )}

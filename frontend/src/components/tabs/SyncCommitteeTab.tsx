@@ -314,36 +314,41 @@ const SyncCommitteeTab: React.FC = () => {
           )}
         </div>
         
-        <div className="overflow-x-auto">
+        <div className="bg-white/5 dark:bg-white/2 backdrop-blur-sm rounded-xl border border-white/10 dark:border-white/15 shadow-sm overflow-hidden">
+          {/* Sticky Header */}
+          <div className="sticky top-0 z-10 bg-white/10 dark:bg-white/5 backdrop-blur-sm border-b border-white/10 dark:border-white/15">
+            <div className="grid px-4 py-4 font-semibold text-neutral-900 dark:text-neutral-100 text-body-medium" style={{gridTemplateColumns: "0.7fr 2.8fr 2fr 1.8fr 1.5fr 1.5fr 1.2fr 1.2fr", gap: "12px"}}>
+              <div>Rank</div>
+              <div>Address</div>
+              <div>ENS / Discord Name</div>
+              <div>Participation Rate</div>
+              <div>Total Periods</div>
+              <div>Total Slots</div>
+              <div>Successful</div>
+              <div>Missed</div>
+            </div>
+          </div>
+          
+          {/* Scrollable Body */}
           <div className="max-h-96 overflow-y-auto">
-            <GlassTable>
-              <GlassTableHeader>
-                <GlassTableRow>
-                  <GlassTableCell>Rank</GlassTableCell>
-                  <GlassTableCell>Address</GlassTableCell>
-                  <GlassTableCell>ENS / Discord Name</GlassTableCell>
-                  <GlassTableCell>Participation Rate</GlassTableCell>
-                  <GlassTableCell>Total Periods</GlassTableCell>
-                  <GlassTableCell>Total Slots</GlassTableCell>
-                  <GlassTableCell>Successful</GlassTableCell>
-                  <GlassTableCell>Missed</GlassTableCell>
-                </GlassTableRow>
-              </GlassTableHeader>
-              <GlassTableBody>
-                {filteredOperatorData.map((operator, index) => (
-                  <GlassTableRow key={index}>
-                    <GlassTableCell className="font-medium">{operator.rank}</GlassTableCell>
-                    <GlassTableCell className="font-mono text-xs">{operator.address}</GlassTableCell>
-                    <GlassTableCell>{operator.ensName || '-'}</GlassTableCell>
-                    <GlassTableCell className="font-medium text-green-600">{operator.participationRate}</GlassTableCell>
-                    <GlassTableCell>{operator.totalPeriods}</GlassTableCell>
-                    <GlassTableCell>{operator.totalSlots}</GlassTableCell>
-                    <GlassTableCell className="text-green-600">{operator.successful}</GlassTableCell>
-                    <GlassTableCell className="text-red-600">{operator.missed}</GlassTableCell>
-                  </GlassTableRow>
-                ))}
-              </GlassTableBody>
-            </GlassTable>
+            <div className="divide-y divide-white/5 dark:divide-white/10">
+              {filteredOperatorData.map((operator, index) => (
+                <div 
+                  key={index}
+                  className="grid px-4 py-3 hover:bg-primary-500/8 dark:hover:bg-primary-500/5 hover:shadow-sm transition-all duration-200 ease-in-out border-b border-white/5 dark:border-white/10 last:border-b-0 text-neutral-800 dark:text-neutral-200 text-body-medium"
+                  style={{gridTemplateColumns: "0.7fr 2.8fr 2fr 1.8fr 1.5fr 1.5fr 1.2fr 1.2fr", gap: "12px"}}
+                >
+                  <div className="font-medium">{operator.rank}</div>
+                  <div className="font-mono text-xs">{operator.address}</div>
+                  <div>{operator.ensName || '-'}</div>
+                  <div className="font-medium text-green-600">{operator.participationRate}</div>
+                  <div>{operator.totalPeriods}</div>
+                  <div>{operator.totalSlots}</div>
+                  <div className="text-green-600">{operator.successful}</div>
+                  <div className="text-red-600">{operator.missed}</div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </GlassCard>
@@ -379,32 +384,37 @@ const SyncCommitteeTab: React.FC = () => {
           )}
         </div>
         
-        <div className="overflow-x-auto">
+        <div className="bg-white/5 dark:bg-white/2 backdrop-blur-sm rounded-xl border border-white/10 dark:border-white/15 shadow-sm overflow-hidden">
+          {/* Sticky Header */}
+          <div className="sticky top-0 z-10 bg-white/10 dark:bg-white/5 backdrop-blur-sm border-b border-white/10 dark:border-white/15">
+            <div className="grid px-4 py-4 font-semibold text-neutral-900 dark:text-neutral-100 text-body-medium" style={{gridTemplateColumns: "1.5fr 1.5fr 1.5fr 1.2fr 1.2fr 2fr", gap: "12px"}}>
+              <div>Period</div>
+              <div>Validators</div>
+              <div>Total Slots</div>
+              <div>Successful</div>
+              <div>Missed</div>
+              <div>Participation Rate</div>
+            </div>
+          </div>
+          
+          {/* Scrollable Body */}
           <div className="max-h-96 overflow-y-auto">
-            <GlassTable>
-              <GlassTableHeader>
-                <GlassTableRow>
-                  <GlassTableCell>Period</GlassTableCell>
-                  <GlassTableCell>Validators</GlassTableCell>
-                  <GlassTableCell>Total Slots</GlassTableCell>
-                  <GlassTableCell>Successful</GlassTableCell>
-                  <GlassTableCell>Missed</GlassTableCell>
-                  <GlassTableCell>Participation Rate</GlassTableCell>
-                </GlassTableRow>
-              </GlassTableHeader>
-              <GlassTableBody>
-                {filteredPeriodData.map((period, index) => (
-                  <GlassTableRow key={index}>
-                    <GlassTableCell className="font-medium">{period.period}</GlassTableCell>
-                    <GlassTableCell>{period.validators}</GlassTableCell>
-                    <GlassTableCell>{period.totalSlots}</GlassTableCell>
-                    <GlassTableCell className="text-green-600">{period.successful}</GlassTableCell>
-                    <GlassTableCell className="text-red-600">{period.missed}</GlassTableCell>
-                    <GlassTableCell className="font-medium text-blue-600">{period.participationRate}</GlassTableCell>
-                  </GlassTableRow>
-                ))}
-              </GlassTableBody>
-            </GlassTable>
+            <div className="divide-y divide-white/5 dark:divide-white/10">
+              {filteredPeriodData.map((period, index) => (
+                <div 
+                  key={index}
+                  className="grid px-4 py-3 hover:bg-primary-500/8 dark:hover:bg-primary-500/5 hover:shadow-sm transition-all duration-200 ease-in-out border-b border-white/5 dark:border-white/10 last:border-b-0 text-neutral-800 dark:text-neutral-200 text-body-medium"
+                  style={{gridTemplateColumns: "1.5fr 1.5fr 1.5fr 1.2fr 1.2fr 2fr", gap: "12px"}}
+                >
+                  <div className="font-medium">{period.period}</div>
+                  <div>{period.validators}</div>
+                  <div>{period.totalSlots}</div>
+                  <div className="text-green-600">{period.successful}</div>
+                  <div className="text-red-600">{period.missed}</div>
+                  <div className="font-medium text-blue-600">{period.participationRate}</div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </GlassCard>
@@ -440,40 +450,45 @@ const SyncCommitteeTab: React.FC = () => {
           )}
         </div>
 
-        <div className="overflow-x-auto">
+        <div className="bg-white/5 dark:bg-white/2 backdrop-blur-sm rounded-xl border border-white/10 dark:border-white/15 shadow-sm overflow-hidden">
+          {/* Sticky Header */}
+          <div className="sticky top-0 z-10 bg-white/10 dark:bg-white/5 backdrop-blur-sm border-b border-white/10 dark:border-white/15">
+            <div className="grid px-4 py-4 font-semibold text-neutral-900 dark:text-neutral-100 text-body-medium" style={{gridTemplateColumns: "1fr 2fr 1.5fr 1.8fr 1.2fr 1.2fr 1.2fr 1.3fr 1.3fr 1.5fr", gap: "12px"}}>
+              <div>Period</div>
+              <div>Operator</div>
+              <div>Validator Index</div>
+              <div>Participation Rate</div>
+              <div>Total Slots</div>
+              <div>Successful</div>
+              <div>Missed</div>
+              <div>Start Epoch</div>
+              <div>End Epoch</div>
+              <div>Partial Period</div>
+            </div>
+          </div>
+          
+          {/* Scrollable Body */}
           <div className="max-h-96 overflow-y-auto">
-            <GlassTable>
-              <GlassTableHeader>
-                <GlassTableRow>
-                  <GlassTableCell>Period</GlassTableCell>
-                  <GlassTableCell>Operator</GlassTableCell>
-                  <GlassTableCell>Validator Index</GlassTableCell>
-                  <GlassTableCell>Participation Rate</GlassTableCell>
-                  <GlassTableCell>Total Slots</GlassTableCell>
-                  <GlassTableCell>Successful</GlassTableCell>
-                  <GlassTableCell>Missed</GlassTableCell>
-                  <GlassTableCell>Start Epoch</GlassTableCell>
-                  <GlassTableCell>End Epoch</GlassTableCell>
-                  <GlassTableCell>Partial Period</GlassTableCell>
-                </GlassTableRow>
-              </GlassTableHeader>
-              <GlassTableBody>
-                {filteredDetailedData.map((record, index) => (
-                  <GlassTableRow key={index}>
-                    <GlassTableCell className="font-medium">{record.period}</GlassTableCell>
-                    <GlassTableCell>{record.operator}</GlassTableCell>
-                    <GlassTableCell>{record.validatorIndex}</GlassTableCell>
-                    <GlassTableCell className="font-medium text-green-600">{record.participationRate}</GlassTableCell>
-                    <GlassTableCell>{record.totalSlots}</GlassTableCell>
-                    <GlassTableCell className="text-green-600">{record.successful}</GlassTableCell>
-                    <GlassTableCell className="text-red-600">{record.missed}</GlassTableCell>
-                    <GlassTableCell>{record.startEpoch}</GlassTableCell>
-                    <GlassTableCell>{record.endEpoch}</GlassTableCell>
-                    <GlassTableCell>{record.partialPeriod}</GlassTableCell>
-                  </GlassTableRow>
-                ))}
-              </GlassTableBody>
-            </GlassTable>
+            <div className="divide-y divide-white/5 dark:divide-white/10">
+              {filteredDetailedData.map((record, index) => (
+                <div 
+                  key={index}
+                  className="grid px-4 py-3 hover:bg-primary-500/8 dark:hover:bg-primary-500/5 hover:shadow-sm transition-all duration-200 ease-in-out border-b border-white/5 dark:border-white/10 last:border-b-0 text-neutral-800 dark:text-neutral-200 text-body-medium"
+                  style={{gridTemplateColumns: "1fr 2fr 1.5fr 1.8fr 1.2fr 1.2fr 1.2fr 1.3fr 1.3fr 1.5fr", gap: "12px"}}
+                >
+                  <div className="font-medium">{record.period}</div>
+                  <div>{record.operator}</div>
+                  <div>{record.validatorIndex}</div>
+                  <div className="font-medium text-green-600">{record.participationRate}</div>
+                  <div>{record.totalSlots}</div>
+                  <div className="text-green-600">{record.successful}</div>
+                  <div className="text-red-600">{record.missed}</div>
+                  <div>{record.startEpoch}</div>
+                  <div>{record.endEpoch}</div>
+                  <div>{record.partialPeriod}</div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </GlassCard>

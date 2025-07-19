@@ -339,44 +339,49 @@ const GasAnalysisTab: React.FC = () => {
             </div>
           </div>
           
-          <div className="overflow-x-auto">
+          <div className="bg-white/5 dark:bg-white/2 backdrop-blur-sm rounded-xl border border-white/10 dark:border-white/15 shadow-sm overflow-hidden">
+            {/* Sticky Header */}
+            <div className="sticky top-0 z-10 bg-white/10 dark:bg-white/5 backdrop-blur-sm border-b border-white/10 dark:border-white/15">
+              <div className="grid px-4 py-4 font-semibold text-neutral-900 dark:text-neutral-100 text-body-medium" style={{gridTemplateColumns: "2.5fr 2fr 2.5fr 1.8fr", gap: "12px"}}>
+                <div>Address</div>
+                <div>ENS Name</div>
+                <div>Strategy</div>
+                <div>Max Gas Limit</div>
+              </div>
+            </div>
+            
+            {/* Scrollable Body */}
             <div style={{ maxHeight: '600px', overflow: 'auto' }}>
-              <GlassTable>
-                <GlassTableHeader>
-                  <GlassTableRow>
-                    <GlassTableCell>Address</GlassTableCell>
-                    <GlassTableCell>ENS Name</GlassTableCell>
-                    <GlassTableCell>Strategy</GlassTableCell>
-                    <GlassTableCell>Max Gas Limit</GlassTableCell>
-                  </GlassTableRow>
-                </GlassTableHeader>
-                <GlassTableBody>
-                  {getFilteredAndSortedOperators().map((op, index) => (
-                    <GlassTableRow key={`${op.operator}-${index}`}>
-                      <GlassTableCell className="font-mono text-xs">
-                        {op.operator}
-                      </GlassTableCell>
-                      <GlassTableCell>
-                        {op.operator_name && op.operator_name !== op.operator ? op.operator_name : '-'}
-                      </GlassTableCell>
-                      <GlassTableCell>
-                        <div className="flex items-center">
-                          <div 
-                            className="w-3 h-3 rounded-full mr-2"
-                            style={{ backgroundColor: getStrategyColor(op.strategy) }}
-                          ></div>
-                          <span className="text-sm capitalize font-medium">
-                            {op.strategy.replace('_', ' ')}
-                          </span>
-                        </div>
-                      </GlassTableCell>
-                      <GlassTableCell className="text-right font-semibold">
-                        {formatGasLimit(op.max_gas_limit)}
-                      </GlassTableCell>
-                    </GlassTableRow>
-                  ))}
-                </GlassTableBody>
-              </GlassTable>
+              <div className="divide-y divide-white/5 dark:divide-white/10">
+                {getFilteredAndSortedOperators().map((op, index) => (
+                  <div 
+                    key={`${op.operator}-${index}`}
+                    className="grid px-4 py-3 hover:bg-primary-500/8 dark:hover:bg-primary-500/5 hover:shadow-sm transition-all duration-200 ease-in-out border-b border-white/5 dark:border-white/10 last:border-b-0 text-neutral-800 dark:text-neutral-200 text-body-medium"
+                    style={{gridTemplateColumns: "2.5fr 2fr 2.5fr 1.8fr", gap: "12px"}}
+                  >
+                    <div className="font-mono text-xs">
+                      {op.operator}
+                    </div>
+                    <div>
+                      {op.operator_name && op.operator_name !== op.operator ? op.operator_name : '-'}
+                    </div>
+                    <div>
+                      <div className="flex items-center">
+                        <div 
+                          className="w-3 h-3 rounded-full mr-2"
+                          style={{ backgroundColor: getStrategyColor(op.strategy) }}
+                        ></div>
+                        <span className="text-sm capitalize font-medium">
+                          {op.strategy.replace('_', ' ')}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="text-right font-semibold">
+                      {formatGasLimit(op.max_gas_limit)}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </GlassCard>
