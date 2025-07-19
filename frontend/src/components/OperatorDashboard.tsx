@@ -150,18 +150,39 @@ const OperatorDashboard: React.FC<OperatorDashboardProps> = ({ operatorAddress: 
     const avgHeadAccuracy = days.reduce((sum, day) => sum + day.head_accuracy, 0) / days.length;
     const avgInclusionDelay = days.reduce((sum, day) => sum + day.avg_inclusion_delay, 0) / days.length;
 
+    // Additional debugging for suspected 100% issues
+    if (latestDay.attestation_performance >= 99.9 || latestDay.participation_rate >= 99.9) {
+      console.log(`📊 [${operatorAddress}] High performance detected - checking recent trends:`, {
+        last7Days: days.slice(0, 7).map(d => ({
+          date: d.date,
+          performance: d.attestation_performance,
+          participation: d.participation_rate
+        })),
+        performanceRange: {
+          min: Math.min(...days.map(d => d.attestation_performance)),
+          max: Math.max(...days.map(d => d.attestation_performance)),
+          variation: Math.max(...days.map(d => d.attestation_performance)) - Math.min(...days.map(d => d.attestation_performance))
+        }
+      });
+    }
+
     const metrics = {
-      latestPerformance: latestDay.attestation_performance,
+      // Changed to use averages for selected period instead of latest day
+      latestPerformance: avgPerformance,
       avgPerformance,
-      latestParticipation: latestDay.participation_rate,
+      latestParticipation: avgParticipation,
       avgParticipation,
-      latestHeadAccuracy: latestDay.head_accuracy,
+      latestHeadAccuracy: avgHeadAccuracy,
       avgHeadAccuracy,
-      latestInclusionDelay: latestDay.avg_inclusion_delay,
+      latestInclusionDelay: avgInclusionDelay,
       avgInclusionDelay,
       validatorCount: latestDay.validator_count,
       totalDays: days.length,
-      latestDate: latestDay.date
+      latestDate: latestDay.date,
+      // Keep actual latest day values for reference
+      actualLatestPerformance: latestDay.attestation_performance,
+      actualLatestParticipation: latestDay.participation_rate,
+      actualLatestHeadAccuracy: latestDay.head_accuracy
     };
 
     console.log('Calculated summary metrics:', {
@@ -191,6 +212,15 @@ const OperatorDashboard: React.FC<OperatorDashboardProps> = ({ operatorAddress: 
     }
     
     const currentOperator7DayPerf = currentOperatorData.avg_attestation_performance;
+    
+    // Debug: Check for data consistency between different sources
+    console.log(`🔄 [${operatorAddress}] Data source comparison:`, {
+      performanceData_latest: summaryMetrics.latestPerformance,
+      operatorSummary_7day: currentOperator7DayPerf,
+      difference: Math.abs(summaryMetrics.latestPerformance - currentOperator7DayPerf),
+      chartDataAvailable: !!chartData,
+      selectedDaysPeriod: selectedDays
+    });
     
     // Calculate percentile ranking based on 7-day performance
     const betterCount = operatorSummaries.filter(op => op.avg_attestation_performance < currentOperator7DayPerf).length;
@@ -323,54 +353,78 @@ const OperatorDashboard: React.FC<OperatorDashboardProps> = ({ operatorAddress: 
   }
 
   if (!performanceData || !summaryMetrics) {
-    return <ErrorMessage message="No performance data available for this operator" />;
+    // Friendly "no data" page for operators without performance data
+    return (
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <GlassButton
+              onClick={() => navigate('/', { state: { tab: 'operators' } })}
+              variant="secondary"
+              size="sm"
+            >
+              <Icon name="left" size="sm" />
+              Back to Rankings
+            </GlassButton>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                Operator Dashboard
+              </h1>
+              <p className="text-gray-600 dark:text-gray-400">
+                {getOperatorDisplayName(operatorAddress!)}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* No Data Message */}
+        <div className="flex items-center justify-center min-h-[400px]">
+          <GlassCard className="max-w-md text-center">
+            <div className="py-8 px-6">
+              <div className="mx-auto w-16 h-16 mb-4 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                <Icon name="chart" size="lg" color="neutral" />
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                No Performance Data Available
+              </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                This operator doesn't have any recent performance data in our system. This could be because:
+              </p>
+              <ul className="text-sm text-gray-600 dark:text-gray-400 text-left space-y-1 mb-6">
+                <li>• All validators have been exited</li>
+                <li>• The operator is newly registered</li>
+                <li>• No recent attestation activity</li>
+              </ul>
+              <div className="space-y-3">
+                <GlassButton
+                  onClick={() => navigate('/', { state: { tab: 'operators' } })}
+                  variant="primary"
+                  size="sm"
+                  className="w-full"
+                >
+                  View All Operators
+                </GlassButton>
+                <GlassButton
+                  onClick={() => navigate('/', { state: { tab: 'exit-analysis' } })}
+                  variant="secondary"
+                  size="sm"
+                  className="w-full"
+                >
+                  Check Exit Analysis
+                </GlassButton>
+              </div>
+            </div>
+          </GlassCard>
+        </div>
+      </div>
+    );
   }
 
   const performanceStatus = getPerformanceStatus(summaryMetrics.latestPerformance);
 
   return (
     <div className="space-y-6">
-      {/* Debug Panel - Remove this in production */}
-      {process.env.NODE_ENV === 'development' && summaryMetrics && (
-        <GlassCard>
-          <div className="text-sm">
-            <h3 className="font-semibold text-red-600 mb-2">Debug Information (Development Only)</h3>
-            <div className="grid grid-cols-2 gap-4 text-xs">
-              <div>
-                <strong>Raw Latest Day Values:</strong>
-                <pre className="mt-1 text-xs overflow-x-auto">
-                  {JSON.stringify({
-                    date: performanceData?.daily_performance[0]?.date,
-                    attestation_performance: performanceData?.daily_performance[0]?.attestation_performance,
-                    participation_rate: performanceData?.daily_performance[0]?.participation_rate,
-                    head_accuracy: performanceData?.daily_performance[0]?.head_accuracy,
-                  }, null, 2)}
-                </pre>
-                <strong className="block mt-2">Performance Trend (Last 7 Days):</strong>
-                <div className="text-xs mt-1">
-                  {performanceData?.daily_performance.slice(0, 7).map((day, index) => (
-                    <div key={day.date} className="flex justify-between">
-                      <span>{day.date}:</span>
-                      <span>{day.attestation_performance.toFixed(2)}% / {day.participation_rate.toFixed(2)}%</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <strong>Calculated Summary:</strong>
-                <pre className="mt-1 text-xs overflow-x-auto">
-                  {JSON.stringify({
-                    latestPerformance: summaryMetrics.latestPerformance,
-                    latestParticipation: summaryMetrics.latestParticipation,
-                    avgPerformance: summaryMetrics.avgPerformance,
-                    avgParticipation: summaryMetrics.avgParticipation,
-                  }, null, 2)}
-                </pre>
-              </div>
-            </div>
-          </div>
-        </GlassCard>
-      )}
 
       {/* Header */}
       <div className="flex items-center justify-between">
@@ -409,9 +463,9 @@ const OperatorDashboard: React.FC<OperatorDashboardProps> = ({ operatorAddress: 
             <div className="text-2xl font-bold text-gray-900 dark:text-white">
               {formatPerformanceMetric(summaryMetrics.latestPerformance)}%
             </div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">Performance</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">{selectedDays}d Avg Performance</div>
             <div className="text-xs text-gray-500 dark:text-gray-500">
-              vs {formatPerformanceMetric(summaryMetrics.avgPerformance)}% avg
+              {summaryMetrics.totalDays} days of data
             </div>
           </div>
         </GlassCard>
@@ -421,9 +475,9 @@ const OperatorDashboard: React.FC<OperatorDashboardProps> = ({ operatorAddress: 
             <div className="text-2xl font-bold text-gray-900 dark:text-white">
               {formatPerformanceMetric(summaryMetrics.latestParticipation)}%
             </div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">Participation</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">{selectedDays}d Avg Participation</div>
             <div className="text-xs text-gray-500 dark:text-gray-500">
-              {summaryMetrics.totalDays} days avg
+              {summaryMetrics.totalDays} days of data
             </div>
           </div>
         </GlassCard>
@@ -433,9 +487,9 @@ const OperatorDashboard: React.FC<OperatorDashboardProps> = ({ operatorAddress: 
             <div className="text-2xl font-bold text-gray-900 dark:text-white">
               {formatPerformanceMetric(summaryMetrics.latestHeadAccuracy)}%
             </div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">Head Accuracy</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">{selectedDays}d Avg Head Accuracy</div>
             <div className="text-xs text-gray-500 dark:text-gray-500">
-              {summaryMetrics.totalDays} days avg
+              {summaryMetrics.totalDays} days of data
             </div>
           </div>
         </GlassCard>
@@ -493,12 +547,12 @@ const OperatorDashboard: React.FC<OperatorDashboardProps> = ({ operatorAddress: 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <GlassCard>
           <div className="text-center">
-            <div className="text-lg font-semibold text-gray-900 dark:text-white">Today</div>
+            <div className="text-lg font-semibold text-gray-900 dark:text-white">{selectedDays}d Average</div>
             <div className="text-sm text-gray-600 dark:text-gray-400 mt-2">
               {formatPerformanceMetric(summaryMetrics.latestPerformance)}% Performance
             </div>
             <div className="text-xs text-gray-500 dark:text-gray-500">
-              Latest: {summaryMetrics.latestDate}
+              Latest data: {summaryMetrics.latestDate}
             </div>
           </div>
         </GlassCard>
@@ -582,14 +636,18 @@ const OperatorDashboard: React.FC<OperatorDashboardProps> = ({ operatorAddress: 
           </h3>
           <div className="space-y-3">
             {[
-              { label: 'Days at 99%+', threshold: 99 },
-              { label: 'Days at 98%+', threshold: 98 },
-              { label: 'Days at 97%+', threshold: 97 },
-              { label: 'Below 97%', threshold: 0 }
+              { label: '99-100%', min: 99, max: 100 },
+              { label: '98-99%', min: 98, max: 99 },
+              { label: '97-98%', min: 97, max: 98 },
+              { label: 'Below 97%', min: 0, max: 97 }
             ].map((item, index) => {
-              const count = index === 3 
-                ? performanceData.daily_performance.filter(d => d.attestation_performance < 97).length
-                : performanceData.daily_performance.filter(d => d.attestation_performance >= item.threshold).length;
+              const count = performanceData.daily_performance.filter(d => {
+                const perf = d.attestation_performance;
+                if (index === 0) return perf >= 99; // 99-100%
+                if (index === 1) return perf >= 98 && perf < 99; // 98-99%
+                if (index === 2) return perf >= 97 && perf < 98; // 97-98%
+                return perf < 97; // Below 97%
+              }).length;
               const percentage = (count / performanceData.daily_performance.length) * 100;
               
               return (
