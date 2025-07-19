@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import { TabId } from './types/api';
 import { apiService } from './services/api';
 import Icon from './components/common/Icon';
 import { analyticsService } from './services/analytics';
 import AnalyticsPage from './components/AnalyticsPage';
 import TheoreticalPerformancePage from './components/TheoreticalPerformancePage';
+import OperatorDashboard from './components/OperatorDashboard';
 import TabNavigation from './components/common/TabNavigation';
 import InformationTab from './components/tabs/InformationTab';
 import DistributionTab from './components/tabs/DistributionTab';
@@ -19,11 +21,19 @@ import ClientDiversityTab from './components/tabs/ClientDiversityTab';
 import GasAnalysisTab from './components/tabs/GasAnalysisTab';
 import VaultActivityTab from './components/tabs/VaultActivityTab';
 
-function App() {
+function MainDashboard() {
+  const location = useLocation();
   const [activeTab, setActiveTab] = useState<TabId>('information');
   const [backendConnected, setBackendConnected] = useState<boolean | null>(null);
   const [cacheTimestamp, setCacheTimestamp] = useState<string | null>(null);
   const [, setIsRefreshing] = useState<boolean>(false);
+
+  // Handle navigation state to set the correct tab
+  useEffect(() => {
+    if (location.state?.tab) {
+      setActiveTab(location.state.tab as TabId);
+    }
+  }, [location.state]);
 
   // Format timestamp for display in UTC
   const formatCacheTimestamp = (timestamp: string | null): string => {
@@ -135,7 +145,7 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-original-light dark:bg-original-dark">
+    <>
       {/* Header */}
       <header className="bg-white/20 dark:bg-gray-800/30 backdrop-blur-glass border-b border-gray-200/50 dark:border-white/15 shadow-glass">
         <div className="px-4 sm:px-6 lg:px-8">
@@ -333,23 +343,23 @@ function App() {
           renderActiveTab()
         )}
       </main>
+    </>
+  );
+}
+
+// Main App component with routing
+function App() {
+
+  return (
+    <div className="min-h-screen bg-original-light dark:bg-original-dark">
+      <Routes>
+        <Route path="/analytics" element={<AnalyticsPage />} />
+        <Route path="/theoretical" element={<TheoreticalPerformancePage />} />
+        <Route path="/operator/:operatorAddress" element={<OperatorDashboard />} />
+        <Route path="/*" element={<MainDashboard />} />
+      </Routes>
     </div>
   );
 }
 
-// Main App component with analytics route handling
-function AppWithAnalytics() {
-  // Check for hidden analytics route
-  if (window.location.pathname === '/analytics') {
-    return <AnalyticsPage />;
-  }
-  
-  // Check for hidden theoretical performance route
-  if (window.location.pathname === '/theoretical') {
-    return <TheoreticalPerformancePage />;
-  }
-  
-  return <App />;
-}
-
-export default AppWithAnalytics;
+export default App;

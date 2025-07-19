@@ -1,0 +1,731 @@
+import React, { useState, useEffect, useMemo } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { apiService } from '../services/api';
+import {
+  OperatorPerformanceData,
+  OperatorChartData,
+  OperatorSummary
+} from '../types/api';
+import GlassCard from './common/GlassCard';
+import GlassButton from './common/GlassButton';
+import LoadingSpinner from './common/LoadingSpinner';
+import ErrorMessage from './common/ErrorMessage';
+import LineChart from './charts/LineChart';
+import Icon from './common/Icon';
+
+interface OperatorDashboardProps {
+  operatorAddress?: string;
+}
+
+const OperatorDashboard: React.FC<OperatorDashboardProps> = ({ operatorAddress: propOperatorAddress }) => {
+  const { operatorAddress: paramOperatorAddress } = useParams<{ operatorAddress: string }>();
+  const navigate = useNavigate();
+  
+  const operatorAddress = propOperatorAddress || paramOperatorAddress;
+  
+  const [performanceData, setPerformanceData] = useState<OperatorPerformanceData | null>(null);
+  const [chartData, setChartData] = useState<OperatorChartData | null>(null);
+  const [allOperatorsSummary, setAllOperatorsSummary] = useState<Record<string, OperatorSummary>>({});
+  const [validatorsList, setValidatorsList] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedDays, setSelectedDays] = useState<number>(30);
+  // ENS name lookup (simplified - you may want to expand this)
+  const getOperatorDisplayName = (address: string): string => {
+    // This could be enhanced to load ENS names from your existing ENS data
+    if (address.length > 10) {
+      return `${address.slice(0, 6)}...${address.slice(-4)}`;
+    }
+    return address;
+  };
+
+  // Load operator data
+  useEffect(() => {
+    if (!operatorAddress) {
+      setError('No operator address provided');
+      setLoading(false);
+      return;
+    }
+
+    const loadOperatorData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        // Load operator performance data and chart data in parallel
+        const [performance, chart, allSummary, validatorPerformanceData, exitData] = await Promise.all([
+          apiService.getOperatorPerformance(operatorAddress, selectedDays),
+          apiService.getOperatorChartData(operatorAddress, selectedDays),
+          apiService.getOperatorsSummary(7), // Always use 7-day data for network ranking
+          apiService.getValidatorPerformanceData(), // Get active validator data
+          apiService.getExitData() // Get exit data for exited validators
+        ]);
+
+        // Get active validators for this operator
+        const activeValidators = Object.entries(validatorPerformanceData.validators || {})
+          .filter(([, validator]: [string, any]) => validator.operator === operatorAddress)
+          .map(([validatorIndex, validator]: [string, any]) => ({
+            validator_index: validator.validator_index,
+            public_key: validatorIndex, // The key is the validator public key
+            activation_timestamp: validator.activation_data?.activation_timestamp,
+            activation_date: validator.activation_data?.activation_date || 
+              (validator.activation_data?.activation_timestamp ? 
+                new Date(validator.activation_data.activation_timestamp * 1000).toISOString().split('T')[0] : null),
+            exit_timestamp: null,
+            exit_date: null,
+            status: validator.activation_data?.status || 'Active'
+          }));
+
+        // Get exited validators for this operator
+        const exitedValidators = (exitData.recent_exits || [])
+          .filter((exit: any) => exit.operator === operatorAddress)
+          .map((exit: any) => ({
+            validator_index: exit.validator_index,
+            public_key: `0x${exit.validator_index.toString(16).padStart(12, '0')}...`, // Placeholder public key
+            activation_timestamp: null,
+            activation_date: null, // Could be enhanced with activation data if available
+            exit_timestamp: exit.exit_timestamp,
+            exit_date: exit.exit_date || 
+              (exit.exit_timestamp ? 
+                new Date(exit.exit_timestamp * 1000).toISOString().split('T')[0] : null),
+            status: exit.slashed ? 'Slashed' : 'Exited'
+          }));
+
+        // Combine and sort all validators
+        const operatorValidators = [...activeValidators, ...exitedValidators]
+          .sort((a, b) => a.validator_index - b.validator_index);
+
+        // Debug logging for API responses
+        console.log('API Response - Performance Data Structure:', {
+          operatorAddress,
+          dailyPerformanceLength: performance?.daily_performance?.length,
+          firstDayData: performance?.daily_performance?.[0],
+          lastDayData: performance?.daily_performance?.[performance?.daily_performance?.length - 1]
+        });
+
+        setPerformanceData(performance);
+        setChartData(chart);
+        setAllOperatorsSummary(allSummary);
+        setValidatorsList(operatorValidators);
+      } catch (err) {
+        console.error('Failed to load operator data:', err);
+        setError(err instanceof Error ? err.message : 'Failed to load operator data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadOperatorData();
+  }, [operatorAddress, selectedDays]);
+
+  // Calculate summary metrics
+  const summaryMetrics = useMemo(() => {
+    if (!performanceData?.daily_performance || performanceData.daily_performance.length === 0) {
+      return null;
+    }
+
+    const days = performanceData.daily_performance;
+    const latestDay = days[0]; // Newest first
+    
+    // Debug logging to help diagnose issues
+    console.log(`OperatorDashboard: Processing ${days.length} days of data for operator ${operatorAddress}`);
+    console.log('Latest day data:', {
+      date: latestDay.date,
+      attestation_performance: latestDay.attestation_performance,
+      participation_rate: latestDay.participation_rate,
+      head_accuracy: latestDay.head_accuracy,
+      validator_count: latestDay.validator_count
+    });
+    
+    // Validate data ranges - performance metrics should be 0-100
+    if (latestDay.attestation_performance > 100 || latestDay.participation_rate > 100) {
+      console.warn(`OperatorDashboard: Unusual performance values detected for ${operatorAddress}:`, {
+        performance: latestDay.attestation_performance,
+        participation: latestDay.participation_rate
+      });
+    }
+    
+    const avgPerformance = days.reduce((sum, day) => sum + day.attestation_performance, 0) / days.length;
+    const avgParticipation = days.reduce((sum, day) => sum + day.participation_rate, 0) / days.length;
+    const avgHeadAccuracy = days.reduce((sum, day) => sum + day.head_accuracy, 0) / days.length;
+    const avgInclusionDelay = days.reduce((sum, day) => sum + day.avg_inclusion_delay, 0) / days.length;
+
+    const metrics = {
+      latestPerformance: latestDay.attestation_performance,
+      avgPerformance,
+      latestParticipation: latestDay.participation_rate,
+      avgParticipation,
+      latestHeadAccuracy: latestDay.head_accuracy,
+      avgHeadAccuracy,
+      latestInclusionDelay: latestDay.avg_inclusion_delay,
+      avgInclusionDelay,
+      validatorCount: latestDay.validator_count,
+      totalDays: days.length,
+      latestDate: latestDay.date
+    };
+
+    console.log('Calculated summary metrics:', {
+      latestPerformance: metrics.latestPerformance,
+      avgPerformance: metrics.avgPerformance,
+      latestParticipation: metrics.latestParticipation,
+      avgParticipation: metrics.avgParticipation
+    });
+
+    return metrics;
+  }, [performanceData, operatorAddress]);
+
+  // Calculate network comparison (always based on 7-day performance)
+  const networkComparison = useMemo(() => {
+    if (!summaryMetrics || Object.keys(allOperatorsSummary).length === 0 || !operatorAddress) {
+      return null;
+    }
+
+    const operatorSummaries = Object.values(allOperatorsSummary);
+    const networkAvgPerformance = operatorSummaries.reduce((sum, op) => sum + op.avg_attestation_performance, 0) / operatorSummaries.length;
+    
+    // Get current operator's 7-day performance for ranking
+    const currentOperatorData = allOperatorsSummary[operatorAddress];
+    if (!currentOperatorData) {
+      console.warn(`No summary data found for operator ${operatorAddress}`);
+      return null;
+    }
+    
+    const currentOperator7DayPerf = currentOperatorData.avg_attestation_performance;
+    
+    // Calculate percentile ranking based on 7-day performance
+    const betterCount = operatorSummaries.filter(op => op.avg_attestation_performance < currentOperator7DayPerf).length;
+    const percentile = Math.round((betterCount / operatorSummaries.length) * 100);
+    
+    // Calculate rank based on 7-day performance with proper tie handling
+    const sortedOperators = operatorSummaries.sort((a, b) => b.avg_attestation_performance - a.avg_attestation_performance);
+    
+    // Count operators with better performance (standard ranking)
+    let rank = 1;
+    for (const op of sortedOperators) {
+      if (op.avg_attestation_performance > currentOperator7DayPerf) {
+        rank++;
+      } else {
+        break; // Found first operator with same or lower performance
+      }
+    }
+
+    console.log(`Operator ${operatorAddress}: Performance=${currentOperator7DayPerf.toFixed(4)}, Rank=${rank}, Total=${operatorSummaries.length}`);
+
+    return {
+      networkAvgPerformance,
+      percentile,
+      rank,
+      totalOperators: operatorSummaries.length,
+      performanceDiff: currentOperator7DayPerf - networkAvgPerformance,
+      period: '7-day' // Indicate this is based on 7-day data
+    };
+  }, [summaryMetrics, allOperatorsSummary, operatorAddress]);
+
+  // Performance status
+  const getPerformanceStatus = (performance: number) => {
+    // Ensure performance is a valid number within expected range
+    const validPerformance = isNaN(performance) ? 0 : Math.max(0, Math.min(100, performance));
+    
+    if (validPerformance >= 99) return { label: 'Excellent', color: 'text-green-600 dark:text-green-400', bgColor: 'bg-green-100 dark:bg-green-900/30' };
+    if (validPerformance >= 97) return { label: 'Good', color: 'text-yellow-600 dark:text-yellow-400', bgColor: 'bg-yellow-100 dark:bg-yellow-900/30' };
+    return { label: 'Needs Attention', color: 'text-red-600 dark:text-red-400', bgColor: 'bg-red-100 dark:bg-red-900/30' };
+  };
+
+  // Helper function to safely format performance metrics
+  const formatPerformanceMetric = (value: number, decimals: number = 3): string => {
+    if (isNaN(value) || value === null || value === undefined) {
+      return 'N/A';
+    }
+    
+    // Clamp value to reasonable range (0-100 for percentages)
+    const clampedValue = Math.max(0, Math.min(100, value));
+    
+    // Warn if original value was outside expected range
+    if (Math.abs(value - clampedValue) > 0.001) {
+      console.warn(`Performance metric outside expected range: ${value}, clamped to ${clampedValue}`);
+    }
+    
+    return clampedValue.toFixed(decimals);
+  };
+
+  // Chart configuration for Recharts
+  const chartConfig = useMemo(() => {
+    if (!chartData) return null;
+
+    // Transform data for Recharts format
+    const transformedData = chartData.dates.map((date, index) => ({
+      date,
+      performance: chartData.attestation_performance[index],
+      headAccuracy: chartData.head_accuracy[index],
+      participation: chartData.participation_rate[index]
+    }));
+
+    // Debug chart data vs summary metrics discrepancy
+    const chartLatestDay = transformedData[transformedData.length - 1]; // Chart data is in ascending order (oldest first)
+    console.log('Chart vs Summary Data Comparison:', {
+      chartDataSource: 'API chart endpoint (ascending order)',
+      summaryDataSource: 'API performance endpoint (descending order)',
+      chartFirstDay: {
+        date: transformedData[0]?.date,
+        performance: transformedData[0]?.performance,
+        participation: transformedData[0]?.participation
+      },
+      chartLatestDay: {
+        date: chartLatestDay?.date,
+        performance: chartLatestDay?.performance,
+        participation: chartLatestDay?.participation
+      },
+      summaryLatestDay: summaryMetrics ? {
+        date: summaryMetrics.latestDate,
+        performance: summaryMetrics.latestPerformance,
+        participation: summaryMetrics.latestParticipation
+      } : null,
+      dataMismatch: summaryMetrics && chartLatestDay ? 
+        Math.abs(chartLatestDay.performance - summaryMetrics.latestPerformance) > 0.001 : false
+    });
+
+    return {
+      data: transformedData,
+      lines: [
+        {
+          dataKey: 'headAccuracy',
+          stroke: 'rgb(16, 185, 129)',
+          strokeWidth: 2,
+          name: 'Head Accuracy %'
+        },
+        {
+          dataKey: 'participation',
+          stroke: 'rgb(245, 158, 11)',
+          strokeWidth: 3,
+          name: 'Participation %',
+          strokeDasharray: '5,5'
+        },
+        {
+          dataKey: 'performance',
+          stroke: 'rgb(59, 130, 246)',
+          strokeWidth: 3,
+          name: 'Performance %'
+        }
+      ]
+    };
+  }, [chartData, summaryMetrics]);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <LoadingSpinner size="lg" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return <ErrorMessage message={error} />;
+  }
+
+  if (!performanceData || !summaryMetrics) {
+    return <ErrorMessage message="No performance data available for this operator" />;
+  }
+
+  const performanceStatus = getPerformanceStatus(summaryMetrics.latestPerformance);
+
+  return (
+    <div className="space-y-6">
+      {/* Debug Panel - Remove this in production */}
+      {process.env.NODE_ENV === 'development' && summaryMetrics && (
+        <GlassCard>
+          <div className="text-sm">
+            <h3 className="font-semibold text-red-600 mb-2">Debug Information (Development Only)</h3>
+            <div className="grid grid-cols-2 gap-4 text-xs">
+              <div>
+                <strong>Raw Latest Day Values:</strong>
+                <pre className="mt-1 text-xs overflow-x-auto">
+                  {JSON.stringify({
+                    date: performanceData?.daily_performance[0]?.date,
+                    attestation_performance: performanceData?.daily_performance[0]?.attestation_performance,
+                    participation_rate: performanceData?.daily_performance[0]?.participation_rate,
+                    head_accuracy: performanceData?.daily_performance[0]?.head_accuracy,
+                  }, null, 2)}
+                </pre>
+                <strong className="block mt-2">Performance Trend (Last 7 Days):</strong>
+                <div className="text-xs mt-1">
+                  {performanceData?.daily_performance.slice(0, 7).map((day, index) => (
+                    <div key={day.date} className="flex justify-between">
+                      <span>{day.date}:</span>
+                      <span>{day.attestation_performance.toFixed(2)}% / {day.participation_rate.toFixed(2)}%</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <strong>Calculated Summary:</strong>
+                <pre className="mt-1 text-xs overflow-x-auto">
+                  {JSON.stringify({
+                    latestPerformance: summaryMetrics.latestPerformance,
+                    latestParticipation: summaryMetrics.latestParticipation,
+                    avgPerformance: summaryMetrics.avgPerformance,
+                    avgParticipation: summaryMetrics.avgParticipation,
+                  }, null, 2)}
+                </pre>
+              </div>
+            </div>
+          </div>
+        </GlassCard>
+      )}
+
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-4">
+          <GlassButton
+            onClick={() => navigate('/', { state: { tab: 'operators' } })}
+            variant="secondary"
+            size="sm"
+          >
+            <Icon name="left" size="sm" />
+            Back to Rankings
+          </GlassButton>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+              Operator Dashboard
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400">
+              {getOperatorDisplayName(operatorAddress!)}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Quick Stats */}
+      <div className="text-center">
+        <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+          Rank #{networkComparison?.rank || '?'} • {summaryMetrics.validatorCount} Validators • 
+          Better than {networkComparison?.percentile || 0}% of operators
+        </div>
+      </div>
+
+      {/* Key Performance Indicators */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <GlassCard>
+          <div className="text-center">
+            <div className="text-2xl font-bold text-gray-900 dark:text-white">
+              {formatPerformanceMetric(summaryMetrics.latestPerformance)}%
+            </div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">Performance</div>
+            <div className="text-xs text-gray-500 dark:text-gray-500">
+              vs {formatPerformanceMetric(summaryMetrics.avgPerformance)}% avg
+            </div>
+          </div>
+        </GlassCard>
+
+        <GlassCard>
+          <div className="text-center">
+            <div className="text-2xl font-bold text-gray-900 dark:text-white">
+              {formatPerformanceMetric(summaryMetrics.latestParticipation)}%
+            </div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">Participation</div>
+            <div className="text-xs text-gray-500 dark:text-gray-500">
+              {summaryMetrics.totalDays} days avg
+            </div>
+          </div>
+        </GlassCard>
+
+        <GlassCard>
+          <div className="text-center">
+            <div className="text-2xl font-bold text-gray-900 dark:text-white">
+              {formatPerformanceMetric(summaryMetrics.latestHeadAccuracy)}%
+            </div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">Head Accuracy</div>
+            <div className="text-xs text-gray-500 dark:text-gray-500">
+              {summaryMetrics.totalDays} days avg
+            </div>
+          </div>
+        </GlassCard>
+
+        <GlassCard>
+          <div className="text-center">
+            <div className="text-2xl font-bold text-gray-900 dark:text-white">
+              {summaryMetrics.latestInclusionDelay.toFixed(2)}s
+            </div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">Avg Delay</div>
+            <div className="text-xs text-gray-500 dark:text-gray-500">
+              {summaryMetrics.totalDays} days avg
+            </div>
+          </div>
+        </GlassCard>
+      </div>
+
+      {/* Performance Chart */}
+      <div className="relative">
+        <div className="absolute top-6 left-6 right-6 z-10 flex items-center justify-between">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            Daily Performance Trends
+          </h2>
+          <div className="flex space-x-2">
+            {[7, 30, 90].map(days => (
+              <GlassButton
+                key={days}
+                onClick={() => setSelectedDays(days)}
+                variant={selectedDays === days ? "primary" : "secondary"}
+                size="sm"
+              >
+                {days}d
+              </GlassButton>
+            ))}
+          </div>
+        </div>
+        
+        {chartConfig && (
+          <div className="pt-16">
+            <LineChart
+              data={chartConfig.data}
+              lines={chartConfig.lines}
+              xAxisDataKey="date"
+              xAxisType="category"
+              xAxisLabel="Date"
+              yAxisLabel="Percentage (%)"
+              yDomain={[95, 100]}
+              showLegend={true}
+            />
+          </div>
+        )}
+      </div>
+
+      {/* Current Status Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <GlassCard>
+          <div className="text-center">
+            <div className="text-lg font-semibold text-gray-900 dark:text-white">Today</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+              {formatPerformanceMetric(summaryMetrics.latestPerformance)}% Performance
+            </div>
+            <div className="text-xs text-gray-500 dark:text-gray-500">
+              Latest: {summaryMetrics.latestDate}
+            </div>
+          </div>
+        </GlassCard>
+
+        <GlassCard>
+          <div className="text-center">
+            <div className="text-lg font-semibold text-gray-900 dark:text-white">Validators</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+              {validatorsList.filter(v => v.status?.toLowerCase().includes('active')).length} Active
+            </div>
+            <div className="text-xs text-gray-500 dark:text-gray-500">
+              {validatorsList.filter(v => v.status === 'Exited' || v.status === 'Slashed').length} Exited
+            </div>
+          </div>
+        </GlassCard>
+
+        <GlassCard>
+          <div className="text-center">
+            <div className="text-lg font-semibold text-gray-900 dark:text-white">
+              Status
+            </div>
+            <div className={`inline-flex px-2 py-1 rounded-full text-xs font-medium mt-2 ${performanceStatus.bgColor} ${performanceStatus.color}`}>
+              {performanceStatus.label}
+            </div>
+            <div className="text-xs text-gray-500 dark:text-gray-500 mt-1">All Healthy</div>
+          </div>
+        </GlassCard>
+
+        <GlassCard>
+          <div className="text-center">
+            <div className="text-lg font-semibold text-gray-900 dark:text-white">Network Rank</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+              #{networkComparison?.rank || '?'} of {networkComparison?.totalOperators || '?'}
+            </div>
+            <div className="text-xs text-gray-500 dark:text-gray-500">
+              {networkComparison?.performanceDiff && networkComparison.performanceDiff > 0 ? '+' : ''}
+              {networkComparison?.performanceDiff?.toFixed(2) || '0'}% vs network (7-day)
+            </div>
+          </div>
+        </GlassCard>
+      </div>
+
+      {/* Detailed Analytics */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <GlassCard>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+            Accuracy Breakdown
+          </h3>
+          <div className="space-y-3">
+            {[
+              { label: 'Head', value: summaryMetrics.avgHeadAccuracy, color: 'bg-green-500' },
+              { label: 'Target', value: performanceData.daily_performance.reduce((sum, day) => sum + day.target_accuracy, 0) / performanceData.daily_performance.length, color: 'bg-blue-500' },
+              { label: 'Source', value: performanceData.daily_performance.reduce((sum, day) => sum + day.source_accuracy, 0) / performanceData.daily_performance.length, color: 'bg-purple-500' }
+            ].map(item => (
+              <div key={item.label} className="flex items-center">
+                <div className="w-16 text-sm text-gray-600 dark:text-gray-400">{item.label}:</div>
+                <div className="flex-1 mx-3">
+                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                    <div 
+                      className={`h-2 rounded-full ${item.color}`}
+                      style={{ width: `${item.value}%` }}
+                    ></div>
+                  </div>
+                </div>
+                <div className="w-12 text-sm font-medium text-gray-900 dark:text-white text-right">
+                  {formatPerformanceMetric(item.value)}%
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="mt-4 text-sm text-gray-600 dark:text-gray-400">
+            <div>Inclusion Delay: {summaryMetrics.avgInclusionDelay.toFixed(2)}s avg</div>
+            <div>Best Day: {formatPerformanceMetric(Math.max(...performanceData.daily_performance.map(d => d.attestation_performance)))}%</div>
+            <div>Worst Day: {formatPerformanceMetric(Math.min(...performanceData.daily_performance.map(d => d.attestation_performance)))}%</div>
+          </div>
+        </GlassCard>
+
+        <GlassCard>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+            Performance Distribution
+          </h3>
+          <div className="space-y-3">
+            {[
+              { label: 'Days at 99%+', threshold: 99 },
+              { label: 'Days at 98%+', threshold: 98 },
+              { label: 'Days at 97%+', threshold: 97 },
+              { label: 'Below 97%', threshold: 0 }
+            ].map((item, index) => {
+              const count = index === 3 
+                ? performanceData.daily_performance.filter(d => d.attestation_performance < 97).length
+                : performanceData.daily_performance.filter(d => d.attestation_performance >= item.threshold).length;
+              const percentage = (count / performanceData.daily_performance.length) * 100;
+              
+              return (
+                <div key={item.label} className="flex items-center">
+                  <div className="w-24 text-sm text-gray-600 dark:text-gray-400">{item.label}:</div>
+                  <div className="flex-1 mx-3">
+                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                      <div 
+                        className="h-2 rounded-full bg-blue-500"
+                        style={{ width: `${percentage}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                  <div className="w-12 text-sm font-medium text-gray-900 dark:text-white text-right">
+                    {percentage.toFixed(0)}%
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <div className="mt-4 text-sm text-gray-600 dark:text-gray-400">
+            <div>Consistency Score: {(100 - (Math.max(...performanceData.daily_performance.map(d => d.attestation_performance)) - Math.min(...performanceData.daily_performance.map(d => d.attestation_performance)))).toFixed(1)}/10</div>
+            <div>Better than {networkComparison?.percentile || 0}% of operators</div>
+          </div>
+        </GlassCard>
+      </div>
+
+      {/* Recent Performance Table */}
+      <GlassCard hoverable={false}>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            Recent Performance (Last 7 Days)
+          </h2>
+          <GlassButton size="sm" variant="secondary">
+            Export CSV
+          </GlassButton>
+        </div>
+        
+        <div className="overflow-x-auto" title="">
+          <table className="min-w-full" style={{cursor: 'default'}} title="">
+            <thead>
+              <tr className="border-b border-gray-200 dark:border-gray-700">
+                <th className="text-left py-3 px-4 text-sm font-medium text-gray-900 dark:text-white" title="">Date</th>
+                <th className="text-right py-3 px-4 text-sm font-medium text-gray-900 dark:text-white" title="">Performance</th>
+                <th className="text-right py-3 px-4 text-sm font-medium text-gray-900 dark:text-white" title="">Head</th>
+                <th className="text-right py-3 px-4 text-sm font-medium text-gray-900 dark:text-white" title="">Target</th>
+                <th className="text-right py-3 px-4 text-sm font-medium text-gray-900 dark:text-white" title="">Source</th>
+                <th className="text-right py-3 px-4 text-sm font-medium text-gray-900 dark:text-white" title="">Delay</th>
+                <th className="text-right py-3 px-4 text-sm font-medium text-gray-900 dark:text-white" title="">Net Rewards</th>
+              </tr>
+            </thead>
+            <tbody>
+              {performanceData.daily_performance.slice(0, 7).map((day, index) => (
+                <tr key={day.date} className="border-b border-gray-100 dark:border-gray-800" style={{cursor: 'default'}} title="" onMouseEnter={(e) => e.preventDefault()} onMouseOver={(e) => e.preventDefault()}>
+                  <td className="py-3 px-4 text-sm text-gray-900 dark:text-white" title="">{day.date}</td>
+                  <td className="py-3 px-4 text-sm text-right text-gray-900 dark:text-white" title="">
+                    {formatPerformanceMetric(day.attestation_performance)}%
+                  </td>
+                  <td className="py-3 px-4 text-sm text-right text-gray-900 dark:text-white" title="">
+                    {formatPerformanceMetric(day.head_accuracy)}%
+                  </td>
+                  <td className="py-3 px-4 text-sm text-right text-gray-900 dark:text-white" title="">
+                    {formatPerformanceMetric(day.target_accuracy)}%
+                  </td>
+                  <td className="py-3 px-4 text-sm text-right text-gray-900 dark:text-white" title="">
+                    {formatPerformanceMetric(day.source_accuracy)}%
+                  </td>
+                  <td className="py-3 px-4 text-sm text-right text-gray-900 dark:text-white" title="">
+                    {day.avg_inclusion_delay.toFixed(2)}s
+                  </td>
+                  <td className="py-3 px-4 text-sm text-right text-gray-900 dark:text-white" title="">
+                    {(day.net_rewards / 1e9).toFixed(6)} ETH
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </GlassCard>
+
+      {/* Validators List Table */}
+      <GlassCard hoverable={false}>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            Validators ({validatorsList.length})
+          </h2>
+          <GlassButton size="sm" variant="secondary">
+            Export CSV
+          </GlassButton>
+        </div>
+        
+        <div className="overflow-x-auto" title="">
+          <table className="min-w-full" style={{cursor: 'default'}} title="">
+            <thead>
+              <tr className="border-b border-gray-200 dark:border-gray-700">
+                <th className="text-left py-3 px-4 text-sm font-medium text-gray-900 dark:text-white" title="">Validator Index</th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-gray-900 dark:text-white" title="">Public Key</th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-gray-900 dark:text-white" title="">Status</th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-gray-900 dark:text-white" title="">Activation Date</th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-gray-900 dark:text-white" title="">Exit Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {validatorsList.map((validator, index) => (
+                <tr key={validator.validator_index} className="border-b border-gray-100 dark:border-gray-800" style={{cursor: 'default'}} title="" onMouseEnter={(e) => e.preventDefault()} onMouseOver={(e) => e.preventDefault()}>
+                  <td className="py-3 px-4 text-sm text-gray-900 dark:text-white font-mono" title="">
+                    {validator.validator_index}
+                  </td>
+                  <td className="py-3 px-4 text-sm text-gray-900 dark:text-white font-mono" title="">
+                    {validator.public_key ? `${validator.public_key.slice(0, 12)}...${validator.public_key.slice(-8)}` : '-'}
+                  </td>
+                  <td className="py-3 px-4 text-sm text-gray-900 dark:text-white" title="">
+                    <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
+                      validator.status?.toLowerCase().includes('active') 
+                        ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                        : validator.status?.toLowerCase().includes('exit') || validator.status?.toLowerCase().includes('slashed')
+                        ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                        : 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
+                    }`} title="">
+                      {validator.status}
+                    </span>
+                  </td>
+                  <td className="py-3 px-4 text-sm text-gray-900 dark:text-white" title="">
+                    {validator.activation_date || '-'}
+                  </td>
+                  <td className="py-3 px-4 text-sm text-gray-900 dark:text-white" title="">
+                    {validator.exit_date || '-'}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </GlassCard>
+    </div>
+  );
+};
+
+export default OperatorDashboard;

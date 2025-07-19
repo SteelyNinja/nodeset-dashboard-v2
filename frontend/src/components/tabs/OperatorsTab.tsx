@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ConcentrationMetrics } from '../../types/api';
 import { apiService } from '../../services/api';
 import LoadingSpinner from '../common/LoadingSpinner';
@@ -15,9 +16,11 @@ interface OperatorData {
   exited: number;
   exit_rate: number;
   market_share: number;
+  performance_7d: number;
 }
 
 const OperatorsTab: React.FC = () => {
+  const navigate = useNavigate();
   const [, setConcentrationMetrics] = useState<ConcentrationMetrics | null>(null);
   const [operatorData, setOperatorData] = useState<OperatorData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -29,24 +32,40 @@ const OperatorsTab: React.FC = () => {
       setLoading(true);
       setError(null);
       
-      const [concentrationData, topOperatorsData] = await Promise.all([
+      const [concentrationData, topOperatorsData, validatorData, operatorSummary] = await Promise.all([
         apiService.getConcentrationMetrics(),
-        apiService.getTopOperators(1000) // Get all operators
+        apiService.getTopOperators(1000), // Get all operators
+        apiService.getValidatorData(), // Get validator data for ENS names
+        apiService.getOperatorsSummary(7) // Get 7-day performance data for ranking
       ]);
       
       setConcentrationMetrics(concentrationData);
       
-      // Process top operators data from backend
+      // Process operators data and add 7-day performance ranking
       const operators = topOperatorsData.operators.map((op: any) => ({
         rank: op.rank,
         address: op.full_address,
-        ens_name: op.operator.replace(op.full_address, '').trim() || '', // Extract ENS name if present
+        ens_name: validatorData.ens_names?.[op.full_address] || '', // Get ENS name from validator data
         active: op.active_count,
         total: op.validator_count,
         exited: op.exited_count,
         exit_rate: op.exit_rate,
-        market_share: op.percentage
+        market_share: op.percentage,
+        performance_7d: operatorSummary[op.full_address]?.avg_attestation_performance || 0
       })) as OperatorData[];
+
+      // Sort by 7-day performance (highest first), then by active validators as tiebreaker
+      operators.sort((a, b) => {
+        if (b.performance_7d !== a.performance_7d) {
+          return b.performance_7d - a.performance_7d; // Primary sort: 7-day performance descending
+        }
+        return b.active - a.active; // Secondary sort: active validators descending
+      });
+
+      // Recalculate ranks based on performance ranking
+      operators.forEach((op, index) => {
+        op.rank = index + 1;
+      });
       
       setOperatorData(operators);
     } catch (err) {
@@ -69,13 +88,14 @@ const OperatorsTab: React.FC = () => {
   }
 
   const downloadCSV = () => {
-    const headers = ['Rank', 'Address', 'ENS / Discord Name', 'Active', 'Total', 'Exited', 'Exit Rate', 'Market Share'];
+    const headers = ['Rank', 'Address', 'ENS / Discord Name', '7-Day Performance', 'Active', 'Total', 'Exited', 'Exit Rate', 'Market Share'];
     const csvContent = [
       headers.join(','),
       ...operatorData.map(op => [
         op.rank,
         op.address,
         op.ens_name,
+        `${op.performance_7d.toFixed(4)}%`,
         op.active,
         op.total,
         op.exited,
@@ -106,7 +126,7 @@ const OperatorsTab: React.FC = () => {
       <div className="mb-6">
         <h1 className="text-headline-large font-semibold text-neutral-900 dark:text-neutral-100 mb-2 flex items-center gap-3">
           <Icon name="trophy" size="lg" color="primary" />
-          Top Operators by Active Validators
+          Operator Ranking - 7 Day
         </h1>
       </div>
 
@@ -143,15 +163,17 @@ const OperatorsTab: React.FC = () => {
           <div className="bg-white/5 dark:bg-white/2 backdrop-blur-sm rounded-xl border border-white/10 dark:border-white/15 shadow-sm overflow-hidden">
             {/* Sticky Header */}
             <div className="sticky top-0 z-10 bg-white/10 dark:bg-white/5 backdrop-blur-sm border-b border-white/10 dark:border-white/15">
-              <div className="grid px-4 py-4 font-semibold text-neutral-900 dark:text-neutral-100 text-body-medium" style={{gridTemplateColumns: "0.7fr 2.8fr 2fr 1.2fr 1.2fr 1.2fr 1.5fr 1.5fr", gap: "12px"}}>
+              <div className="grid px-4 py-4 font-semibold text-neutral-900 dark:text-neutral-100 text-body-medium" style={{gridTemplateColumns: "0.7fr 2.8fr 2fr 1.3fr 1.2fr 1.2fr 1.2fr 1.5fr 1.5fr 1.3fr", gap: "12px"}}>
                 <div>Rank</div>
                 <div>Address</div>
                 <div>ENS / Discord Name</div>
+                <div>7-Day Performance</div>
                 <div>Active</div>
                 <div>Total</div>
                 <div>Exited</div>
                 <div>Exit Rate</div>
                 <div>Market Share</div>
+                <div>Actions</div>
               </div>
             </div>
             
@@ -165,7 +187,7 @@ const OperatorsTab: React.FC = () => {
                       className={`grid px-4 py-3 hover:bg-primary-500/8 dark:hover:bg-primary-500/5 hover:shadow-sm transition-all duration-200 ease-in-out border-b border-white/5 dark:border-white/10 last:border-b-0 text-neutral-800 dark:text-neutral-200 text-body-medium ${
                         index % 2 === 0 ? 'bg-gray-50/30 dark:bg-gray-800/15' : 'bg-transparent'
                       }`}
-                      style={{gridTemplateColumns: "0.7fr 2.8fr 2fr 1.2fr 1.2fr 1.2fr 1.5fr 1.5fr", gap: "12px"}}
+                      style={{gridTemplateColumns: "0.7fr 2.8fr 2fr 1.3fr 1.2fr 1.2fr 1.2fr 1.5fr 1.5fr 1.3fr", gap: "12px"}}
                     >
                       <div className="font-medium">
                         {operator.rank}
@@ -175,6 +197,9 @@ const OperatorsTab: React.FC = () => {
                       </div>
                       <div>
                         {operator.ens_name || '-'}
+                      </div>
+                      <div className="font-medium">
+                        {operator.performance_7d ? `${operator.performance_7d.toFixed(4)}%` : '-'}
                       </div>
                       <div>
                         {operator.active}
@@ -190,6 +215,17 @@ const OperatorsTab: React.FC = () => {
                       </div>
                       <div>
                         {operator.market_share.toFixed(2)}%
+                      </div>
+                      <div>
+                        <GlassButton
+                          onClick={() => navigate(`/operator/${operator.address}`)}
+                          variant="primary"
+                          size="xs"
+                          className="flex items-center gap-1"
+                        >
+                          <Icon name="chart" size="xs" />
+                          Dashboard
+                        </GlassButton>
                       </div>
                     </div>
                   ))

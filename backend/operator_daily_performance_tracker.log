@@ -1,0 +1,45 @@
+2025-07-19 17:32:57,380 - INFO - Starting operator daily performance update
+2025-07-19 17:33:04,966 - INFO - Found 12 complete UTC days available in database
+2025-07-19 17:33:04,966 - INFO - Date range: 2025-07-07 to 2025-07-18
+2025-07-19 17:33:04,966 - INFO - Found 12 days needing updates
+2025-07-19 17:33:12,841 - INFO - Found 154 NodeSet operators
+2025-07-19 17:33:12,841 - INFO - Processing 12 days for 154 operators
+2025-07-19 17:33:12,841 - INFO - Processing operator 1/154: 0x0359Ac985C0A63d419185a5aD6805114C0A26a5D
+2025-07-19 17:33:49,283 - INFO - Added 12 new days for operator 0x0359Ac985C0A63d419185a5aD6805114C0A26a5D
+2025-07-19 17:33:49,283 - INFO - Processing operator 2/154: 0x049B18E785fde136521B7a7B6BDD5B77D7b85C10
+2025-07-19 17:34:28,140 - INFO - Added 12 new days for operator 0x049B18E785fde136521B7a7B6BDD5B77D7b85C10
+2025-07-19 17:34:28,140 - INFO - Processing operator 3/154: 0x04CEcFA05C7539249A3D7AF65A78471eE6399cbb
+2025-07-19 17:35:59,330 - INFO - Starting operator daily performance update
+2025-07-19 17:36:06,883 - INFO - Found 12 complete UTC days available in database
+2025-07-19 17:36:06,883 - INFO - Date range: 2025-07-07 to 2025-07-18
+2025-07-19 17:36:06,883 - INFO - Found 12 days needing updates
+2025-07-19 17:36:14,654 - INFO - Found 154 NodeSet operators
+2025-07-19 17:36:14,654 - INFO - Processing 12 days for 154 operators
+2025-07-19 17:36:14,654 - INFO - Processing operator 1/154: 0x0359Ac985C0A63d419185a5aD6805114C0A26a5D
+2025-07-19 17:36:49,859 - INFO - Added 12 new days for operator 0x0359Ac985C0A63d419185a5aD6805114C0A26a5D
+2025-07-19 17:36:49,859 - INFO - Processing operator 2/154: 0x049B18E785fde136521B7a7B6BDD5B77D7b85C10
+2025-07-19 17:45:26,880 - INFO - Starting operator daily performance update
+2025-07-19 17:45:34,538 - INFO - Found 12 complete UTC days available in database
+2025-07-19 17:45:34,539 - INFO - Date range: 2025-07-07 to 2025-07-18
+2025-07-19 17:45:34,539 - INFO - Found 12 days needing updates
+2025-07-19 17:45:42,237 - INFO - Found 154 NodeSet operators
+2025-07-19 17:45:42,237 - INFO - TESTING MODE: Processing only first 3 operators
+2025-07-19 17:45:42,237 - INFO - Processing 12 days for 3 operators
+2025-07-19 17:45:42,237 - INFO - Processing operator 1/3: 0x0359Ac985C0A63d419185a5aD6805114C0A26a5D
+2025-07-19 17:46:17,883 - INFO - Added 12 new days for operator 0x0359Ac985C0A63d419185a5aD6805114C0A26a5D
+2025-07-19 17:46:17,884 - INFO - Processing operator 2/3: 0x049B18E785fde136521B7a7B6BDD5B77D7b85C10
+2025-07-19 17:46:53,875 - INFO - Added 12 new days for operator 0x049B18E785fde136521B7a7B6BDD5B77D7b85C10
+2025-07-19 17:46:53,875 - INFO - Processing operator 3/3: 0x04CEcFA05C7539249A3D7AF65A78471eE6399cbb
+2025-07-19 17:57:07,215 - INFO - Starting operator daily performance update
+2025-07-19 17:57:14,842 - INFO - Found 12 complete UTC days available in database
+2025-07-19 17:57:14,842 - INFO - Date range: 2025-07-07 to 2025-07-18
+2025-07-19 17:57:14,843 - INFO - Found 12 days needing updates
+2025-07-19 17:57:22,565 - INFO - Found 154 NodeSet operators
+2025-07-19 17:57:22,565 - INFO - TESTING MODE: Processing only first 1 operators
+2025-07-19 17:57:22,565 - INFO - Processing 12 days for 1 operators
+2025-07-19 17:57:22,565 - INFO - Processing operator 1/1: 0x0359Ac985C0A63d419185a5aD6805114C0A26a5D
+2025-07-19 17:57:58,369 - INFO - Added 12 new days for operator 0x0359Ac985C0A63d419185a5aD6805114C0A26a5D
+2025-07-19 17:57:58,370 - INFO - Saved daily performance data to operator_daily_performance_cache.json
+2025-07-19 17:57:58,370 - INFO - Daily performance update completed
+2025-07-19 17:57:58,370 - INFO - Total operators processed: 1
+2025-07-19 17:57:58,370 - INFO - Total daily updates added: 12

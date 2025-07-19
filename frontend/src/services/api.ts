@@ -18,6 +18,11 @@ import {
   VaultEventsData,
   TheoreticalPerformanceData,
   TheoreticalPerformanceError,
+  OperatorPerformanceData,
+  OperatorPerformanceCacheInfo,
+  OperatorSummary,
+  OperatorChartData,
+  PerformanceTrend,
 } from '../types/api';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL;
@@ -183,6 +188,40 @@ class ApiService {
       console.error('Failed to get cache timestamp:', error);
       return null;
     }
+  }
+
+  // Operator Performance endpoints
+  async getOperatorPerformanceCacheInfo(): Promise<OperatorPerformanceCacheInfo> {
+    const response = await this.apiClient.get<ApiResponse<OperatorPerformanceCacheInfo>>('/api/operator-performance/cache-info');
+    return this.extractData(response);
+  }
+
+  async getAllOperators(): Promise<string[]> {
+    const response = await this.apiClient.get<ApiResponse<string[]>>('/api/operator-performance/operators');
+    return this.extractData(response);
+  }
+
+  async getOperatorsSummary(days?: number): Promise<Record<string, OperatorSummary>> {
+    const params = days ? `?days=${days}` : '';
+    const response = await this.apiClient.get<ApiResponse<Record<string, OperatorSummary>>>(`/api/operator-performance/operators/summary${params}`);
+    return this.extractData(response);
+  }
+
+  async getOperatorPerformance(operator: string, days?: number): Promise<OperatorPerformanceData> {
+    const params = days ? `?days=${days}` : '';
+    const response = await this.apiClient.get<ApiResponse<OperatorPerformanceData>>(`/api/operator-performance/operator/${encodeURIComponent(operator)}${params}`);
+    return this.extractData(response);
+  }
+
+  async getOperatorChartData(operator: string, days?: number): Promise<OperatorChartData> {
+    const params = days ? `?days=${days}` : '';
+    const response = await this.apiClient.get<ApiResponse<OperatorChartData>>(`/api/operator-performance/operator/${encodeURIComponent(operator)}/chart-data${params}`);
+    return this.extractData(response);
+  }
+
+  async getPerformanceTrends(days: number = 30): Promise<{trends: PerformanceTrend[]}> {
+    const response = await this.apiClient.get<ApiResponse<{trends: PerformanceTrend[]}>>(`/api/operator-performance/trends?days=${days}`);
+    return this.extractData(response);
   }
 
   // Utility methods

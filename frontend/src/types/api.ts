@@ -466,3 +466,72 @@ export interface TheoreticalPerformanceError {
   requested_start_epoch: number;
   data_completeness_percentage: number;
 }
+
+// Operator Daily Performance Types
+export interface DailyPerformanceEntry {
+  date: string;
+  epoch_range: [number, number];
+  validator_count: number;
+  active_duty_periods: number;
+  successful_attestations: number;
+  missed_attestations: number;
+  participation_rate: number;
+  head_accuracy: number;
+  target_accuracy: number;
+  source_accuracy: number;
+  avg_inclusion_delay: number;
+  attestation_performance: number;
+  total_earned_rewards: number;
+  total_penalties: number;
+  net_rewards: number;
+  max_possible_rewards: number;
+}
+
+export interface OperatorPerformanceData {
+  daily_performance: DailyPerformanceEntry[];
+}
+
+export interface OperatorPerformanceCacheInfo {
+  cache_available: boolean;
+  cache_path: string | null;
+  last_updated: string | null;
+  data_period_days: number;
+  operators_count: number;
+  data_days_available: number;
+}
+
+export interface OperatorSummary {
+  validator_count: number;
+  days_of_data: number;
+  latest_date: string;
+  avg_participation_rate: number;
+  avg_head_accuracy: number;
+  avg_target_accuracy: number;
+  avg_source_accuracy: number;
+  avg_inclusion_delay: number;
+  avg_attestation_performance: number;
+  latest_performance: number;
+}
+
+export interface OperatorChartData {
+  dates: string[];
+  participation_rate: number[];
+  head_accuracy: number[];
+  target_accuracy: number[];
+  source_accuracy: number[];
+  inclusion_delay: number[];
+  attestation_performance: number[];
+  validator_count: number[];
+}
+
+export interface PerformanceTrend {
+  date: string;
+  operators_count: number;
+  total_validators: number;
+  avg_participation_rate: number;
+  avg_head_accuracy: number;
+  avg_target_accuracy: number;
+  avg_source_accuracy: number;
+  avg_inclusion_delay: number;
+  avg_attestation_performance: number;
+}
