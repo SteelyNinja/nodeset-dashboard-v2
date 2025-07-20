@@ -11,7 +11,7 @@ import uvicorn
 from contextlib import asynccontextmanager
 
 # Import routers
-from routers import dashboard, data, health, analytics, attestations, nodeset, operator_performance
+from routers import dashboard, data, health, analytics, attestations, nodeset, operator_performance, enhanced_analytics
 
 # Version and metadata
 __version__ = "1.0.0"
@@ -53,6 +53,7 @@ app.include_router(analytics.router, prefix="/api", tags=["analytics"])
 app.include_router(attestations.router, prefix="/api/attestations", tags=["attestations"])
 app.include_router(nodeset.router, prefix="/api/nodeset", tags=["nodeset"])
 app.include_router(operator_performance.router, prefix="/api/operator-performance", tags=["operator-performance"])
+app.include_router(enhanced_analytics.router, prefix="/api/enhanced-analytics", tags=["enhanced-analytics"])
 
 # Root endpoint
 @app.get("/")

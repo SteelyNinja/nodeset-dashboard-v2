@@ -224,6 +224,27 @@ class ApiService {
     return this.extractData(response);
   }
 
+  // Enhanced Analytics endpoints
+  async getOperatorMevAnalytics(operator: string): Promise<any> {
+    const response = await this.apiClient.get<ApiResponse<any>>(`/api/enhanced-analytics/operator/${encodeURIComponent(operator)}/mev-analytics`);
+    return this.extractData(response);
+  }
+
+  async getOperatorSyncCommitteeAnalytics(operator: string): Promise<any> {
+    const response = await this.apiClient.get<ApiResponse<any>>(`/api/enhanced-analytics/operator/${encodeURIComponent(operator)}/sync-committee`);
+    return this.extractData(response);
+  }
+
+  async getOperatorComprehensiveAnalytics(operator: string): Promise<any> {
+    const response = await this.apiClient.get<ApiResponse<any>>(`/api/enhanced-analytics/operator/${encodeURIComponent(operator)}/comprehensive`);
+    return this.extractData(response);
+  }
+
+  async getNetworkMevSummary(): Promise<any> {
+    const response = await this.apiClient.get<ApiResponse<any>>('/api/enhanced-analytics/network/mev-summary');
+    return this.extractData(response);
+  }
+
   // Utility methods
   async checkBackendConnection(): Promise<boolean> {
     try {
