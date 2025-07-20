@@ -1,6 +1,6 @@
 // Updated Exit Analysis Tab with sync committee styling
 import React, { useState, useEffect } from 'react';
-import { ExitData } from '../../types/api';
+import { ExitData, ValidatorData } from '../../types/api';
 import { apiService } from '../../services/api';
 import LoadingSpinner from '../common/LoadingSpinner';
 import ErrorMessage from '../common/ErrorMessage';
@@ -10,19 +10,22 @@ import Icon from '../common/Icon';
 
 const ExitAnalysisTab: React.FC = () => {
   const [exitData, setExitData] = useState<ExitData | null>(null);
+  const [validatorData, setValidatorData] = useState<ValidatorData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [operatorSearchTerm, setOperatorSearchTerm] = useState('');
   const [exitSearchTerm, setExitSearchTerm] = useState('');
 
+
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        // Fetch both original exit data (for summary and operators) and all exit records
-        const [originalData, allExitRecords] = await Promise.all([
+        // Fetch exit data, all exit records, and validator data (for ENS names)
+        const [originalData, allExitRecords, validators] = await Promise.all([
           apiService.getExitData(),
-          apiService.getAllExitRecords()
+          apiService.getAllExitRecords(),
+          apiService.getValidatorData().catch(() => null)
         ]);
         
         // Merge the data: use original for summary/operators, but replace recent_exits with all records
@@ -32,6 +35,7 @@ const ExitAnalysisTab: React.FC = () => {
         };
         
         setExitData(mergedData);
+        setValidatorData(validators);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load exit data');
       } finally {
@@ -187,7 +191,7 @@ const ExitAnalysisTab: React.FC = () => {
                     style={{gridTemplateColumns: "2.5fr 2fr 1fr 1.3fr 1.3fr 1.3fr 1.8fr", gap: "12px"}}
                   >
                     <div className="font-mono text-xs">{operator.operator}</div>
-                    <div>{operator.operator_name || '-'}</div>
+                    <div>{validatorData?.ens_names?.[operator.operator] || '-'}</div>
                     <div className="text-red-600 font-medium">{operator.exits}</div>
                     <div className="text-green-600">{operator.still_active}</div>
                     <div className="font-medium">{operator.total_ever}</div>
@@ -258,7 +262,7 @@ const ExitAnalysisTab: React.FC = () => {
                   >
                     <div className="font-medium">{exit.validator_index}</div>
                     <div className="font-mono text-xs">{exit.operator}</div>
-                    <div>{exit.operator_name}</div>
+                    <div>{validatorData?.ens_names?.[exit.operator] || '-'}</div>
                     <div>{exit.exit_date}</div>
                     <div>
                       <span className={`px-2 py-1 rounded-full text-xs ${
