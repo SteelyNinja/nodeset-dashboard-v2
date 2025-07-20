@@ -181,10 +181,12 @@ const OperatorDashboard: React.FC<OperatorDashboardProps> = ({ operatorAddress: 
       });
     }
     
-    const avgPerformance = days.reduce((sum: number, day: any) => sum + day.attestation_performance, 0) / days.length;
-    const avgParticipation = days.reduce((sum: number, day: any) => sum + day.participation_rate, 0) / days.length;
-    const avgHeadAccuracy = days.reduce((sum: number, day: any) => sum + day.head_accuracy, 0) / days.length;
-    const avgInclusionDelay = days.reduce((sum: number, day: any) => sum + day.avg_inclusion_delay, 0) / days.length;
+    const daysToUse = Math.min(selectedDays, days.length);
+    const periodsToUse = days.slice(0, daysToUse);
+    const avgPerformance = periodsToUse.reduce((sum: number, day: any) => sum + day.attestation_performance, 0) / periodsToUse.length;
+    const avgParticipation = periodsToUse.reduce((sum: number, day: any) => sum + day.participation_rate, 0) / periodsToUse.length;
+    const avgHeadAccuracy = periodsToUse.reduce((sum: number, day: any) => sum + day.head_accuracy, 0) / periodsToUse.length;
+    const avgInclusionDelay = periodsToUse.reduce((sum: number, day: any) => sum + day.avg_inclusion_delay, 0) / periodsToUse.length;
 
     // Calculate 7-day trend (recent 7 days vs previous 7 days)
     let performanceTrend = 0;
