@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { apiService } from '../../services/api';
+import { analyticsService } from '../../services/analytics';
 import { VaultEventsData } from '../../types/api';
 import GlassCard from '../common/GlassCard';
 // Removed unused GlassTable imports
@@ -283,6 +284,8 @@ const VaultActivityTab: React.FC = () => {
   }, [allTransactions, searchTerm]);
 
   const downloadCSV = () => {
+    analyticsService.trackDownload('vault_activity_csv');
+    
     const headers = ['Type', 'Amount (ETH)', 'Address', 'Time'];
     const csvData = [
       headers,

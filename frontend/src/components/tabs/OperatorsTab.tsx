@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ConcentrationMetrics } from '../../types/api';
 import { apiService } from '../../services/api';
+import { analyticsService } from '../../services/analytics';
 import LoadingSpinner from '../common/LoadingSpinner';
 import ErrorMessage from '../common/ErrorMessage';
 import GlassButton from '../common/GlassButton';
@@ -88,6 +89,8 @@ const OperatorsTab: React.FC = () => {
   }
 
   const downloadCSV = () => {
+    analyticsService.trackDownload('operators_csv');
+    
     const headers = ['Rank', 'Address', 'ENS / Discord Name', '7-Day Performance', 'Active', 'Total', 'Exited', 'Exit Rate', 'Market Share'];
     const csvContent = [
       headers.join(','),
@@ -218,7 +221,10 @@ const OperatorsTab: React.FC = () => {
                       </div>
                       <div>
                         <GlassButton
-                          onClick={() => navigate(`/operator/${operator.address}`)}
+                          onClick={() => {
+                            analyticsService.trackNavigation('operators', 'operator_dashboard');
+                            navigate(`/operator/${operator.address}`);
+                          }}
                           variant="primary"
                           size="xs"
                           className="flex items-center gap-1"

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { apiService } from '../../services/api';
+import { analyticsService } from '../../services/analytics';
 import LoadingSpinner from '../common/LoadingSpinner';
 import GlassCard from '../common/GlassCard';
 import GlassButton from '../common/GlassButton';
@@ -32,6 +33,8 @@ const GasAnalysisTab: React.FC = () => {
   }, []);
 
   const downloadCSV = (data: any[], filename: string) => {
+    analyticsService.trackDownload('gas_analysis_csv');
+    
     if (data.length === 0) return;
 
     const headers = Object.keys(data[0]).join(',');

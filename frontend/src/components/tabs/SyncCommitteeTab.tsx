@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { SyncCommitteeData, ValidatorData } from '../../types/api';
 import { apiService } from '../../services/api';
+import { analyticsService } from '../../services/analytics';
 import LoadingSpinner from '../common/LoadingSpinner';
 import ErrorMessage from '../common/ErrorMessage';
 import GlassCard from '../common/GlassCard';
@@ -222,6 +223,8 @@ const SyncCommitteeTab: React.FC = () => {
   };
 
   const downloadCSV = (data: any[], filename: string) => {
+    analyticsService.trackDownload('sync_committee_csv');
+    
     const csv = [
       Object.keys(data[0]).join(','),
       ...data.map(row => Object.values(row).join(','))

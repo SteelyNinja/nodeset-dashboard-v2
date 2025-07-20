@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { ValidatorPerformanceData, ExitData } from '../../types/api';
 import { apiService } from '../../services/api';
+import { analyticsService } from '../../services/analytics';
 import LoadingSpinner from '../common/LoadingSpinner';
 import GlassButton from '../common/GlassButton';
 import Icon from '../common/Icon';
@@ -432,6 +433,8 @@ const PerformanceTab: React.FC = () => {
   }, [fetchData]);
 
   const downloadCSV = () => {
+    analyticsService.trackDownload('performance_csv');
+    
     if (!hasPerformanceData) return;
     
     const headers = ['Rank', 'Address', 'ENS / Discord Name', 'Performance', 'Category', 'Active', 'Total', 'Exited'];
@@ -461,6 +464,8 @@ const PerformanceTab: React.FC = () => {
   };
 
   const downloadAttestationCSV = (data: AttestationPerformanceData[], period: string) => {
+    analyticsService.trackDownload('performance_csv');
+    
     if (!data || data.length === 0) return;
     
     const headers = ['Rank', 'Address', 'ENS / Discord Name', 'Avg Performance', 'Attestation Validators', 'Excluded (Proposals/Sync)', 'Total Validators', 'Relative Score (%)'];

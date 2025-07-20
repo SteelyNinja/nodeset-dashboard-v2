@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { ExitData, ValidatorData } from '../../types/api';
 import { apiService } from '../../services/api';
+import { analyticsService } from '../../services/analytics';
 import LoadingSpinner from '../common/LoadingSpinner';
 import ErrorMessage from '../common/ErrorMessage';
 import GlassCard from '../common/GlassCard';
@@ -72,6 +73,8 @@ const ExitAnalysisTab: React.FC = () => {
   };
 
   const downloadCSV = (data: any[], filename: string) => {
+    analyticsService.trackDownload('exit_analysis_csv');
+    
     const csv = [
       Object.keys(data[0]).join(','),
       ...data.map(row => Object.values(row).join(','))

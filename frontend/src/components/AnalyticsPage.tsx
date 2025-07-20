@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import GlassCard from './common/GlassCard';
 import Icon from './common/Icon';
+import { analyticsService } from '../services/analytics';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
 interface AnalyticsSummary {
@@ -27,9 +28,13 @@ const AnalyticsPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Track analytics page view
+    analyticsService.trackNavigation('direct', 'analytics_dashboard');
+    
     const fetchAnalytics = async () => {
       try {
-        const response = await fetch(`/api/analytics/summary`);
+        const baseUrl = process.env.REACT_APP_API_URL || '';
+        const response = await fetch(`${baseUrl}/api/analytics/summary`);
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}`);
         }
@@ -142,7 +147,7 @@ const AnalyticsPage: React.FC = () => {
         </GlassCard>
 
         {/* Summary Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <GlassCard>
             <div className="text-center">
               <div className="text-3xl font-bold text-black dark:text-white">
@@ -167,24 +172,6 @@ const AnalyticsPage: React.FC = () => {
                 {analytics.summary.total_tab_switches.toLocaleString()}
               </div>
               <div className="text-sm text-gray-600 dark:text-gray-400">Tab Switches</div>
-            </div>
-          </GlassCard>
-          
-          <GlassCard>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-black dark:text-white">
-                {analytics.summary.total_downloads.toLocaleString()}
-              </div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">Downloads</div>
-            </div>
-          </GlassCard>
-          
-          <GlassCard>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-black dark:text-white">
-                {analytics.summary.total_page_views.toLocaleString()}
-              </div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">Page Views</div>
             </div>
           </GlassCard>
         </div>

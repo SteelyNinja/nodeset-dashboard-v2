@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { apiService } from '../services/api';
+import { analyticsService } from '../services/analytics';
 import {
   OperatorPerformanceData,
   OperatorChartData,
@@ -57,6 +58,9 @@ const OperatorDashboard: React.FC<OperatorDashboardProps> = ({ operatorAddress: 
       try {
         setLoading(true);
         setError(null);
+
+        // Track operator dashboard view
+        analyticsService.trackOperatorDashboard(operatorAddress);
 
         // Load operator performance data and enhanced analytics in parallel
         const [performance, chart, allSummary, previousDaySummary, validatorPerformanceData, exitData, mevData, syncData, comprehensiveAnalytics, validatorData] = await Promise.all([

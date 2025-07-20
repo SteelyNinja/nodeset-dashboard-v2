@@ -2,7 +2,7 @@
 // Only tracks aggregated, non-personal data
 
 interface AnalyticsEvent {
-  type: 'page_view' | 'tab_switch' | 'download' | 'refresh' | 'session_start' | 'session_end';
+  type: 'page_view' | 'tab_switch' | 'download' | 'refresh' | 'session_start' | 'session_end' | 'operator_dashboard_view' | 'navigation';
   timestamp: number;
   data?: {
     tab?: string;
@@ -11,6 +11,9 @@ interface AnalyticsEvent {
     userAgent?: string;
     screenWidth?: number;
     referrer?: string;
+    operatorAddress?: string;
+    fromPage?: string;
+    toPage?: string;
   };
 }
 
@@ -109,6 +112,16 @@ class AnalyticsService {
     this.trackEvent('refresh');
   }
 
+  public trackOperatorDashboard(operatorAddress: string): void {
+    this.trackEvent('operator_dashboard_view', { 
+      operatorAddress: operatorAddress.substring(0, 10) + '...' // Anonymize the address 
+    });
+  }
+
+  public trackNavigation(fromPage: string, toPage: string): void {
+    this.trackEvent('navigation', { fromPage, toPage });
+  }
+
   private endSession(): void {
     const sessionDuration = Date.now() - this.sessionStart;
     this.trackEvent('session_end', { sessionDuration });
@@ -117,7 +130,8 @@ class AnalyticsService {
   private async sendToBackend(event: AnalyticsEvent): Promise<void> {
     try {
       // Send to our backend analytics endpoint
-      await fetch(`/api/analytics`, {
+      const baseUrl = process.env.REACT_APP_API_URL || '';
+      await fetch(`${baseUrl}/api/analytics`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

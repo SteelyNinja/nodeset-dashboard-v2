@@ -137,6 +137,17 @@ class AnalyticsStore:
             recent_events = [e for e in data["events"] if e["timestamp"] > recent_cutoff]
             recent_sessions = len(set(event["session_id"] for event in recent_events if event["type"] == "session_start"))
             
+            # Process daily stats to ensure unique_sessions are integers
+            processed_daily_stats = {}
+            for date, stats in data["daily_stats"].items():
+                processed_stats = stats.copy()
+                # Convert unique_sessions to int if it's still a set or list
+                if isinstance(processed_stats["unique_sessions"], (set, list)):
+                    processed_stats["unique_sessions"] = len(processed_stats["unique_sessions"])
+                elif not isinstance(processed_stats["unique_sessions"], int):
+                    processed_stats["unique_sessions"] = 0
+                processed_daily_stats[date] = processed_stats
+
             return {
                 "summary": {
                     "total_sessions": total_sessions,
@@ -147,7 +158,7 @@ class AnalyticsStore:
                 },
                 "tab_popularity": dict(sorted(tab_counts.items(), key=lambda x: x[1], reverse=True)),
                 "browser_stats": browser_stats,
-                "daily_stats": data["daily_stats"],
+                "daily_stats": processed_daily_stats,
                 "metadata": data["metadata"]
             }
         except Exception as e:
