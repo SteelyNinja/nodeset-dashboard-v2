@@ -2,12 +2,12 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { apiService } from '../../services/api';
 import { VaultEventsData } from '../../types/api';
 import GlassCard from '../common/GlassCard';
-import { GlassTable, GlassTableHeader, GlassTableBody, GlassTableRow, GlassTableCell } from '../common/GlassTable';
+// Removed unused GlassTable imports
 import GlassButton from '../common/GlassButton';
 import LoadingSpinner from '../common/LoadingSpinner';
 import ErrorMessage from '../common/ErrorMessage';
 import LineChart from '../charts/LineChart';
-import BarChart from '../charts/BarChart';
+// Removed unused BarChart import
 import Icon from '../common/Icon';
 
 interface OverviewMetrics {
