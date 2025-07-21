@@ -270,26 +270,34 @@ const OperatorsTab: React.FC = () => {
       {operatorData.length > 0 && (
         <div className="space-y-4">
           {/* Header with filters and download button */}
-          <div className="flex justify-between items-center flex-wrap gap-4">
-            <div className="flex items-center gap-4 flex-wrap">
+          <div className="space-y-4">
+            {/* Title and Download Button */}
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
                 All Operators ({operatorData.length})
                 {(searchTerm || executionClientFilter || consensusClientFilter) && (
-                  <span className="text-sm font-normal text-gray-600 dark:text-gray-400 ml-2">
+                  <span className="text-sm font-normal text-gray-600 dark:text-gray-400 ml-2 block sm:inline">
                     • Showing {filteredOperators.length} results
                   </span>
                 )}
               </h2>
               
-              {/* Client Filter Dropdowns */}
-              <div className="flex items-center gap-3">
+              <GlassButton onClick={downloadCSV} variant="primary" size="sm" className="flex items-center gap-2 w-full sm:w-auto min-h-[44px] justify-center">
+                <Icon name="download" size="sm" color="current" />
+                Download CSV
+              </GlassButton>
+            </div>
+            
+            {/* Client Filter Dropdowns */}
+            <div className="flex flex-col lg:flex-row lg:items-center gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 flex-1">
                 {/* Execution Client Filter */}
-                <div className="flex items-center gap-2">
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Execution Client:</label>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 block">Execution Client:</label>
                   <select
                     value={executionClientFilter}
                     onChange={(e) => setExecutionClientFilter(e.target.value)}
-                    className="px-3 py-1.5 text-sm border-2 border-blue-300 dark:border-blue-500 rounded-lg bg-blue-50 dark:bg-blue-900/30 backdrop-blur-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-400 text-gray-900 dark:text-white shadow-sm hover:border-blue-400 dark:hover:border-blue-400 transition-colors"
+                    className="w-full px-4 py-3 text-sm border-2 border-blue-300 dark:border-blue-500 rounded-lg bg-blue-50 dark:bg-blue-900/30 backdrop-blur-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-400 text-gray-900 dark:text-white shadow-sm hover:border-blue-400 dark:hover:border-blue-400 transition-colors min-h-[44px]"
                   >
                     <option value="">All Execution</option>
                     {getUniqueExecutionClients().map(client => (
@@ -299,12 +307,12 @@ const OperatorsTab: React.FC = () => {
                 </div>
 
                 {/* Consensus Client Filter */}
-                <div className="flex items-center gap-2">
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Consensus Client:</label>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 block">Consensus Client:</label>
                   <select
                     value={consensusClientFilter}
                     onChange={(e) => setConsensusClientFilter(e.target.value)}
-                    className="px-3 py-1.5 text-sm border-2 border-green-300 dark:border-green-500 rounded-lg bg-green-50 dark:bg-green-900/30 backdrop-blur-sm focus:ring-2 focus:ring-green-500 focus:border-green-400 text-gray-900 dark:text-white shadow-sm hover:border-green-400 dark:hover:border-green-400 transition-colors"
+                    className="w-full px-4 py-3 text-sm border-2 border-green-300 dark:border-green-500 rounded-lg bg-green-50 dark:bg-green-900/30 backdrop-blur-sm focus:ring-2 focus:ring-green-500 focus:border-green-400 text-gray-900 dark:text-white shadow-sm hover:border-green-400 dark:hover:border-green-400 transition-colors min-h-[44px]"
                   >
                     <option value="">All Consensus</option>
                     {getUniqueConsensusClients().map(client => (
@@ -312,28 +320,23 @@ const OperatorsTab: React.FC = () => {
                     ))}
                   </select>
                 </div>
-
-                {/* Clear Filters Button */}
-                {(executionClientFilter || consensusClientFilter) && (
-                  <GlassButton 
-                    onClick={() => {
-                      setExecutionClientFilter('');
-                      setConsensusClientFilter('');
-                    }}
-                    variant="secondary" 
-                    size="xs"
-                    className="text-xs"
-                  >
-                    Clear Filters
-                  </GlassButton>
-                )}
               </div>
+
+              {/* Clear Filters Button */}
+              {(executionClientFilter || consensusClientFilter) && (
+                <GlassButton 
+                  onClick={() => {
+                    setExecutionClientFilter('');
+                    setConsensusClientFilter('');
+                  }}
+                  variant="secondary" 
+                  size="sm"
+                  className="w-full sm:w-auto min-h-[44px]"
+                >
+                  Clear Filters
+                </GlassButton>
+              )}
             </div>
-            
-            <GlassButton onClick={downloadCSV} variant="primary" size="sm" className="flex items-center gap-2">
-              <Icon name="download" size="sm" color="current" />
-              Download CSV
-            </GlassButton>
           </div>
 
           {/* Search Input */}
@@ -341,14 +344,174 @@ const OperatorsTab: React.FC = () => {
             <input
               type="text"
               placeholder="Search by operator address or ENS name"
-              className="w-full px-4 py-2 border border-white/30 rounded-lg bg-white/20 dark:bg-white/10 backdrop-blur-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+              className="w-full px-4 py-3 border border-white/30 rounded-lg bg-white/20 dark:bg-white/10 backdrop-blur-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 min-h-[44px]"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
           
-          {/* Glass Table with sticky header */}
-          <div className="bg-white/5 dark:bg-white/2 backdrop-blur-sm rounded-xl border border-white/10 dark:border-white/15 shadow-sm overflow-hidden">
+          {/* Mobile Card View */}
+          <div className="block xl:hidden space-y-3">
+            {filteredOperators.length > 0 ? (
+              filteredOperators.map((operator, index) => {
+                const truncateAddress = (address: string) => {
+                  return `${address.slice(0, 6)}...${address.slice(-4)}`;
+                };
+                
+                return (
+                  <div 
+                    key={operator.address}
+                    className="bg-white/5 dark:bg-white/2 backdrop-blur-sm rounded-xl border border-white/10 dark:border-white/15 shadow-sm p-4 space-y-4"
+                  >
+                    {/* Header with rank and action */}
+                    <div className="flex justify-between items-start">
+                      <div className="flex items-center gap-3">
+                        <div className="text-xl font-bold text-neutral-800 dark:text-neutral-200">
+                          #{operator.rank}
+                        </div>
+                        {operator.rank_change !== null && operator.rank_change !== undefined && (
+                          <div className={`flex items-center text-sm font-bold ${
+                            operator.rank_change! > 0 
+                              ? 'text-green-600 dark:text-green-400' 
+                              : operator.rank_change! < 0
+                              ? 'text-red-600 dark:text-red-400'
+                              : 'text-gray-500 dark:text-gray-400'
+                          }`}>
+                            {operator.rank_change! > 0 && (
+                              <>
+                                <Icon name="up" size="sm" />
+                                <span className="ml-1">+{operator.rank_change}</span>
+                              </>
+                            )}
+                            {operator.rank_change! < 0 && (
+                              <>
+                                <Icon name="down" size="sm" />
+                                <span className="ml-1">{operator.rank_change}</span>
+                              </>
+                            )}
+                            {operator.rank_change === 0 && (
+                              <span className="ml-1">= 0</span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                      <GlassButton
+                        onClick={() => {
+                          analyticsService.trackNavigation('operators', 'operator_dashboard');
+                          navigate(`/operator/${operator.address}`);
+                        }}
+                        variant="primary"
+                        size="sm"
+                        className="flex items-center gap-2 min-h-[44px]"
+                      >
+                        <Icon name="chart" size="sm" />
+                        Dashboard
+                      </GlassButton>
+                    </div>
+                    
+                    {/* Address and ENS */}
+                    <div>
+                      <div className="font-mono text-sm text-neutral-800 dark:text-neutral-200 mb-1">
+                        {truncateAddress(operator.address)}
+                      </div>
+                      {operator.ens_name && (
+                        <div className="text-sm text-neutral-600 dark:text-neutral-400">
+                          {operator.ens_name}
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Performance and Key Metrics */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">7-Day Performance</div>
+                        <div className="text-lg font-semibold text-neutral-800 dark:text-neutral-200">
+                          {operator.performance_7d ? `${operator.performance_7d.toFixed(4)}%` : '-'}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Market Share</div>
+                        <div className="text-lg font-semibold text-neutral-800 dark:text-neutral-200">
+                          {operator.market_share.toFixed(2)}%
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Active Validators</div>
+                        <div className="text-lg font-semibold text-neutral-800 dark:text-neutral-200">
+                          {operator.active}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Exit Rate</div>
+                        <div className="text-lg font-semibold text-neutral-800 dark:text-neutral-200">
+                          {operator.exit_rate.toFixed(1)}%
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Additional Stats */}
+                    <div className="grid grid-cols-2 gap-4 pt-2 border-t border-white/10 dark:border-white/15">
+                      <div>
+                        <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Total</div>
+                        <div className="text-sm font-medium text-neutral-700 dark:text-neutral-300">{operator.total}</div>
+                      </div>
+                      <div>
+                        <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Exited</div>
+                        <div className="text-sm font-medium text-neutral-700 dark:text-neutral-300">{operator.exited}</div>
+                      </div>
+                    </div>
+                    
+                    {/* Client Information */}
+                    {(operator.execution_client || operator.consensus_client) && (
+                      <div className="pt-2 border-t border-white/10 dark:border-white/15">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          {operator.execution_client && (
+                            <div>
+                              <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Execution Client</div>
+                              <span
+                                className="inline-block px-3 py-2 rounded-lg font-medium border text-sm"
+                                style={{
+                                  color: getClientColor(operator.execution_client, 'execution'),
+                                  borderColor: getClientColor(operator.execution_client, 'execution'),
+                                  backgroundColor: `${getClientColor(operator.execution_client, 'execution')}15`
+                                }}
+                              >
+                                {operator.execution_client}
+                              </span>
+                            </div>
+                          )}
+                          {operator.consensus_client && (
+                            <div>
+                              <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Consensus Client</div>
+                              <span
+                                className="inline-block px-3 py-2 rounded-lg font-medium border text-sm"
+                                style={{
+                                  color: getClientColor(operator.consensus_client, 'consensus'),
+                                  borderColor: getClientColor(operator.consensus_client, 'consensus'),
+                                  backgroundColor: `${getClientColor(operator.consensus_client, 'consensus')}15`
+                                }}
+                              >
+                                {operator.consensus_client}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })
+            ) : (
+              <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+                <Icon name="search" size="lg" className="mx-auto mb-4 opacity-50" />
+                <p className="text-lg font-medium mb-2">No operators found</p>
+                <p>No operators match your search criteria "{searchTerm}"</p>
+              </div>
+            )}
+          </div>
+          
+          {/* Desktop Table View */}
+          <div className="hidden xl:block bg-white/5 dark:bg-white/2 backdrop-blur-sm rounded-xl border border-white/10 dark:border-white/15 shadow-sm overflow-hidden">
             {/* Sticky Header */}
             <div className="sticky top-0 z-10 bg-white/10 dark:bg-white/5 backdrop-blur-sm border-b border-white/10 dark:border-white/15">
               <div className="grid px-4 py-4 font-semibold text-neutral-900 dark:text-neutral-100 text-body-medium" style={{gridTemplateColumns: "0.8fr 2.4fr 1.8fr 1.1fr 1fr 1fr 1fr 1.2fr 1.2fr 1.1fr 1.1fr 1.2fr", gap: "10px"}}>

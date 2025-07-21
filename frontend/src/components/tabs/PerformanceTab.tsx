@@ -1047,27 +1047,101 @@ const PerformanceTab: React.FC = () => {
 
           {/* Performance Table */}
           <div className="space-y-4">
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                 <Icon name="trophy" size="lg" color="primary" className="inline mr-2" />Operators by Performance
               </h3>
-              <div className="w-72">
+              <div className="w-full sm:w-72">
                 <input
                   type="text"
                   placeholder="Search by address, operator name, or ENS name..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg 
+                  className="w-full px-4 py-3 text-sm border border-gray-300 dark:border-gray-600 rounded-lg 
                     bg-white dark:bg-gray-700 text-gray-900 dark:text-white 
                     placeholder-gray-500 dark:placeholder-gray-400
-                    focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                    focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400
+                    min-h-[44px]"
                 />
               </div>
             </div>
             <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">
               Showing {filteredAndSortedData.length} of {performanceData.length} operators (sorted by performance)
             </div>
-            <div className="bg-white/5 dark:bg-white/2 backdrop-blur-sm rounded-xl border border-white/10 dark:border-white/15 shadow-sm overflow-hidden">
+            
+            {/* Mobile Card View */}
+            <div className="block md:hidden space-y-3">
+              {filteredAndSortedData.map((operator, index) => {
+                // Find original rank from the full unfiltered sorted data
+                const originalRank = performanceData
+                  .slice()
+                  .sort((a, b) => b.performance - a.performance)
+                  .findIndex(op => op.address === operator.address) + 1;
+                
+                const truncateAddress = (address: string) => {
+                  return `${address.slice(0, 6)}...${address.slice(-4)}`;
+                };
+                
+                return (
+                  <div 
+                    key={operator.address}
+                    className="bg-white/5 dark:bg-white/2 backdrop-blur-sm rounded-xl border border-white/10 dark:border-white/15 shadow-sm p-4 space-y-3"
+                  >
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <div className="text-sm font-medium text-gray-500 dark:text-gray-400">Rank #{originalRank}</div>
+                        <div className="font-mono text-sm text-neutral-800 dark:text-neutral-200">
+                          {truncateAddress(operator.address)}
+                        </div>
+                        {operator.ens_name && (
+                          <div className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
+                            {operator.ens_name}
+                          </div>
+                        )}
+                      </div>
+                      <span className={`px-3 py-1 text-xs font-medium rounded-full ${
+                        operator.category === 'Excellent' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' :
+                        operator.category === 'Good' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
+                        operator.category === 'Average' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
+                        'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                      }`}>
+                        {operator.category}
+                      </span>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Performance</div>
+                        <div className="text-lg font-semibold text-neutral-800 dark:text-neutral-200">
+                          {operator.performance.toFixed(2)}%
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Active Validators</div>
+                        <div className="text-lg font-semibold text-neutral-800 dark:text-neutral-200">
+                          {operator.active}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Total</div>
+                        <div className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                          {operator.total}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Exited</div>
+                        <div className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                          {operator.exited}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            
+            {/* Desktop Table View */}
+            <div className="hidden md:block bg-white/5 dark:bg-white/2 backdrop-blur-sm rounded-xl border border-white/10 dark:border-white/15 shadow-sm overflow-hidden">
               {/* Sticky Header */}
               <div className="sticky top-0 z-10 bg-white/10 dark:bg-white/5 backdrop-blur-sm border-b border-white/10 dark:border-white/15">
                 <div className="grid px-4 py-4 font-semibold text-neutral-900 dark:text-neutral-100 text-body-medium" style={{gridTemplateColumns: "0.7fr 2.8fr 2fr 1.2fr 1.2fr 0.8fr 0.8fr 0.8fr", gap: "12px"}}>
@@ -1142,8 +1216,8 @@ const PerformanceTab: React.FC = () => {
             </div>
             
             {/* Download CSV Button */}
-            <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700">
-              <GlassButton onClick={downloadCSV} variant="primary" size="sm">
+            <div className="flex justify-center md:justify-start px-4 py-4">
+              <GlassButton onClick={downloadCSV} variant="primary" size="sm" className="w-full md:w-auto min-h-[44px]">
                 <Icon name="download" size="sm" color="current" className="mr-2" />
                 Download Performance Data
               </GlassButton>
@@ -1188,7 +1262,7 @@ const PerformanceTab: React.FC = () => {
               <div className="space-y-8">
                 {/* 7-Day Attestation Performance */}
                 <div className="space-y-4">
-                  <div className="flex justify-between items-center">
+                  <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-4">
                     <div>
                       <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                         7-Day Attestation Performance
@@ -1201,29 +1275,100 @@ const PerformanceTab: React.FC = () => {
                       onClick={() => downloadAttestationCSV(attestation7dData, '7-day')} 
                       variant="primary" 
                       size="sm"
+                      className="w-full lg:w-auto min-h-[44px]"
                     >
                       <Icon name="download" size="sm" color="current" className="mr-2" />
                       Download 7-Day CSV
                     </GlassButton>
                   </div>
-                  <div className="flex justify-between items-center">
+                  
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
                     <div className="text-sm text-gray-600 dark:text-gray-400">
                       Showing {filtered7dData.length} of {attestation7dData.length} operators with attestation-only performance
                     </div>
-                    <div className="w-72">
+                    <div className="w-full sm:w-72">
                       <input
                         type="text"
                         placeholder="Search by address, operator name, or ENS name..."
                         value={searchTerm7d}
                         onChange={(e) => setSearchTerm7d(e.target.value)}
-                        className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg 
+                        className="w-full px-4 py-3 text-sm border border-gray-300 dark:border-gray-600 rounded-lg 
                           bg-white dark:bg-gray-700 text-gray-900 dark:text-white 
                           placeholder-gray-500 dark:placeholder-gray-400
-                          focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                          focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400
+                          min-h-[44px]"
                       />
                     </div>
                   </div>
-                  <div className="bg-white/5 dark:bg-white/2 backdrop-blur-sm rounded-xl border border-white/10 dark:border-white/15 shadow-sm overflow-hidden">
+                  
+                  {/* Mobile Card View */}
+                  <div className="block lg:hidden space-y-3">
+                    {filtered7dData.map((operator, index) => {
+                      // Find original rank from the full unfiltered sorted data
+                      const originalRank = attestation7dData.findIndex(op => op.address === operator.address) + 1;
+                      
+                      const truncateAddress = (address: string) => {
+                        return `${address.slice(0, 6)}...${address.slice(-4)}`;
+                      };
+                      
+                      return (
+                        <div 
+                          key={operator.address}
+                          className="bg-white/5 dark:bg-white/2 backdrop-blur-sm rounded-xl border border-white/10 dark:border-white/15 shadow-sm p-4 space-y-3"
+                        >
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <div className="text-sm font-medium text-gray-500 dark:text-gray-400">Rank #{originalRank}</div>
+                              <div className="font-mono text-sm text-neutral-800 dark:text-neutral-200">
+                                {truncateAddress(operator.operator)}
+                              </div>
+                              {operator.ens_name && (
+                                <div className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
+                                  {operator.ens_name}
+                                </div>
+                              )}
+                            </div>
+                            <div className="text-right">
+                              <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Relative Score</div>
+                              <div className="text-sm font-semibold text-neutral-800 dark:text-neutral-200">
+                                {operator.relative_score.toFixed(2)}%
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Avg Performance</div>
+                              <div className="text-lg font-semibold text-neutral-800 dark:text-neutral-200 font-mono">
+                                {Math.round(operator.regular_performance_gwei).toLocaleString()}
+                              </div>
+                            </div>
+                            <div>
+                              <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Attestation Validators</div>
+                              <div className="text-lg font-semibold text-neutral-800 dark:text-neutral-200">
+                                {operator.attestation_validators}
+                              </div>
+                            </div>
+                            <div>
+                              <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Total Validators</div>
+                              <div className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                                {operator.total_validators}
+                              </div>
+                            </div>
+                            <div>
+                              <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Excluded</div>
+                              <div className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                                {operator.excluded_validators}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  
+                  {/* Desktop Table View */}
+                  <div className="hidden lg:block bg-white/5 dark:bg-white/2 backdrop-blur-sm rounded-xl border border-white/10 dark:border-white/15 shadow-sm overflow-hidden">
                     {/* Sticky Header */}
                     <div className="sticky top-0 z-10 bg-white/10 dark:bg-white/5 backdrop-blur-sm border-b border-white/10 dark:border-white/15">
                       <div className="grid px-4 py-4 font-semibold text-neutral-900 dark:text-neutral-100 text-body-medium" style={{gridTemplateColumns: "0.7fr 2.8fr 2fr 1.5fr 1.8fr 2fr 1.5fr 1.7fr", gap: "12px"}}>
@@ -1287,7 +1432,7 @@ const PerformanceTab: React.FC = () => {
 
                 {/* 31-Day Attestation Performance */}
                 <div className="space-y-4">
-                  <div className="flex justify-between items-center">
+                  <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-4">
                     <div>
                       <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                         31-Day Attestation Performance
@@ -1300,29 +1445,100 @@ const PerformanceTab: React.FC = () => {
                       onClick={() => downloadAttestationCSV(attestation31dData, '31-day')} 
                       variant="primary" 
                       size="sm"
+                      className="w-full lg:w-auto min-h-[44px]"
                     >
                       <Icon name="download" size="sm" color="current" className="mr-2" />
                       Download 31-Day CSV
                     </GlassButton>
                   </div>
-                  <div className="flex justify-between items-center">
+                  
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
                     <div className="text-sm text-gray-600 dark:text-gray-400">
                       Showing {filtered31dData.length} of {attestation31dData.length} operators with attestation-only performance
                     </div>
-                    <div className="w-72">
+                    <div className="w-full sm:w-72">
                       <input
                         type="text"
                         placeholder="Search by address, operator name, or ENS name..."
                         value={searchTerm31d}
                         onChange={(e) => setSearchTerm31d(e.target.value)}
-                        className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg 
+                        className="w-full px-4 py-3 text-sm border border-gray-300 dark:border-gray-600 rounded-lg 
                           bg-white dark:bg-gray-700 text-gray-900 dark:text-white 
                           placeholder-gray-500 dark:placeholder-gray-400
-                          focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                          focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400
+                          min-h-[44px]"
                       />
                     </div>
                   </div>
-                  <div className="bg-white/5 dark:bg-white/2 backdrop-blur-sm rounded-xl border border-white/10 dark:border-white/15 shadow-sm overflow-hidden">
+                  
+                  {/* Mobile Card View */}
+                  <div className="block lg:hidden space-y-3">
+                    {filtered31dData.map((operator, index) => {
+                      // Find original rank from the full unfiltered sorted data
+                      const originalRank = attestation31dData.findIndex(op => op.address === operator.address) + 1;
+                      
+                      const truncateAddress = (address: string) => {
+                        return `${address.slice(0, 6)}...${address.slice(-4)}`;
+                      };
+                      
+                      return (
+                        <div 
+                          key={operator.address}
+                          className="bg-white/5 dark:bg-white/2 backdrop-blur-sm rounded-xl border border-white/10 dark:border-white/15 shadow-sm p-4 space-y-3"
+                        >
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <div className="text-sm font-medium text-gray-500 dark:text-gray-400">Rank #{originalRank}</div>
+                              <div className="font-mono text-sm text-neutral-800 dark:text-neutral-200">
+                                {truncateAddress(operator.operator)}
+                              </div>
+                              {operator.ens_name && (
+                                <div className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
+                                  {operator.ens_name}
+                                </div>
+                              )}
+                            </div>
+                            <div className="text-right">
+                              <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Relative Score</div>
+                              <div className="text-sm font-semibold text-neutral-800 dark:text-neutral-200">
+                                {operator.relative_score.toFixed(2)}%
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Avg Performance</div>
+                              <div className="text-lg font-semibold text-neutral-800 dark:text-neutral-200 font-mono">
+                                {Math.round(operator.regular_performance_gwei).toLocaleString()}
+                              </div>
+                            </div>
+                            <div>
+                              <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Attestation Validators</div>
+                              <div className="text-lg font-semibold text-neutral-800 dark:text-neutral-200">
+                                {operator.attestation_validators}
+                              </div>
+                            </div>
+                            <div>
+                              <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Total Validators</div>
+                              <div className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                                {operator.total_validators}
+                              </div>
+                            </div>
+                            <div>
+                              <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Excluded</div>
+                              <div className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                                {operator.excluded_validators}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  
+                  {/* Desktop Table View */}
+                  <div className="hidden lg:block bg-white/5 dark:bg-white/2 backdrop-blur-sm rounded-xl border border-white/10 dark:border-white/15 shadow-sm overflow-hidden">
                     {/* Sticky Header */}
                     <div className="sticky top-0 z-10 bg-white/10 dark:bg-white/5 backdrop-blur-sm border-b border-white/10 dark:border-white/15">
                       <div className="grid px-4 py-4 font-semibold text-neutral-900 dark:text-neutral-100 text-body-medium" style={{gridTemplateColumns: "0.7fr 2.8fr 2fr 1.5fr 1.8fr 2fr 1.5fr 1.7fr", gap: "12px"}}>
