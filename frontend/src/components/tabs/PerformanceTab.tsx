@@ -451,6 +451,39 @@ const PerformanceTab: React.FC = () => {
     setCurrentPage31d(1);
   }, [searchTerm31d]);
 
+  // Pagination handlers
+  const handleMainPageNext = useCallback(() => {
+    setCurrentPage(prev => {
+      const newPage = prev + 1;
+      console.log(`Main page next: ${prev} -> ${newPage}`);
+      return newPage;
+    });
+  }, []);
+  
+  const handleMainPagePrev = useCallback(() => {
+    setCurrentPage(prev => {
+      const newPage = prev - 1;
+      console.log(`Main page prev: ${prev} -> ${newPage}`);
+      return newPage;
+    });
+  }, []);
+  
+  const handle7dPageNext = useCallback(() => {
+    setCurrentPage7d(prev => prev + 1);
+  }, []);
+  
+  const handle7dPagePrev = useCallback(() => {
+    setCurrentPage7d(prev => prev - 1);
+  }, []);
+  
+  const handle31dPageNext = useCallback(() => {
+    setCurrentPage31d(prev => prev + 1);
+  }, []);
+  
+  const handle31dPagePrev = useCallback(() => {
+    setCurrentPage31d(prev => prev - 1);
+  }, []);
+
   const downloadCSV = () => {
     analyticsService.trackDownload('performance_csv');
     
@@ -548,6 +581,9 @@ const PerformanceTab: React.FC = () => {
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
+  
+  // Debug logging
+  console.log(`Main pagination: currentPage=${currentPage}, totalPages=${totalPages}, itemsOnPage=${paginatedData.length}`);
   
   // 7-day pagination logic
   const totalPages7d = Math.ceil(filtered7dData.length / itemsPerPage);
@@ -1184,13 +1220,13 @@ const PerformanceTab: React.FC = () => {
               {/* Mobile Pagination Controls */}
               {totalPages > 1 && (
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 bg-white/5 dark:bg-white/2 backdrop-blur-sm rounded-xl border border-white/10 dark:border-white/15">
-                  <div className="text-sm text-gray-600 dark:text-gray-400 text-center sm:text-left">
+                  <div className="text-sm text-gray-600 dark:text-gray-400 text-center sm:text-left" key={`main-page-${currentPage}-${totalPages}`}>
                     Page {currentPage} of {totalPages} • {filteredAndSortedData.length} total operators
                   </div>
                   
                   <div className="flex items-center justify-center gap-2">
                     <GlassButton
-                      onClick={() => setCurrentPage(currentPage - 1)}
+                      onClick={handleMainPagePrev}
                       disabled={currentPage === 1}
                       variant="secondary"
                       size="sm"
@@ -1201,7 +1237,7 @@ const PerformanceTab: React.FC = () => {
                     </GlassButton>
 
                     <GlassButton
-                      onClick={() => setCurrentPage(currentPage + 1)}
+                      onClick={handleMainPageNext}
                       disabled={currentPage === totalPages}
                       variant="secondary"
                       size="sm"
@@ -1446,13 +1482,13 @@ const PerformanceTab: React.FC = () => {
                     {/* Mobile Pagination Controls for 7-day */}
                     {totalPages7d > 1 && (
                       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 bg-white/5 dark:bg-white/2 backdrop-blur-sm rounded-xl border border-white/10 dark:border-white/15">
-                        <div className="text-sm text-gray-600 dark:text-gray-400 text-center sm:text-left">
+                        <div className="text-sm text-gray-600 dark:text-gray-400 text-center sm:text-left" key={`7d-page-${currentPage7d}-${totalPages7d}`}>
                           Page {currentPage7d} of {totalPages7d} • {filtered7dData.length} total operators
                         </div>
                         
                         <div className="flex items-center justify-center gap-2">
                           <GlassButton
-                            onClick={() => setCurrentPage7d(currentPage7d - 1)}
+                            onClick={handle7dPagePrev}
                             disabled={currentPage7d === 1}
                             variant="secondary"
                             size="sm"
@@ -1463,7 +1499,7 @@ const PerformanceTab: React.FC = () => {
                           </GlassButton>
 
                           <GlassButton
-                            onClick={() => setCurrentPage7d(currentPage7d + 1)}
+                            onClick={handle7dPageNext}
                             disabled={currentPage7d === totalPages7d}
                             variant="secondary"
                             size="sm"
@@ -1651,13 +1687,13 @@ const PerformanceTab: React.FC = () => {
                     {/* Mobile Pagination Controls for 31-day */}
                     {totalPages31d > 1 && (
                       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 bg-white/5 dark:bg-white/2 backdrop-blur-sm rounded-xl border border-white/10 dark:border-white/15">
-                        <div className="text-sm text-gray-600 dark:text-gray-400 text-center sm:text-left">
+                        <div className="text-sm text-gray-600 dark:text-gray-400 text-center sm:text-left" key={`31d-page-${currentPage31d}-${totalPages31d}`}>
                           Page {currentPage31d} of {totalPages31d} • {filtered31dData.length} total operators
                         </div>
                         
                         <div className="flex items-center justify-center gap-2">
                           <GlassButton
-                            onClick={() => setCurrentPage31d(currentPage31d - 1)}
+                            onClick={handle31dPagePrev}
                             disabled={currentPage31d === 1}
                             variant="secondary"
                             size="sm"
@@ -1668,7 +1704,7 @@ const PerformanceTab: React.FC = () => {
                           </GlassButton>
 
                           <GlassButton
-                            onClick={() => setCurrentPage31d(currentPage31d + 1)}
+                            onClick={handle31dPageNext}
                             disabled={currentPage31d === totalPages31d}
                             variant="secondary"
                             size="sm"
