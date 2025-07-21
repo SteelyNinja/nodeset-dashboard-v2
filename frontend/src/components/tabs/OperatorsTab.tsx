@@ -20,6 +20,7 @@ interface OperatorData {
   performance_7d: number;
   execution_client?: string;
   consensus_client?: string;
+  rank_change?: number | null;
 }
 
 const OperatorsTab: React.FC = () => {
@@ -106,35 +107,86 @@ const OperatorsTab: React.FC = () => {
       setLoading(true);
       setError(null);
       
-      const [concentrationData, topOperatorsData, validatorData, operatorSummary, clientDiversityData] = await Promise.all([
+      const [concentrationData, topOperatorsData, validatorData, operatorSummary, previousDayOperatorsSummary, clientDiversityData] = await Promise.all([
         apiService.getConcentrationMetrics(),
         apiService.getTopOperators(1000), // Get all operators
         apiService.getValidatorData(), // Get validator data for ENS names
         apiService.getOperatorsSummary(7), // Get 7-day performance data for ranking
+        apiService.getOperatorsSummary(8).catch(() => ({})), // Get 8-day data to calculate previous day rank
         apiService.getClientDiversity() // Get client diversity data for execution/consensus clients
       ]);
       
       setConcentrationMetrics(concentrationData);
       
+      // Calculate previous day ranks for rank change comparison
+      const calculatePreviousRank = (operatorAddress: string): number | null => {
+        if (Object.keys(previousDayOperatorsSummary).length === 0) {
+          return null;
+        }
+        
+        // Type guard to ensure we have the correct type
+        const previousSummaryRecord = previousDayOperatorsSummary as Record<string, any>;
+        const previousOperatorSummaries = Object.values(previousSummaryRecord);
+        const previousOperatorData = previousSummaryRecord[operatorAddress];
+        
+        if (!previousOperatorData) {
+          return null;
+        }
+        
+        const previousOperator8DayPerf = previousOperatorData.avg_attestation_performance;
+        const sortedPreviousOperators = previousOperatorSummaries.sort((a: any, b: any) => b.avg_attestation_performance - a.avg_attestation_performance);
+        
+        let previousRank = 1;
+        for (const op of sortedPreviousOperators) {
+          if (op.avg_attestation_performance > previousOperator8DayPerf) {
+            previousRank++;
+          } else {
+            break;
+          }
+        }
+        
+        return previousRank;
+      };
+      
       // Process operators data and add 7-day performance ranking
-      const operators = topOperatorsData.operators.map((op: any) => ({
-        rank: op.rank,
-        address: op.full_address,
-        ens_name: validatorData.ens_names?.[op.full_address] || '', // Get ENS name from validator data
-        active: op.active_count,
-        total: op.validator_count,
-        exited: op.exited_count,
-        exit_rate: op.exit_rate,
-        market_share: op.percentage,
-        performance_7d: operatorSummary[op.full_address]?.avg_attestation_performance || 0,
-        execution_client: clientDiversityData.operator_details?.[op.full_address] ? 
-          getClientName(clientDiversityData.operator_details[op.full_address].execution_client, 'execution') : undefined,
-        consensus_client: clientDiversityData.operator_details?.[op.full_address] ? 
-          getClientName(clientDiversityData.operator_details[op.full_address].consensus_client, 'consensus') : undefined
-      })) as OperatorData[];
+      const operators = topOperatorsData.operators.map((op: any) => {
+        return {
+          rank: 0, // Will be set after sorting by performance
+          address: op.full_address,
+          ens_name: validatorData.ens_names?.[op.full_address] || '', // Get ENS name from validator data
+          active: op.active_count,
+          total: op.validator_count,
+          exited: op.exited_count,
+          exit_rate: op.exit_rate,
+          market_share: op.percentage,
+          performance_7d: operatorSummary[op.full_address]?.avg_attestation_performance || 0,
+          execution_client: clientDiversityData.operator_details?.[op.full_address] ? 
+            getClientName(clientDiversityData.operator_details[op.full_address].execution_client, 'execution') : undefined,
+          consensus_client: clientDiversityData.operator_details?.[op.full_address] ? 
+            getClientName(clientDiversityData.operator_details[op.full_address].consensus_client, 'consensus') : undefined,
+          rank_change: null // Will be calculated after ranking
+        };
+      }) as OperatorData[];
 
-      // Keep operators in original order (sorted by validator count from API)
-      // Don't sort by performance - let users filter and sort as needed
+      // Sort operators by 7-day performance (descending - best performance first)
+      operators.sort((a, b) => b.performance_7d - a.performance_7d);
+      
+      // Assign ranks based on performance with proper tie handling
+      operators.forEach((operator, index) => {
+        let currentRank = 1;
+        for (let i = 0; i < index; i++) {
+          if (operators[i].performance_7d > operator.performance_7d) {
+            currentRank++;
+          } else {
+            break; // Found first operator with same or lower performance
+          }
+        }
+        operator.rank = currentRank;
+        
+        // Calculate rank change after assigning current rank
+        const previousRank = calculatePreviousRank(operator.address);
+        operator.rank_change = previousRank !== null ? previousRank - currentRank : null; // Positive means improved rank (moved up)
+      });
       
       setOperatorData(operators);
     } catch (err) {
@@ -299,7 +351,7 @@ const OperatorsTab: React.FC = () => {
           <div className="bg-white/5 dark:bg-white/2 backdrop-blur-sm rounded-xl border border-white/10 dark:border-white/15 shadow-sm overflow-hidden">
             {/* Sticky Header */}
             <div className="sticky top-0 z-10 bg-white/10 dark:bg-white/5 backdrop-blur-sm border-b border-white/10 dark:border-white/15">
-              <div className="grid px-4 py-4 font-semibold text-neutral-900 dark:text-neutral-100 text-body-medium" style={{gridTemplateColumns: "0.6fr 2.4fr 1.8fr 1.1fr 1fr 1fr 1fr 1.2fr 1.2fr 1.1fr 1.1fr 1.2fr", gap: "10px"}}>
+              <div className="grid px-4 py-4 font-semibold text-neutral-900 dark:text-neutral-100 text-body-medium" style={{gridTemplateColumns: "0.8fr 2.4fr 1.8fr 1.1fr 1fr 1fr 1fr 1.2fr 1.2fr 1.1fr 1.1fr 1.2fr", gap: "10px"}}>
                 <div>Rank</div>
                 <div>Address</div>
                 <div>ENS / Discord Name</div>
@@ -325,10 +377,37 @@ const OperatorsTab: React.FC = () => {
                       className={`grid px-4 py-3 hover:bg-primary-500/8 dark:hover:bg-primary-500/5 hover:shadow-sm transition-all duration-200 ease-in-out border-b border-white/5 dark:border-white/10 last:border-b-0 text-neutral-800 dark:text-neutral-200 text-body-medium ${
                         index % 2 === 0 ? 'bg-gray-50/30 dark:bg-gray-800/15' : 'bg-transparent'
                       }`}
-                      style={{gridTemplateColumns: "0.6fr 2.4fr 1.8fr 1.1fr 1fr 1fr 1fr 1.2fr 1.2fr 1.1fr 1.1fr 1.2fr", gap: "10px"}}
+                      style={{gridTemplateColumns: "0.8fr 2.4fr 1.8fr 1.1fr 1fr 1fr 1fr 1.2fr 1.2fr 1.1fr 1.1fr 1.2fr", gap: "10px"}}
                     >
-                      <div className="font-medium">
+                      <div className="font-medium flex items-center gap-2">
                         {operator.rank}
+                        {operator.rank_change !== null && operator.rank_change !== undefined && (
+                          <div className={`flex items-center text-sm font-bold ${
+                            operator.rank_change! > 0 
+                              ? 'text-green-600 dark:text-green-400' 
+                              : operator.rank_change! < 0
+                              ? 'text-red-600 dark:text-red-400'
+                              : 'text-gray-500 dark:text-gray-400'
+                          }`}>
+                            {operator.rank_change! > 0 && (
+                              <>
+                                <Icon name="up" size="xs" />
+                                <span className="ml-0.5">+{operator.rank_change}</span>
+                              </>
+                            )}
+                            {operator.rank_change! < 0 && (
+                              <>
+                                <Icon name="down" size="xs" />
+                                <span className="ml-0.5">{operator.rank_change}</span>
+                              </>
+                            )}
+                            {operator.rank_change === 0 && (
+                              <>
+                                <span className="ml-0.5">= 0</span>
+                              </>
+                            )}
+                          </div>
+                        )}
                       </div>
                       <div className="font-mono text-xs">
                         {operator.address}
