@@ -106,8 +106,15 @@ class ApiService {
   }
 
   async getExitData(): Promise<ExitData> {
-    const response = await this.apiClient.get<ApiResponse<ExitData>>('/api/data/exit-data');
-    return this.extractData(response);
+    // Try enhanced exit data first, fall back to original if not available
+    try {
+      const response = await this.apiClient.get<ApiResponse<ExitData>>('/api/dashboard/enhanced-exit-data');
+      return this.extractData(response);
+    } catch (error) {
+      // Fall back to original exit data
+      const response = await this.apiClient.get<ApiResponse<ExitData>>('/api/data/exit-data');
+      return this.extractData(response);
+    }
   }
 
   async getSyncCommitteeData(): Promise<SyncCommitteeData> {

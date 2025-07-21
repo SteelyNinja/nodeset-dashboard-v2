@@ -176,3 +176,21 @@ async def get_all_exit_records():
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to get all exit records: {str(e)}")
 
+@router.get("/enhanced-exit-data")
+async def get_enhanced_exit_data():
+    """Get enhanced exit data that includes both exited and active_exiting validators"""
+    try:
+        enhanced_data = analytics_service.get_enhanced_exit_data()
+        
+        if "error" in enhanced_data:
+            raise HTTPException(status_code=404, detail=enhanced_data["error"])
+        
+        return AnalysisResponse(
+            data=enhanced_data,
+            success=True,
+            message="Enhanced exit data retrieved successfully",
+            timestamp=datetime.now().isoformat()
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get enhanced exit data: {str(e)}")
+

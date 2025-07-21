@@ -626,7 +626,7 @@ class AnalyticsService:
             return {"error": f"Failed to get network overview: {str(e)}"}
     
     def get_all_exit_records(self):
-        """Extract all individual exit records from validator data exit_details"""
+        """Extract all individual exit records from validator data exit_details and active_exiting_details"""
         try:
             # Load validator data which contains complete exit details
             validator_data, _ = load_validator_data()
@@ -637,51 +637,32 @@ class AnalyticsService:
             ens_names_data, _ = load_ens_names()
             ens_names = ens_names_data or {}
             
-            # Get all exit details from validator data (has all exits with timestamps)
+            # Get all exit details from validator data (completed exits)
             exit_details = validator_data.get('exit_details', {})
-            if not exit_details:
+            # Get active exiting details (validators currently in exit process)
+            active_exiting_details = validator_data.get('active_exiting_details', {})
+            
+            if not exit_details and not active_exiting_details:
                 return {"error": "No exit details found in validator data"}
             
             # Convert all exit details to individual records
             all_exit_records = []
             
+            # Process completed exits from exit_details
             for validator_pubkey, exit_info in exit_details.items():
-                # Extract exit information from the complete exit_details
-                validator_index = exit_info.get('validator_index', 'N/A')
-                operator = exit_info.get('operator', '')
-                operator_name = exit_info.get('operator_name', '')
-                if not operator_name and operator:
-                    operator_name = ens_names.get(operator, f"{operator[:8]}...{operator[-6:]}")
+                exit_record = self._create_exit_record(validator_pubkey, exit_info, ens_names)
+                all_exit_records.append(exit_record)
+            
+            # Process active exiting validators from active_exiting_details
+            for validator_pubkey, exit_info in active_exiting_details.items():
+                # For active_exiting, use active_exiting_timestamp as exit_timestamp
+                # and active_exiting_epoch as exit_epoch for consistency
+                if 'active_exiting_timestamp' in exit_info:
+                    exit_info['exit_timestamp'] = exit_info['active_exiting_timestamp']
+                if 'active_exiting_epoch' in exit_info:
+                    exit_info['exit_epoch'] = exit_info['active_exiting_epoch']
                 
-                status = exit_info.get('status', 'unknown')
-                exit_epoch = exit_info.get('exit_epoch', 'N/A')
-                exit_timestamp = exit_info.get('exit_timestamp')
-                slashed = exit_info.get('slashed', False)
-                balance_gwei = exit_info.get('balance')
-                
-                # Convert timestamp to formatted date if available
-                exit_date = 'N/A'
-                if exit_timestamp:
-                    try:
-                        from datetime import datetime
-                        exit_date = datetime.fromtimestamp(exit_timestamp).strftime('%Y-%m-%d %H:%M:%S')
-                    except:
-                        exit_date = 'N/A'
-                
-                # Create exit record with all available data
-                exit_record = {
-                    'validator_index': validator_index,
-                    'validator_pubkey': validator_pubkey,
-                    'operator': operator,
-                    'operator_name': operator_name,
-                    'exit_timestamp': exit_timestamp,
-                    'exit_date': exit_date,
-                    'status': status,
-                    'slashed': slashed,
-                    'balance_gwei': balance_gwei,
-                    'exit_epoch': exit_epoch
-                }
-                
+                exit_record = self._create_exit_record(validator_pubkey, exit_info, ens_names)
                 all_exit_records.append(exit_record)
             
             # Sort by exit timestamp (most recent first), then by validator index
@@ -697,6 +678,195 @@ class AnalyticsService:
             
         except Exception as e:
             return {"error": f"Failed to get all exit records: {str(e)}"}
+    
+    def _create_exit_record(self, validator_pubkey, exit_info, ens_names):
+        """Helper method to create a standardized exit record"""
+        # Extract exit information
+        validator_index = exit_info.get('validator_index', 'N/A')
+        operator = exit_info.get('operator', '')
+        operator_name = exit_info.get('operator_name', '')
+        if not operator_name and operator:
+            operator_name = ens_names.get(operator, f"{operator[:8]}...{operator[-6:]}")
+        
+        status = exit_info.get('status', 'unknown')
+        exit_epoch = exit_info.get('exit_epoch', 'N/A')
+        exit_timestamp = exit_info.get('exit_timestamp')
+        slashed = exit_info.get('slashed', False)
+        balance_gwei = exit_info.get('balance')
+        
+        # Convert timestamp to formatted date if available
+        exit_date = 'N/A'
+        if exit_timestamp:
+            try:
+                from datetime import datetime
+                exit_date = datetime.fromtimestamp(exit_timestamp).strftime('%Y-%m-%d %H:%M:%S')
+            except:
+                exit_date = 'N/A'
+        
+        # Create exit record with all available data
+        return {
+            'validator_index': validator_index,
+            'validator_pubkey': validator_pubkey,
+            'operator': operator,
+            'operator_name': operator_name,
+            'exit_timestamp': exit_timestamp,
+            'exit_date': exit_date,
+            'status': status,
+            'slashed': slashed,
+            'balance_gwei': balance_gwei,
+            'exit_epoch': exit_epoch
+        }
+    
+    def get_enhanced_exit_data(self):
+        """Generate enhanced exit data that includes both exited and active_exiting validators"""
+        try:
+            # Load validator data
+            validator_data, _ = load_validator_data()
+            if not validator_data:
+                return {"error": "Validator data not available"}
+            
+            # Load ENS names
+            ens_names_data, _ = load_ens_names()
+            ens_names = ens_names_data or {}
+            
+            # Get both completed exits and active exiting validators
+            exit_details = validator_data.get('exit_details', {})
+            active_exiting_details = validator_data.get('active_exiting_details', {})
+            
+            # Track operators and their exit statistics
+            operator_stats = {}
+            all_exit_records = []
+            
+            # Process completed exits
+            for validator_pubkey, exit_info in exit_details.items():
+                operator = exit_info.get('operator', '')
+                if not operator:
+                    continue
+                    
+                # Initialize operator stats if not exists
+                if operator not in operator_stats:
+                    operator_name = exit_info.get('operator_name', '')
+                    if not operator_name:
+                        operator_name = ens_names.get(operator, f"{operator[:8]}...{operator[-6:]}")
+                    operator_stats[operator] = {
+                        'operator': operator,
+                        'operator_name': operator_name,
+                        'exits': 0,
+                        'active_exiting': 0,
+                        'still_active': 0,
+                        'total_ever': 0,
+                        'latest_exit_timestamp': 0,
+                        'latest_exit_date': ''
+                    }
+                
+                # Count completed exit
+                operator_stats[operator]['exits'] += 1
+                
+                # Update latest exit info
+                exit_timestamp = exit_info.get('exit_timestamp', 0) or 0
+                if exit_timestamp > operator_stats[operator]['latest_exit_timestamp']:
+                    operator_stats[operator]['latest_exit_timestamp'] = exit_timestamp
+                    try:
+                        from datetime import datetime
+                        operator_stats[operator]['latest_exit_date'] = datetime.fromtimestamp(exit_timestamp).strftime('%Y-%m-%d')
+                    except:
+                        operator_stats[operator]['latest_exit_date'] = 'N/A'
+                
+                # Add to all records
+                exit_record = self._create_exit_record(validator_pubkey, exit_info, ens_names)
+                all_exit_records.append(exit_record)
+            
+            # Process active exiting validators
+            for validator_pubkey, exit_info in active_exiting_details.items():
+                operator = exit_info.get('operator', '')
+                if not operator:
+                    continue
+                    
+                # Initialize operator stats if not exists
+                if operator not in operator_stats:
+                    operator_name = exit_info.get('operator_name', '')
+                    if not operator_name:
+                        operator_name = ens_names.get(operator, f"{operator[:8]}...{operator[-6:]}")
+                    operator_stats[operator] = {
+                        'operator': operator,
+                        'operator_name': operator_name,
+                        'exits': 0,
+                        'active_exiting': 0,
+                        'still_active': 0,
+                        'total_ever': 0,
+                        'latest_exit_timestamp': 0,
+                        'latest_exit_date': ''
+                    }
+                
+                # Count active exiting
+                operator_stats[operator]['active_exiting'] += 1
+                
+                # Update latest exit info with active_exiting timestamp
+                exit_timestamp = exit_info.get('active_exiting_timestamp', 0) or 0
+                if exit_timestamp > operator_stats[operator]['latest_exit_timestamp']:
+                    operator_stats[operator]['latest_exit_timestamp'] = exit_timestamp
+                    try:
+                        from datetime import datetime
+                        operator_stats[operator]['latest_exit_date'] = datetime.fromtimestamp(exit_timestamp).strftime('%Y-%m-%d')
+                    except:
+                        operator_stats[operator]['latest_exit_date'] = 'N/A'
+                
+                # Add to all records (normalize field names)
+                if 'active_exiting_timestamp' in exit_info:
+                    exit_info['exit_timestamp'] = exit_info['active_exiting_timestamp']
+                if 'active_exiting_epoch' in exit_info:
+                    exit_info['exit_epoch'] = exit_info['active_exiting_epoch']
+                
+                exit_record = self._create_exit_record(validator_pubkey, exit_info, ens_names)
+                all_exit_records.append(exit_record)
+            
+            # Get operator validator counts from main validator data
+            operator_validators = validator_data.get('operator_validators', {})
+            
+            # Finalize operator statistics
+            operators_with_exits = []
+            for operator, stats in operator_stats.items():
+                total_validators = operator_validators.get(operator, 0)
+                total_exits_and_exiting = stats['exits'] + stats['active_exiting']
+                stats['still_active'] = max(0, total_validators - stats['exits'])  # Only subtract completed exits
+                stats['total_ever'] = total_validators
+                stats['exit_rate'] = (total_exits_and_exiting / total_validators * 100) if total_validators > 0 else 0.0
+                
+                # Only include operators that have exits or active_exiting
+                if total_exits_and_exiting > 0:
+                    operators_with_exits.append(stats)
+            
+            # Sort operators by total exits + active_exiting (descending)
+            operators_with_exits.sort(key=lambda x: (x['exits'] + x['active_exiting']), reverse=True)
+            
+            # Calculate summary statistics
+            total_exited = sum(op['exits'] for op in operators_with_exits)
+            total_active_exiting = sum(op['active_exiting'] for op in operators_with_exits)
+            total_active = sum(op['still_active'] for op in operators_with_exits)
+            total_validators = total_exited + total_active_exiting + total_active
+            exit_rate_percent = ((total_exited + total_active_exiting) / total_validators * 100) if total_validators > 0 else 0.0
+            
+            # Sort all exit records by timestamp
+            all_exit_records.sort(key=lambda x: -(x.get('exit_timestamp', 0) or 0))
+            
+            # Create enhanced exit data structure
+            enhanced_exit_data = {
+                'exit_summary': {
+                    'total_exited': total_exited,
+                    'total_active_exiting': total_active_exiting,
+                    'total_active': total_active,
+                    'exit_rate_percent': exit_rate_percent,
+                    'last_updated': int(validator_data.get('last_block_timestamp', 0)) or int(__import__('time').time())
+                },
+                'operators_with_exits': operators_with_exits,
+                'recent_exits': all_exit_records[:100],  # Limit to most recent 100
+                'total_operators_with_exits': len(operators_with_exits)
+            }
+            
+            return enhanced_exit_data
+            
+        except Exception as e:
+            return {"error": f"Failed to generate enhanced exit data: {str(e)}"}
 
 # Create singleton instance
 analytics_service = AnalyticsService()

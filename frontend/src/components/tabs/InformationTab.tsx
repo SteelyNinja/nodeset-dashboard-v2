@@ -3,7 +3,7 @@ import { apiService } from '../../services/api';
 import LoadingSpinner from '../common/LoadingSpinner';
 import GlassCard from '../common/GlassCard';
 import Icon from '../common/Icon';
-import { ValidatorData, ConcentrationMetrics, PerformanceAnalysis, ClientDiversity, ENSSourcesData } from '../../types/api';
+import { ValidatorData, ConcentrationMetrics, PerformanceAnalysis, ClientDiversity, ENSSourcesData, ExitData } from '../../types/api';
 
 const InformationTab: React.FC = () => {
   const [validatorData, setValidatorData] = useState<ValidatorData | null>(null);
@@ -11,6 +11,7 @@ const InformationTab: React.FC = () => {
   const [performanceData, setPerformanceData] = useState<PerformanceAnalysis | null>(null);
   const [clientData, setClientData] = useState<ClientDiversity | null>(null);
   const [ensSourcesData, setEnsSourcesData] = useState<ENSSourcesData | null>(null);
+  const [exitData, setExitData] = useState<ExitData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -19,14 +20,15 @@ const InformationTab: React.FC = () => {
       try {
         setLoading(true);
         
-        // Fetch all overview data in parallel including network overview
-        const [validator, concentration, performance, client, overview, ensSources] = await Promise.all([
+        // Fetch all overview data in parallel including network overview and exit data
+        const [validator, concentration, performance, client, overview, ensSources, exitDataResult] = await Promise.all([
           apiService.getValidatorData(),
           apiService.getConcentrationMetrics(),
           apiService.getPerformanceAnalysis(),
           apiService.getClientDiversity(),
           apiService.getNetworkOverview(),
-          apiService.getENSSourcesData()
+          apiService.getENSSourcesData(),
+          apiService.getExitData().catch(() => null) // Don't fail if exit data unavailable
         ]);
 
         setValidatorData(validator);
@@ -34,6 +36,7 @@ const InformationTab: React.FC = () => {
         setPerformanceData(performance);
         setClientData(client);
         setEnsSourcesData(ensSources);
+        setExitData(exitDataResult);
         // Store network overview data in validatorData for activation rates
         if (overview && validator) {
           setValidatorData({
@@ -325,7 +328,7 @@ const InformationTab: React.FC = () => {
           </GlassCard>
         </div>
         {/* Network Overview Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
           <GlassCard elevation="raised" className="p-4">
             <div className="flex items-center mb-2">
               <Icon name="building" size="md" color="primary" className="mr-2" />
@@ -371,10 +374,23 @@ const InformationTab: React.FC = () => {
               <div className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Exited Validators</div>
             </div>
             <div className="text-3xl font-extrabold text-gray-900 dark:text-white mb-1 tracking-tight">
-              {validatorData ? formatNumber(validatorData.total_exited || 0) : 'Loading...'}
+              {exitData ? formatNumber(exitData.exit_summary.total_exited) : (validatorData ? formatNumber(validatorData.total_exited || 0) : 'Loading...')}
             </div>
             <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
-              No longer validating
+              Completed exits
+            </p>
+          </GlassCard>
+
+          <GlassCard elevation="raised" className="p-4">
+            <div className="flex items-center mb-2">
+              <Icon name="warning" size="md" color="warning" className="mr-2" />
+              <div className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Active Exiting</div>
+            </div>
+            <div className="text-3xl font-extrabold text-yellow-600 dark:text-yellow-400 mb-1 tracking-tight">
+              {exitData ? formatNumber(exitData.exit_summary.total_active_exiting || 0) : 'Loading...'}
+            </div>
+            <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
+              Currently exiting
             </p>
           </GlassCard>
         </div>

@@ -114,21 +114,26 @@ const ExitAnalysisTab: React.FC = () => {
       
       <div className="space-y-6">
         {/* Summary Metrics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           <GlassCard>
             <div className="text-sm font-medium text-gray-500 mb-1">Total Exits</div>
             <div className="text-2xl font-bold text-black dark:text-white">{exitData.exit_summary.total_exited.toLocaleString()}</div>
-            <div className="text-xs text-gray-400">Validators that have exited</div>
+            <div className="text-xs text-gray-400">Completed exits</div>
+          </GlassCard>
+          <GlassCard>
+            <div className="text-sm font-medium text-gray-500 mb-1">Active Exiting</div>
+            <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{(exitData.exit_summary.total_active_exiting || 0).toLocaleString()}</div>
+            <div className="text-xs text-gray-400">Currently exiting</div>
           </GlassCard>
           <GlassCard>
             <div className="text-sm font-medium text-gray-500 mb-1">Still Active</div>
             <div className="text-2xl font-bold text-black dark:text-white">{exitData.exit_summary.total_active.toLocaleString()}</div>
-            <div className="text-xs text-gray-400">Currently active validators</div>
+            <div className="text-xs text-gray-400">Fully active validators</div>
           </GlassCard>
           <GlassCard>
             <div className="text-sm font-medium text-gray-500 mb-1">Exit Rate</div>
             <div className="text-2xl font-bold text-black dark:text-white">{exitData.exit_summary.exit_rate_percent.toFixed(2)}%</div>
-            <div className="text-xs text-gray-400">Percentage of validators exited</div>
+            <div className="text-xs text-gray-400">% exited + exiting</div>
           </GlassCard>
           <GlassCard>
             <div className="text-sm font-medium text-gray-500 mb-1">Last Updated</div>
@@ -171,10 +176,11 @@ const ExitAnalysisTab: React.FC = () => {
           <div className="bg-white/5 dark:bg-white/2 backdrop-blur-sm rounded-xl border border-white/10 dark:border-white/15 shadow-sm overflow-hidden">
             {/* Sticky Header */}
             <div className="sticky top-0 z-10 bg-white/10 dark:bg-white/5 backdrop-blur-sm border-b border-white/10 dark:border-white/15">
-              <div className="grid px-4 py-4 font-semibold text-neutral-900 dark:text-neutral-100 text-body-medium" style={{gridTemplateColumns: "2.5fr 2fr 1fr 1.3fr 1.3fr 1.3fr 1.8fr", gap: "12px"}}>
+              <div className="grid px-4 py-4 font-semibold text-neutral-900 dark:text-neutral-100 text-body-medium" style={{gridTemplateColumns: "2.5fr 2fr 1fr 1fr 1.3fr 1.3fr 1.3fr 1.8fr", gap: "12px"}}>
                 <div>Address</div>
                 <div>ENS / Discord Name</div>
                 <div>Exits</div>
+                <div>Exiting</div>
                 <div>Still Active</div>
                 <div>Total Ever</div>
                 <div>Exit Rate</div>
@@ -191,11 +197,12 @@ const ExitAnalysisTab: React.FC = () => {
                     className={`grid px-4 py-3 hover:bg-primary-500/8 dark:hover:bg-primary-500/5 hover:shadow-sm transition-all duration-200 ease-in-out border-b border-white/5 dark:border-white/10 last:border-b-0 text-neutral-800 dark:text-neutral-200 text-body-medium ${
                       index % 2 === 0 ? 'bg-gray-50/30 dark:bg-gray-800/15' : 'bg-transparent'
                     }`}
-                    style={{gridTemplateColumns: "2.5fr 2fr 1fr 1.3fr 1.3fr 1.3fr 1.8fr", gap: "12px"}}
+                    style={{gridTemplateColumns: "2.5fr 2fr 1fr 1fr 1.3fr 1.3fr 1.3fr 1.8fr", gap: "12px"}}
                   >
                     <div className="font-mono text-xs">{operator.operator}</div>
                     <div>{validatorData?.ens_names?.[operator.operator] || '-'}</div>
                     <div className="text-red-600 font-medium">{operator.exits}</div>
+                    <div className="text-yellow-600 font-medium">{operator.active_exiting || 0}</div>
                     <div className="text-green-600">{operator.still_active}</div>
                     <div className="font-medium">{operator.total_ever}</div>
                     <div className="text-orange-600">{operator.exit_rate.toFixed(2)}%</div>

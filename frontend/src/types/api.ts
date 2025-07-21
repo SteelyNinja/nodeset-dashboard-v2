@@ -213,6 +213,7 @@ export interface SyncCommitteeData {
 export interface ExitData {
   exit_summary: {
     total_exited: number;
+    total_active_exiting?: number;
     total_active: number;
     exit_rate_percent: number;
     last_updated: number;
@@ -221,6 +222,7 @@ export interface ExitData {
     operator: string;
     operator_name: string;
     exits: number;
+    active_exiting?: number;
     still_active: number;
     total_ever: number;
     exit_rate: number;
