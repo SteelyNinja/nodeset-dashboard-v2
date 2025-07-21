@@ -1,444 +1,344 @@
 INFO:     Will watch for changes in these directories: ['/home/gary/git/react-dash/backend']
 INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
-INFO:     Started reloader process [9934] using WatchFiles
-INFO:     Started server process [9947]
+INFO:     Started reloader process [20817] using WatchFiles
+INFO:     Started server process [20837]
 INFO:     Waiting for application startup.
 INFO:     Application startup complete.
 🚀 FastAPI Backend Starting...
 📊 NodeSet Validator Dashboard API v1.0.0
-INFO:     192.168.0.100:58526 - "GET /api/data/validator-performance HTTP/1.1" 200 OK
-INFO:     192.168.202.10:36500 - "GET /api/data/validator-performance?period=7d HTTP/1.1" 200 OK
-INFO:     192.168.202.10:58988 - "GET /api/data/validator-performance?period=7d HTTP/1.1" 200 OK
-INFO:     192.168.202.10:58992 - "GET /api/data/validator-performance?period=7d HTTP/1.1" 200 OK
-INFO:     192.168.202.10:51800 - "GET /api/data/validator-performance?period=7d HTTP/1.1" 200 OK
-INFO:     192.168.202.10:51812 - "GET /api/data/validator-performance?period=31d HTTP/1.1" 200 OK
-INFO:     192.168.0.100:58538 - "GET /api/data/validator-performance HTTP/1.1" 200 OK
-INFO:     192.168.0.100:58560 - "GET /api/data/validator-performance HTTP/1.1" 200 OK
-INFO:     192.168.202.10:58270 - "GET /docs HTTP/1.1" 200 OK
-INFO:     192.168.202.10:45912 - "GET /openapi.json HTTP/1.1" 200 OK
-INFO:     192.168.0.100:58569 - "GET /api/data/validator-performance HTTP/1.1" 200 OK
-INFO:     192.168.0.100:58592 - "GET /api/data/validator-data HTTP/1.1" 200 OK
-INFO:     192.168.0.100:58593 - "GET /api/dashboard/concentration-metrics HTTP/1.1" 200 OK
-INFO:     192.168.0.100:58594 - "GET /api/dashboard/performance-analysis HTTP/1.1" 200 OK
-INFO:     192.168.0.100:58595 - "GET /api/dashboard/client-diversity HTTP/1.1" 200 OK
-INFO:     192.168.0.100:58593 - "GET /api/dashboard/concentration-metrics HTTP/1.1" 200 OK
-INFO:     192.168.0.100:58594 - "GET /api/dashboard/performance-analysis HTTP/1.1" 200 OK
-INFO:     192.168.0.100:58596 - "GET /health/ HTTP/1.1" 200 OK
-INFO:     192.168.0.100:58595 - "GET /api/dashboard/client-diversity HTTP/1.1" 200 OK
-INFO:     192.168.0.100:58597 - "GET /api/data/validator-data HTTP/1.1" 200 OK
-INFO:     192.168.0.100:58593 - "GET /health/ HTTP/1.1" 200 OK
-INFO:     192.168.0.100:58597 - "GET /api/data/validator-performance HTTP/1.1" 200 OK
-INFO:     192.168.0.100:58593 - "GET /api/data/validator-performance HTTP/1.1" 200 OK
-INFO:     192.168.0.100:58593 - "GET /api/data/validator-data HTTP/1.1" 200 OK
-INFO:     192.168.0.100:58597 - "GET /api/dashboard/concentration-metrics HTTP/1.1" 200 OK
-INFO:     192.168.0.100:58599 - "GET /api/dashboard/performance-analysis HTTP/1.1" 200 OK
-INFO:     192.168.0.100:58600 - "GET /api/dashboard/client-diversity HTTP/1.1" 200 OK
-INFO:     192.168.0.100:58601 - "GET /health/ HTTP/1.1" 200 OK
-INFO:     192.168.0.100:58597 - "GET /api/data/validator-data HTTP/1.1" 200 OK
-INFO:     192.168.0.100:58602 - "GET /api/dashboard/concentration-metrics HTTP/1.1" 200 OK
-INFO:     192.168.0.100:58599 - "GET /api/dashboard/performance-analysis HTTP/1.1" 200 OK
-INFO:     192.168.0.100:58600 - "GET /api/dashboard/client-diversity HTTP/1.1" 200 OK
-INFO:     192.168.0.100:58601 - "GET /health/ HTTP/1.1" 200 OK
-INFO:     192.168.0.100:58593 - "GET /api/data/validator-performance HTTP/1.1" 200 OK
-INFO:     192.168.0.100:58593 - "GET /api/data/validator-performance HTTP/1.1" 200 OK
-INFO:     192.168.0.100:58609 - "GET /docs HTTP/1.1" 200 OK
-INFO:     192.168.0.100:58609 - "GET /openapi.json HTTP/1.1" 200 OK
-INFO:     192.168.0.100:58621 - "GET /api/data/validator-performance HTTP/1.1" 200 OK
-INFO:     192.168.0.100:58635 - "GET /api/data/validator-performance HTTP/1.1" 200 OK
-WARNING:  WatchFiles detected changes in 'routers/dashboard.py'. Reloading...
-INFO:     Shutting down
-INFO:     Waiting for application shutdown.
-INFO:     Application shutdown complete.
-INFO:     Finished server process [9947]
-INFO:     Started server process [10343]
-INFO:     Waiting for application startup.
-INFO:     Application startup complete.
-🚀 FastAPI Backend Starting...
-📊 NodeSet Validator Dashboard API v1.0.0
-INFO:     192.168.202.10:44190 - "GET /openapi.json HTTP/1.1" 200 OK
-INFO:     192.168.0.100:58647 - "GET /api/data/validator-performance HTTP/1.1" 200 OK
-INFO:     192.168.202.10:59816 - "GET /openapi.json HTTP/1.1" 200 OK
-INFO:     192.168.0.100:58654 - "GET /api/data/validator-performance HTTP/1.1" 200 OK
-WARNING:  WatchFiles detected changes in 'routers/dashboard.py'. Reloading...
-INFO:     Shutting down
-INFO:     Waiting for application shutdown.
-INFO:     Application shutdown complete.
-INFO:     Finished server process [10343]
-INFO:     Started server process [10451]
-INFO:     Waiting for application startup.
-INFO:     Application startup complete.
+INFO:     127.0.0.1:34586 - "GET /health/ HTTP/1.1" 200 OK
+INFO:     192.168.0.62:61683 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:61711 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:61711 - "OPTIONS /api/analytics HTTP/1.1" 200 OK
+INFO:     192.168.0.62:61711 - "POST /api/analytics HTTP/1.1" 200 OK
+INFO:     192.168.0.62:61711 - "POST /api/analytics HTTP/1.1" 200 OK
+INFO:     192.168.0.62:61712 - "POST /api/analytics HTTP/1.1" 200 OK
+INFO:     192.168.0.62:61712 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:61716 - "GET /api/dashboard/concentration-metrics HTTP/1.1" 200 OK
+INFO:     192.168.0.62:61717 - "GET /api/dashboard/performance-analysis HTTP/1.1" 200 OK
+INFO:     192.168.0.62:61716 - "GET /health/ HTTP/1.1" 200 OK
+INFO:     192.168.0.62:61718 - "GET /api/dashboard/client-diversity HTTP/1.1" 200 OK
+INFO:     192.168.0.62:61717 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:61719 - "GET /api/dashboard/network-overview HTTP/1.1" 200 OK
+INFO:     192.168.0.62:61712 - "GET /api/dashboard/client-diversity HTTP/1.1" 200 OK
+INFO:     192.168.0.62:61718 - "GET /api/dashboard/concentration-metrics HTTP/1.1" 200 OK
+INFO:     192.168.0.62:61716 - "GET /api/dashboard/performance-analysis HTTP/1.1" 200 OK
+INFO:     192.168.0.62:61720 - "GET /api/data/ens-sources HTTP/1.1" 200 OK
+INFO:     192.168.0.62:61719 - "GET /health/ HTTP/1.1" 200 OK
+INFO:     192.168.0.62:61718 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:61720 - "GET /api/dashboard/network-overview HTTP/1.1" 200 OK
+INFO:     192.168.0.62:61712 - "GET /api/data/ens-sources HTTP/1.1" 200 OK
+INFO:     192.168.0.62:61717 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:61717 - "POST /api/analytics HTTP/1.1" 200 OK
+INFO:     192.168.0.62:61717 - "GET /api/data/exit-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:61718 - "GET /api/dashboard/all-exit-records HTTP/1.1" 200 OK
+INFO:     192.168.0.62:61720 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:61712 - "GET /api/data/exit-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:61717 - "GET /api/dashboard/all-exit-records HTTP/1.1" 200 OK
+INFO:     192.168.0.62:61718 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:61722 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49336 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49336 - "POST /api/analytics HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36450 - "GET /api/dashboard/all-exit-records HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49339 - "POST /api/analytics HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49339 - "POST /api/analytics HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49343 - "POST /api/analytics HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49343 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49344 - "GET /api/dashboard/concentration-metrics HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49345 - "GET /api/dashboard/performance-analysis HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49347 - "GET /api/dashboard/client-diversity HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49344 - "GET /health/ HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49346 - "GET /api/dashboard/network-overview HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49348 - "GET /api/data/ens-sources HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49345 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49347 - "GET /api/dashboard/concentration-metrics HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49346 - "GET /api/dashboard/performance-analysis HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49344 - "GET /api/dashboard/client-diversity HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49348 - "GET /api/dashboard/network-overview HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49343 - "GET /health/ HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49343 - "GET /api/data/ens-sources HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49344 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49345 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49349 - "POST /api/analytics HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49349 - "GET /api/data/exit-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49350 - "GET /api/dashboard/all-exit-records HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49349 - "GET /api/data/exit-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49351 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49352 - "GET /api/dashboard/all-exit-records HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49350 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49353 - "POST /api/analytics HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49353 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49354 - "POST /api/analytics HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49369 - "POST /api/analytics HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49369 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36120 - "GET /api/data/exit-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49373 - "GET /api/data/validator-data HTTP/1.1" 200 OK
 WARNING:  WatchFiles detected changes in 'services/analytics.py'. Reloading...
 INFO:     Shutting down
 INFO:     Waiting for application shutdown.
 INFO:     Application shutdown complete.
-INFO:     Finished server process [10451]
-INFO:     Started server process [10456]
-INFO:     Waiting for application startup.
-INFO:     Application startup complete.
-🚀 FastAPI Backend Starting...
-📊 NodeSet Validator Dashboard API v1.0.0
-INFO:     192.168.0.100:58665 - "GET /api/data/validator-performance HTTP/1.1" 200 OK
-WARNING:  WatchFiles detected changes in 'services/analytics.py'. Reloading...
-INFO:     Shutting down
-INFO:     Waiting for application shutdown.
-INFO:     Application shutdown complete.
-INFO:     Finished server process [10456]
-INFO:     Started server process [10463]
-INFO:     Waiting for application startup.
-INFO:     Application startup complete.
-WARNING:  WatchFiles detected changes in 'services/analytics.py'. Reloading...
-INFO:     Shutting down
-INFO:     Waiting for application shutdown.
-INFO:     Application shutdown complete.
-INFO:     Finished server process [10463]
-INFO:     Started server process [10515]
-INFO:     Waiting for application startup.
-INFO:     Application startup complete.
-🚀 FastAPI Backend Starting...
-📊 NodeSet Validator Dashboard API v1.0.0
-INFO:     192.168.0.100:58677 - "GET /api/data/validator-performance HTTP/1.1" 200 OK
-INFO:     192.168.202.10:57448 - "GET /api/dashboard/performance-analysis?period=7d HTTP/1.1" 200 OK
-INFO:     192.168.202.10:47972 - "GET /api/dashboard/performance-analysis?period=7d HTTP/1.1" 200 OK
-INFO:     192.168.0.100:58701 - "GET /api/data/validator-performance HTTP/1.1" 200 OK
-INFO:     192.168.0.100:58710 - "GET /api/data/validator-performance HTTP/1.1" 200 OK
-INFO:     192.168.0.100:58725 - "GET /api/data/proposals HTTP/1.1" 200 OK
-INFO:     192.168.0.100:58723 - "GET /api/data/missed-proposals HTTP/1.1" 200 OK
-INFO:     192.168.0.100:58724 - "GET /api/data/validator-data HTTP/1.1" 200 OK
-INFO:     192.168.0.100:58723 - "GET /api/data/missed-proposals HTTP/1.1" 200 OK
-INFO:     192.168.0.100:58726 - "GET /api/data/proposals HTTP/1.1" 200 OK
-INFO:     192.168.0.100:58727 - "GET /api/data/validator-data HTTP/1.1" 200 OK
-INFO:     192.168.0.100:58727 - "GET /api/data/validator-performance HTTP/1.1" 200 OK
-INFO:     192.168.0.100:58741 - "GET /api/data/validator-performance HTTP/1.1" 200 OK
-INFO:     192.168.0.100:58748 - "GET /api/data/validator-performance HTTP/1.1" 200 OK
-INFO:     192.168.0.100:58765 - "GET /api/data/validator-performance HTTP/1.1" 200 OK
-INFO:     192.168.0.100:58783 - "GET /api/data/validator-performance HTTP/1.1" 200 OK
-INFO:     192.168.0.100:58795 - "GET /api/data/validator-performance HTTP/1.1" 200 OK
-INFO:     192.168.0.100:58805 - "GET /api/data/validator-performance HTTP/1.1" 200 OK
-INFO:     192.168.202.10:56334 - "GET /api/dashboard/performance-analysis?period=31d HTTP/1.1" 200 OK
-INFO:     192.168.202.10:56348 - "GET /openapi.json HTTP/1.1" 200 OK
-INFO:     192.168.0.100:58818 - "GET /api/data/validator-performance HTTP/1.1" 200 OK
-INFO:     192.168.0.100:58828 - "GET /docs HTTP/1.1" 200 OK
-INFO:     192.168.0.100:58828 - "GET /openapi.json HTTP/1.1" 200 OK
-INFO:     192.168.0.100:58842 - "GET /api/data/validator-performance HTTP/1.1" 200 OK
-INFO:     192.168.202.10:36606 - "GET /api/data/validator-performance HTTP/1.1" 200 OK
-INFO:     192.168.0.100:58857 - "GET /api/data/validator-performance HTTP/1.1" 200 OK
-WARNING:  WatchFiles detected changes in 'routers/data.py'. Reloading...
-INFO:     Shutting down
-INFO:     Waiting for application shutdown.
-INFO:     Application shutdown complete.
-INFO:     Finished server process [10515]
-INFO:     Started server process [11010]
+INFO:     Finished server process [20837]
+INFO:     Started server process [21008]
 INFO:     Waiting for application startup.
 INFO:     Application startup complete.
 WARNING:  WatchFiles detected changes in 'routers/dashboard.py'. Reloading...
 INFO:     Shutting down
 INFO:     Waiting for application shutdown.
 INFO:     Application shutdown complete.
-INFO:     Finished server process [11010]
-INFO:     Started server process [11015]
-INFO:     Waiting for application startup.
-INFO:     Application startup complete.
-WARNING:  WatchFiles detected changes in 'routers/data.py'. Reloading...
-INFO:     Shutting down
-INFO:     Waiting for application shutdown.
-INFO:     Application shutdown complete.
-INFO:     Finished server process [11015]
-INFO:     Started server process [11020]
-INFO:     Waiting for application startup.
-INFO:     Application startup complete.
-WARNING:  WatchFiles detected changes in 'services/analytics.py'. Reloading...
-INFO:     Shutting down
-INFO:     Waiting for application shutdown.
-INFO:     Application shutdown complete.
-INFO:     Finished server process [11020]
-INFO:     Started server process [11025]
-INFO:     Waiting for application startup.
-INFO:     Application startup complete.
-WARNING:  WatchFiles detected changes in 'routers/data.py'. Reloading...
-INFO:     Shutting down
-INFO:     Waiting for application shutdown.
-INFO:     Application shutdown complete.
-INFO:     Finished server process [11025]
-INFO:     Started server process [11030]
-INFO:     Waiting for application startup.
-INFO:     Application startup complete.
-WARNING:  WatchFiles detected changes in 'routers/dashboard.py'. Reloading...
-INFO:     Shutting down
-INFO:     Waiting for application shutdown.
-INFO:     Application shutdown complete.
-INFO:     Finished server process [11030]
-INFO:     Started server process [11035]
+INFO:     Finished server process [21008]
+INFO:     Started server process [21018]
 INFO:     Waiting for application startup.
 INFO:     Application startup complete.
 🚀 FastAPI Backend Starting...
 📊 NodeSet Validator Dashboard API v1.0.0
-INFO:     192.168.202.10:59038 - "GET /openapi.json HTTP/1.1" 200 OK
-INFO:     192.168.0.100:58880 - "GET /api/data/validator-performance HTTP/1.1" 200 OK
-INFO:     192.168.202.10:56356 - "GET /openapi.json HTTP/1.1" 200 OK
-INFO:     192.168.202.10:58982 - "GET /api/dashboard/performance-analysis?period=today HTTP/1.1" 500 Internal Server Error
-INFO:     192.168.202.10:46698 - "GET /api/data/validator-performance?period=365d HTTP/1.1" 500 Internal Server Error
-INFO:     192.168.202.10:46712 - "GET /api/dashboard/performance-analysis?period=7d HTTP/1.1" 200 OK
-INFO:     192.168.0.100:58917 - "GET /api/data/validator-performance?period=1d HTTP/1.1" 200 OK
-INFO:     192.168.0.100:58921 - "GET /api/data/validator-performance HTTP/1.1" 200 OK
-INFO:     192.168.0.100:58917 - "GET /favicon.ico HTTP/1.1" 404 Not Found
-INFO:     192.168.0.100:58917 - "GET /api/data/validator-performance?period=7d HTTP/1.1" 200 OK
-INFO:     192.168.0.100:58918 - "GET /api/data/validator-performance?period=31d HTTP/1.1" 200 OK
-INFO:     192.168.0.100:58925 - "GET /api/data/validator-performance?period=31d HTTP/1.1" 200 OK
-INFO:     192.168.0.100:58932 - "GET /api/data/validator-performance?period=7d HTTP/1.1" 200 OK
-INFO:     192.168.202.10:53154 - "GET /api/dashboard/performance-analysis?period=7d HTTP/1.1" 200 OK
-INFO:     192.168.202.10:53158 - "GET /api/dashboard/performance-analysis?period=31d HTTP/1.1" 200 OK
-INFO:     192.168.0.100:58947 - "GET /api/data/validator-performance HTTP/1.1" 200 OK
-INFO:     192.168.202.10:60254 - "GET /api/dashboard/performance-analysis?period=7d HTTP/1.1" 200 OK
-INFO:     192.168.202.10:50768 - "GET /api/dashboard/performance-analysis?period=31d HTTP/1.1" 200 OK
-INFO:     192.168.0.100:58975 - "GET /api/data/validator-performance HTTP/1.1" 200 OK
-INFO:     192.168.0.100:58983 - "GET /api/data/validator-data HTTP/1.1" 200 OK
-INFO:     192.168.0.100:58984 - "GET /api/data/exit-data HTTP/1.1" 200 OK
-INFO:     192.168.0.100:58984 - "GET /api/data/validator-data HTTP/1.1" 200 OK
-INFO:     192.168.0.100:58985 - "GET /api/data/exit-data HTTP/1.1" 200 OK
-INFO:     192.168.0.100:58983 - "GET /api/dashboard/performance-analysis HTTP/1.1" 200 OK
-INFO:     192.168.0.100:58983 - "GET /api/dashboard/performance-analysis HTTP/1.1" 200 OK
-INFO:     192.168.0.100:58984 - "GET /api/data/validator-performance HTTP/1.1" 200 OK
-INFO:     192.168.0.100:58986 - "GET /api/data/sync-committee HTTP/1.1" 200 OK
-INFO:     192.168.0.100:58985 - "GET /api/data/proposals HTTP/1.1" 200 OK
-INFO:     192.168.0.100:58983 - "GET /api/data/validator-performance HTTP/1.1" 200 OK
-INFO:     192.168.0.100:58984 - "GET /api/data/sync-committee HTTP/1.1" 200 OK
-INFO:     192.168.0.100:58986 - "GET /api/data/proposals HTTP/1.1" 200 OK
-INFO:     192.168.0.100:58987 - "GET /api/data/validator-performance HTTP/1.1" 200 OK
-INFO:     192.168.202.10:40608 - "GET /api/dashboard/performance-analysis?period=7d HTTP/1.1" 200 OK
-INFO:     192.168.202.10:56914 - "GET /api/data/validator-performance?period=7d HTTP/1.1" 200 OK
-INFO:     192.168.202.10:56930 - "GET /api/data/validator-performance?period=7d HTTP/1.1" 200 OK
-INFO:     192.168.202.10:39244 - "GET /api/data/validator-performance HTTP/1.1" 200 OK
-INFO:     192.168.0.100:58988 - "GET /api/data/validator-performance HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59011 - "GET /api/data/validator-performance HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59030 - "GET /api/data/validator-performance HTTP/1.1" 200 OK
-INFO:     192.168.202.10:43236 - "GET /api/data/validator-performance?period=7d HTTP/1.1" 200 OK
-WARNING:  WatchFiles detected changes in 'routers/data.py'. Reloading...
-INFO:     Shutting down
-INFO:     Waiting for application shutdown.
-INFO:     Application shutdown complete.
-INFO:     Finished server process [11035]
-INFO:     Started server process [11809]
-INFO:     Waiting for application startup.
-INFO:     Application startup complete.
-🚀 FastAPI Backend Starting...
-📊 NodeSet Validator Dashboard API v1.0.0
-INFO:     192.168.0.100:59042 - "GET /api/data/validator-performance HTTP/1.1" 200 OK
-WARNING:  WatchFiles detected changes in 'routers/data.py'. Reloading...
-INFO:     Shutting down
-INFO:     Waiting for application shutdown.
-INFO:     Application shutdown complete.
-INFO:     Finished server process [11809]
-INFO:     Started server process [11814]
-INFO:     Waiting for application startup.
-INFO:     Application startup complete.
-🚀 FastAPI Backend Starting...
-📊 NodeSet Validator Dashboard API v1.0.0
-INFO:     192.168.202.10:39672 - "GET /api/data/validator-performance?period=7d HTTP/1.1" 200 OK
-INFO:     192.168.202.10:52184 - "GET /api/data/validator-performance HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59052 - "GET /api/data/validator-performance HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49374 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49464 - "GET /api/dashboard/enhanced-exit-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49382 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49384 - "POST /api/analytics HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49384 - "POST /api/analytics HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49388 - "POST /api/analytics HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49388 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49389 - "GET /api/dashboard/concentration-metrics HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49391 - "GET /api/dashboard/client-diversity HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49389 - "GET /health/ HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49390 - "GET /api/dashboard/network-overview HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49392 - "GET /api/dashboard/performance-analysis HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49388 - "GET /health/ HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49391 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49389 - "GET /api/dashboard/concentration-metrics HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49390 - "GET /api/dashboard/client-diversity HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49393 - "GET /api/data/ens-sources HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49392 - "GET /api/dashboard/network-overview HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49389 - "GET /api/dashboard/performance-analysis HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49393 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49390 - "GET /api/data/ens-sources HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49390 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49394 - "POST /api/analytics HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34876 - "GET /api/dashboard/enhanced-exit-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49397 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49398 - "POST /api/analytics HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49398 - "POST /api/analytics HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49402 - "POST /api/analytics HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49402 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49403 - "GET /api/dashboard/concentration-metrics HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49404 - "GET /api/dashboard/performance-analysis HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49405 - "GET /api/dashboard/client-diversity HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49403 - "GET /health/ HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49406 - "GET /api/data/ens-sources HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49407 - "GET /api/dashboard/network-overview HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49404 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49405 - "GET /api/dashboard/concentration-metrics HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49403 - "GET /api/dashboard/performance-analysis HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49407 - "GET /health/ HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49406 - "GET /api/dashboard/client-diversity HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49402 - "GET /api/data/ens-sources HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49402 - "GET /api/dashboard/network-overview HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49403 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49404 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49414 - "POST /api/analytics HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49415 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46878 - "GET /api/dashboard/enhanced-exit-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49416 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49417 - "POST /api/analytics HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49417 - "POST /api/analytics HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49417 - "POST /api/analytics HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49417 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49421 - "GET /api/dashboard/concentration-metrics HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49422 - "GET /api/dashboard/performance-analysis HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49423 - "GET /api/dashboard/client-diversity HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49424 - "GET /api/dashboard/network-overview HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49425 - "GET /api/data/ens-sources HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49421 - "GET /health/ HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49423 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49422 - "GET /api/dashboard/concentration-metrics HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49424 - "GET /api/dashboard/client-diversity HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49425 - "GET /api/dashboard/performance-analysis HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49417 - "GET /api/dashboard/network-overview HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49421 - "GET /api/data/ens-sources HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49417 - "GET /health/ HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49423 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49421 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49426 - "POST /api/analytics HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49426 - "GET /api/dashboard/enhanced-exit-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49427 - "GET /api/dashboard/all-exit-records HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49428 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49426 - "GET /api/dashboard/all-exit-records HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49429 - "GET /api/dashboard/enhanced-exit-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49427 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49430 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49431 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49431 - "POST /api/analytics HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49431 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49432 - "GET /api/dashboard/concentration-metrics HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49433 - "GET /api/dashboard/performance-analysis HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49434 - "GET /api/dashboard/client-diversity HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49432 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49435 - "GET /api/data/ens-sources HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49433 - "GET /api/dashboard/concentration-metrics HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49434 - "GET /api/dashboard/performance-analysis HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49431 - "GET /api/dashboard/client-diversity HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49436 - "GET /api/dashboard/network-overview HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49435 - "GET /api/data/ens-sources HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49433 - "GET /api/dashboard/network-overview HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49437 - "POST /api/analytics HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49438 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49440 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49442 - "GET /api/dashboard/concentration-metrics HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49441 - "GET /api/dashboard/performance-analysis HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49443 - "GET /api/dashboard/client-diversity HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49444 - "GET /api/dashboard/network-overview HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49445 - "GET /api/data/ens-sources HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49448 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49450 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49452 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49453 - "POST /api/analytics HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49453 - "POST /api/analytics HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49457 - "POST /api/analytics HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49457 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49458 - "GET /api/dashboard/concentration-metrics HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49459 - "GET /api/dashboard/performance-analysis HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49458 - "GET /api/dashboard/enhanced-exit-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49460 - "GET /api/dashboard/client-diversity HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49459 - "GET /health/ HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49461 - "GET /api/data/ens-sources HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49458 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49462 - "GET /api/dashboard/network-overview HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49460 - "GET /api/dashboard/concentration-metrics HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49459 - "GET /api/dashboard/performance-analysis HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49461 - "GET /api/dashboard/enhanced-exit-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49457 - "GET /api/dashboard/client-diversity HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49462 - "GET /health/ HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49461 - "GET /api/data/ens-sources HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49457 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49460 - "GET /api/dashboard/network-overview HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49458 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49463 - "POST /api/analytics HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49463 - "GET /api/dashboard/enhanced-exit-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49465 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49463 - "GET /api/dashboard/enhanced-exit-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49464 - "GET /api/dashboard/all-exit-records HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49466 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49463 - "GET /api/dashboard/all-exit-records HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49467 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49468 - "OPTIONS /api/analytics HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49468 - "POST /api/analytics HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49469 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49470 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49471 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49472 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49473 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49474 - "POST /api/analytics HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49477 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49478 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49479 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49481 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49483 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49485 - "POST /api/analytics HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49485 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49485 - "POST /api/analytics HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49488 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49489 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49491 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+🕒 Reloaded validator_data data due to TTL expiration (900s)
+INFO:     192.168.0.62:49495 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49495 - "POST /api/analytics HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49495 - "GET /api/dashboard/top-operators?limit=1000 HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49497 - "GET /api/operator-performance/operators/summary?days=7 HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49495 - "GET /api/dashboard/top-operators?limit=1000 HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49496 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49498 - "GET /api/dashboard/concentration-metrics HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49499 - "GET /api/operator-performance/operators/summary?days=7 HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49497 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49498 - "GET /api/dashboard/concentration-metrics HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49497 - "POST /api/analytics HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49505 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49533 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49537 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49542 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49545 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49546 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49546 - "OPTIONS /api/analytics HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49546 - "POST /api/analytics HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49546 - "POST /api/analytics HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49548 - "POST /api/analytics HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49548 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49552 - "GET /api/dashboard/performance-analysis HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49553 - "GET /api/dashboard/concentration-metrics HTTP/1.1" 200 OK
+🕒 Reloaded proposals_data data due to TTL expiration (900s)
+INFO:     192.168.0.62:49554 - "GET /api/dashboard/client-diversity HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49552 - "GET /api/dashboard/enhanced-exit-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49553 - "GET /health/ HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49555 - "GET /api/data/ens-sources HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49548 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49554 - "GET /api/dashboard/performance-analysis HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49556 - "GET /api/dashboard/network-overview HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49552 - "GET /api/dashboard/concentration-metrics HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49555 - "GET /api/dashboard/client-diversity HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49553 - "GET /api/dashboard/enhanced-exit-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49556 - "GET /api/data/ens-sources HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49554 - "GET /health/ HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49548 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49552 - "GET /api/dashboard/network-overview HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49548 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49548 - "POST /api/analytics HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49548 - "GET /api/dashboard/concentration-metrics HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49554 - "GET /api/dashboard/top-operators?limit=1000 HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49552 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49556 - "GET /api/operator-performance/operators/summary?days=7 HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49553 - "GET /api/dashboard/client-diversity HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49548 - "GET /api/dashboard/concentration-metrics HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49555 - "GET /api/dashboard/top-operators?limit=1000 HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49554 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49548 - "GET /api/dashboard/client-diversity HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49553 - "GET /api/operator-performance/operators/summary?days=7 HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49557 - "POST /api/analytics HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49557 - "POST /api/analytics HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49561 - "OPTIONS /api/analytics HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49561 - "POST /api/analytics HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49561 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49562 - "GET /api/dashboard/concentration-metrics HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49563 - "GET /api/dashboard/performance-analysis HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49562 - "GET /api/dashboard/concentration-metrics HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49564 - "GET /api/dashboard/client-diversity HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49565 - "GET /api/dashboard/network-overview HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49566 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49563 - "GET /api/data/ens-sources HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49562 - "GET /api/dashboard/enhanced-exit-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49565 - "GET /api/dashboard/performance-analysis HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49564 - "GET /api/dashboard/client-diversity HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49561 - "GET /api/dashboard/network-overview HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49562 - "GET /health/ HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49564 - "GET /api/data/ens-sources HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49565 - "GET /api/dashboard/enhanced-exit-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49561 - "GET /health/ HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49564 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49564 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49564 - "POST /api/analytics HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49564 - "GET /api/dashboard/concentration-metrics HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49561 - "GET /api/dashboard/top-operators?limit=1000 HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49565 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49566 - "GET /api/operator-performance/operators/summary?days=7 HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49563 - "GET /api/dashboard/client-diversity HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49564 - "GET /api/dashboard/concentration-metrics HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49562 - "GET /api/dashboard/top-operators?limit=1000 HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49561 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49563 - "GET /api/dashboard/client-diversity HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49564 - "GET /api/operator-performance/operators/summary?days=7 HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49568 - "POST /api/analytics HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49569 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49570 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49571 - "GET /api/data/validator-data HTTP/1.1" 200 OK
+INFO:     192.168.0.62:49572 - "GET /api/data/validator-data HTTP/1.1" 200 OK
 WARNING:  WatchFiles detected changes in 'services/analytics.py'. Reloading...
 INFO:     Shutting down
 INFO:     Waiting for application shutdown.
 INFO:     Application shutdown complete.
-INFO:     Finished server process [11814]
-INFO:     Started server process [11921]
-INFO:     Waiting for application startup.
-INFO:     Application startup complete.
-WARNING:  WatchFiles detected changes in 'services/analytics.py'. Reloading...
-INFO:     Shutting down
-INFO:     Waiting for application shutdown.
-INFO:     Application shutdown complete.
-INFO:     Finished server process [11921]
-INFO:     Started server process [11926]
-INFO:     Waiting for application startup.
-INFO:     Application startup complete.
-WARNING:  WatchFiles detected changes in 'services/analytics.py'. Reloading...
-INFO:     Shutting down
-INFO:     Waiting for application shutdown.
-INFO:     Application shutdown complete.
-INFO:     Finished server process [11926]
-INFO:     Started server process [11931]
-INFO:     Waiting for application startup.
-INFO:     Application startup complete.
-🚀 FastAPI Backend Starting...
-📊 NodeSet Validator Dashboard API v1.0.0
-INFO:     192.168.0.100:59066 - "GET /api/data/validator-performance HTTP/1.1" 200 OK
-INFO:     192.168.202.10:46288 - "GET /api/dashboard/performance-analysis?period=7d HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59079 - "GET /api/data/validator-performance HTTP/1.1" 200 OK
-INFO:     192.168.202.10:40634 - "GET /api/dashboard/performance-analysis?period=31d HTTP/1.1" 200 OK
-INFO:     192.168.202.10:36494 - "GET /api/dashboard/performance-analysis?period=1d HTTP/1.1" 200 OK
-INFO:     192.168.202.10:51962 - "GET /api/data/validator-performance?period=7d HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59094 - "GET /api/data/validator-performance HTTP/1.1" 200 OK
-INFO:     192.168.202.10:51976 - "GET /api/data/validator-performance?period=invalid HTTP/1.1" 500 Internal Server Error
-INFO:     192.168.0.100:59108 - "GET /api/data/validator-performance HTTP/1.1" 200 OK
-INFO:     192.168.202.10:53380 - "GET /api/data/validator-performance HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59123 - "GET /api/data/validator-performance HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59140 - "GET /api/data/validator-performance HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59186 - "GET /api/data/validator-performance HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59213 - "GET /api/data/validator-performance HTTP/1.1" 200 OK
-🔄 Auto-reloaded validator_performance_data data due to file modification
-INFO:     192.168.0.100:59230 - "GET /api/data/validator-performance HTTP/1.1" 200 OK
-🔄 Auto-reloaded validator_data data due to file modification
-INFO:     192.168.0.100:59238 - "GET /api/dashboard/concentration-metrics HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59239 - "GET /api/data/validator-data HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59238 - "GET /api/dashboard/concentration-metrics HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59240 - "GET /api/data/validator-data HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59240 - "GET /api/data/validator-data HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59239 - "GET /api/data/exit-data HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59238 - "GET /api/data/validator-data HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59239 - "GET /api/data/exit-data HTTP/1.1" 200 OK
-🔄 Auto-reloaded ens_names data due to file modification
-INFO:     192.168.0.100:59240 - "GET /api/dashboard/performance-analysis HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59240 - "GET /api/data/proposals HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59239 - "GET /api/data/validator-performance HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59241 - "GET /api/data/sync-committee HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59238 - "GET /api/dashboard/performance-analysis HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59239 - "GET /api/data/validator-performance HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59241 - "GET /api/data/proposals HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59238 - "GET /api/data/sync-committee HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59241 - "GET /api/data/proposals HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59239 - "GET /api/data/missed-proposals HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59238 - "GET /api/data/validator-data HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59240 - "GET /api/data/proposals HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59241 - "GET /api/data/validator-data HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59239 - "GET /api/data/missed-proposals HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59241 - "GET /api/data/sync-committee HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59239 - "GET /api/data/validator-data HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59240 - "GET /api/data/validator-data HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59238 - "GET /api/data/sync-committee HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59240 - "GET /api/data/validator-data HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59238 - "GET /api/data/exit-data HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59239 - "GET /api/data/validator-data HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59241 - "GET /api/data/exit-data HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59240 - "GET /api/dashboard/performance-analysis HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59239 - "GET /api/data/validator-performance HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59241 - "GET /api/data/proposals HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59240 - "GET /api/data/sync-committee HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59238 - "GET /api/dashboard/performance-analysis HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59241 - "GET /api/data/validator-performance HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59238 - "GET /api/data/proposals HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59240 - "GET /api/data/sync-committee HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59238 - "GET /api/dashboard/concentration-metrics HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59241 - "GET /api/data/validator-data HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59240 - "GET /api/dashboard/concentration-metrics HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59238 - "GET /api/data/validator-data HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59238 - "GET /api/dashboard/concentration-metrics HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59241 - "GET /api/data/validator-data HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59240 - "GET /api/dashboard/concentration-metrics HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59238 - "GET /api/data/validator-data HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59238 - "GET /api/data/validator-data HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59241 - "GET /api/data/exit-data HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59240 - "GET /api/data/validator-data HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59239 - "GET /api/data/exit-data HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59240 - "GET /api/data/validator-data HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59238 - "GET /api/dashboard/performance-analysis HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59239 - "GET /api/dashboard/concentration-metrics HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59241 - "GET /api/dashboard/client-diversity HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59242 - "GET /api/data/validator-data HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59238 - "GET /api/dashboard/performance-analysis HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59239 - "GET /api/dashboard/concentration-metrics HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59241 - "GET /api/dashboard/client-diversity HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59242 - "GET /api/data/validator-data HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59241 - "GET /api/data/exit-data HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59238 - "GET /api/data/validator-data HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59239 - "GET /api/data/exit-data HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59238 - "GET /api/dashboard/concentration-metrics HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59239 - "GET /api/data/validator-data HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59242 - "GET /api/dashboard/concentration-metrics HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59238 - "GET /api/data/validator-data HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59238 - "GET /api/dashboard/concentration-metrics HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59239 - "GET /api/data/validator-data HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59242 - "GET /api/dashboard/concentration-metrics HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59238 - "GET /api/data/validator-data HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59238 - "GET /api/data/validator-data HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59239 - "GET /api/data/exit-data HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59242 - "GET /api/data/validator-data HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59241 - "GET /api/data/exit-data HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59238 - "GET /api/dashboard/performance-analysis HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59238 - "GET /api/data/validator-performance HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59241 - "GET /api/data/proposals HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59239 - "GET /api/data/sync-committee HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59242 - "GET /api/dashboard/performance-analysis HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59241 - "GET /api/data/validator-performance HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59242 - "GET /api/data/proposals HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59239 - "GET /api/data/sync-committee HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59243 - "GET /api/data/validator-performance HTTP/1.1" 200 OK
-WARNING:  WatchFiles detected changes in 'services/analytics.py'. Reloading...
-INFO:     Shutting down
-INFO:     Waiting for application shutdown.
-INFO:     Application shutdown complete.
-INFO:     Finished server process [11931]
-INFO:     Started server process [12667]
-INFO:     Waiting for application startup.
-INFO:     Application startup complete.
-🚀 FastAPI Backend Starting...
-📊 NodeSet Validator Dashboard API v1.0.0
-INFO:     192.168.202.10:38862 - "GET /api/dashboard/performance-analysis?period=7d HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59256 - "GET /api/data/validator-performance HTTP/1.1" 200 OK
-INFO:     192.168.202.10:59996 - "GET /api/dashboard/performance-analysis?period=31d HTTP/1.1" 200 OK
-INFO:     192.168.202.10:58576 - "GET /api/dashboard/performance-analysis?period=1d HTTP/1.1" 200 OK
-INFO:     192.168.202.10:56658 - "GET /api/dashboard/performance-analysis?period=7d HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59267 - "GET /api/data/validator-performance HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59284 - "GET /api/data/validator-performance HTTP/1.1" 200 OK
-INFO:     192.168.202.10:34174 - "GET /api/dashboard/performance-analysis?period=7d HTTP/1.1" 200 OK
-INFO:     192.168.202.10:52556 - "GET /api/dashboard/performance-analysis?period=31d HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59299 - "GET /api/data/validator-performance HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59315 - "GET /api/data/validator-performance HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59324 - "GET /api/data/validator-performance?period=7d HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59325 - "GET /api/data/validator-performance?period=31d HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59336 - "GET /api/data/validator-performance HTTP/1.1" 200 OK
-INFO:     127.0.0.1:57108 - "GET /api/dashboard/performance-analysis?period=7d HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59356 - "GET /api/data/validator-performance HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59384 - "GET /api/data/validator-performance HTTP/1.1" 200 OK
-INFO:     192.168.202.10:47094 - "GET /api/dashboard/performance-analysis?period=7d HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59403 - "GET /api/data/validator-performance HTTP/1.1" 200 OK
-INFO:     192.168.202.10:38226 - "GET /api/dashboard/performance-analysis?period=31d HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59412 - "GET /api/data/validator-performance HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59433 - "GET /api/data/validator-performance HTTP/1.1" 200 OK
-🔄 Auto-reloaded validator_performance_data data due to file modification
-INFO:     192.168.0.100:59448 - "GET /api/data/validator-performance HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59466 - "GET /api/data/validator-performance HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59473 - "GET /api/data/validator-performance HTTP/1.1" 200 OK
-🔄 Auto-reloaded validator_data data due to file modification
-INFO:     192.168.0.100:59473 - "GET /api/data/validator-data HTTP/1.1" 200 OK
-🔄 Auto-reloaded ens_names data due to file modification
-INFO:     192.168.0.100:59481 - "GET /api/dashboard/performance-analysis HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59480 - "GET /api/dashboard/concentration-metrics HTTP/1.1" 200 OK
-🔄 Auto-reloaded proposals_data data due to file modification
-INFO:     192.168.0.100:59482 - "GET /api/dashboard/client-diversity HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59473 - "GET /api/dashboard/client-diversity HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59480 - "GET /api/dashboard/concentration-metrics HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59481 - "GET /api/dashboard/performance-analysis HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59483 - "GET /health/ HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59482 - "GET /health/ HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59484 - "GET /api/data/validator-data HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59484 - "GET /api/data/validator-performance HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59482 - "GET /api/data/validator-performance HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59482 - "GET /api/data/validator-data HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59484 - "GET /api/dashboard/concentration-metrics HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59473 - "GET /api/data/validator-data HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59480 - "GET /health/ HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59481 - "GET /api/dashboard/performance-analysis HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59483 - "GET /api/dashboard/client-diversity HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59482 - "GET /api/dashboard/concentration-metrics HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59480 - "GET /api/dashboard/performance-analysis HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59483 - "GET /api/dashboard/client-diversity HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59481 - "GET /health/ HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59481 - "GET /api/data/validator-performance HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59483 - "GET /api/data/validator-performance HTTP/1.1" 200 OK
-INFO:     127.0.0.1:57172 - "GET /api/data/validator-performance HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59500 - "GET /api/data/validator-performance HTTP/1.1" 200 OK
-INFO:     192.168.0.100:59517 - "GET /api/data/validator-performance HTTP/1.1" 200 OK
-WARNING:  WatchFiles detected changes in 'data_loader_api.py'. Reloading...
-INFO:     Shutting down
-INFO:     Waiting for application shutdown.
-INFO:     Application shutdown complete.
-INFO:     Finished server process [12667]
-INFO:     Started server process [13934]
+INFO:     Finished server process [21018]
+INFO:     Started server process [22314]
 INFO:     Waiting for application startup.
 INFO:     Application startup complete.
 INFO:     Shutting down
 INFO:     Waiting for application shutdown.
 INFO:     Application shutdown complete.
-INFO:     Finished server process [13934]
-INFO:     Stopping reloader process [9934]
+INFO:     Finished server process [22314]
+INFO:     Stopping reloader process [20817]
