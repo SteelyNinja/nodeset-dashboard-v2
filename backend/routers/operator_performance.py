@@ -283,8 +283,9 @@ class OperatorPerformanceService:
                     continue
                     
                 # Calculate 7-day average ending on this date
-                end_index = op_day_index + 1  # Include current day
-                start_index = max(0, end_index - 7)  # Go back 7 days or to start
+                # Since data is stored newest-first, we need to go FORWARD in array for older dates
+                start_index = op_day_index  # Start from current date
+                end_index = min(op_day_index + 7, len(op_daily_data))  # Include up to 7 days ending on current date
                 
                 recent_days = op_daily_data[start_index:end_index]
                 if len(recent_days) > 0:
