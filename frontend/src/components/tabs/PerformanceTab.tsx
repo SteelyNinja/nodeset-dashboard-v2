@@ -71,6 +71,8 @@ const PerformanceTab: React.FC = () => {
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage7d, setCurrentPage7d] = useState(1);
+  const [currentPage31d, setCurrentPage31d] = useState(1);
   const itemsPerPage = 20;
 
   // Calculate attestation-only performance analysis (matching original Streamlit logic exactly)
@@ -440,6 +442,14 @@ const PerformanceTab: React.FC = () => {
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm]);
+  
+  useEffect(() => {
+    setCurrentPage7d(1);
+  }, [searchTerm7d]);
+  
+  useEffect(() => {
+    setCurrentPage31d(1);
+  }, [searchTerm31d]);
 
   const downloadCSV = () => {
     analyticsService.trackDownload('performance_csv');
@@ -537,6 +547,20 @@ const PerformanceTab: React.FC = () => {
   const paginatedData = filteredAndSortedData.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
+  );
+  
+  // 7-day pagination logic
+  const totalPages7d = Math.ceil(filtered7dData.length / itemsPerPage);
+  const paginatedData7d = filtered7dData.slice(
+    (currentPage7d - 1) * itemsPerPage,
+    currentPage7d * itemsPerPage
+  );
+  
+  // 31-day pagination logic
+  const totalPages31d = Math.ceil(filtered31dData.length / itemsPerPage);
+  const paginatedData31d = filtered31dData.slice(
+    (currentPage31d - 1) * itemsPerPage,
+    currentPage31d * itemsPerPage
   );
 
   return (
@@ -1082,7 +1106,7 @@ const PerformanceTab: React.FC = () => {
               </div>
             </div>
             <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-              Showing {filteredAndSortedData.length} of {performanceData.length} operators (sorted by performance)
+              Showing {paginatedData.length} of {filteredAndSortedData.length} operators on this page • {performanceData.length} total operators
             </div>
             
             {/* Mobile Card View */}
@@ -1335,7 +1359,7 @@ const PerformanceTab: React.FC = () => {
                   
                   <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
                     <div className="text-sm text-gray-600 dark:text-gray-400">
-                      Showing {filtered7dData.length} of {attestation7dData.length} operators with attestation-only performance
+                      Showing {paginatedData7d.length} of {filtered7dData.length} operators on this page • {attestation7dData.length} total operators
                     </div>
                     <div className="w-full sm:w-72">
                       <input
@@ -1353,10 +1377,11 @@ const PerformanceTab: React.FC = () => {
                   </div>
                   
                   {/* Mobile Card View */}
-                  <div className="block lg:hidden space-y-3">
-                    {filtered7dData.map((operator, index) => {
-                      // Find original rank from the full unfiltered sorted data
-                      const originalRank = attestation7dData.findIndex(op => op.address === operator.address) + 1;
+                  <div className="block lg:hidden space-y-4">
+                    <div className="space-y-3">
+                      {paginatedData7d.map((operator, index) => {
+                        // Find original rank from the full unfiltered sorted data
+                        const originalRank = attestation7dData.findIndex(op => op.address === operator.address) + 1;
                       
                       const truncateAddress = (address: string) => {
                         return `${address.slice(0, 6)}...${address.slice(-4)}`;
@@ -1416,6 +1441,40 @@ const PerformanceTab: React.FC = () => {
                         </div>
                       );
                     })}
+                    </div>
+                    
+                    {/* Mobile Pagination Controls for 7-day */}
+                    {totalPages7d > 1 && (
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 bg-white/5 dark:bg-white/2 backdrop-blur-sm rounded-xl border border-white/10 dark:border-white/15">
+                        <div className="text-sm text-gray-600 dark:text-gray-400 text-center sm:text-left">
+                          Page {currentPage7d} of {totalPages7d} • {filtered7dData.length} total operators
+                        </div>
+                        
+                        <div className="flex items-center justify-center gap-2">
+                          <GlassButton
+                            onClick={() => setCurrentPage7d(currentPage7d - 1)}
+                            disabled={currentPage7d === 1}
+                            variant="secondary"
+                            size="sm"
+                            className="min-h-[44px] px-4"
+                          >
+                            <Icon name="left" size="sm" />
+                            Previous
+                          </GlassButton>
+
+                          <GlassButton
+                            onClick={() => setCurrentPage7d(currentPage7d + 1)}
+                            disabled={currentPage7d === totalPages7d}
+                            variant="secondary"
+                            size="sm"
+                            className="min-h-[44px] px-4"
+                          >
+                            Next
+                            <Icon name="right" size="sm" />
+                          </GlassButton>
+                        </div>
+                      </div>
+                    )}
                   </div>
                   
                   {/* Desktop Table View */}
@@ -1505,7 +1564,7 @@ const PerformanceTab: React.FC = () => {
                   
                   <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
                     <div className="text-sm text-gray-600 dark:text-gray-400">
-                      Showing {filtered31dData.length} of {attestation31dData.length} operators with attestation-only performance
+                      Showing {paginatedData31d.length} of {filtered31dData.length} operators on this page • {attestation31dData.length} total operators
                     </div>
                     <div className="w-full sm:w-72">
                       <input
@@ -1523,8 +1582,9 @@ const PerformanceTab: React.FC = () => {
                   </div>
                   
                   {/* Mobile Card View */}
-                  <div className="block lg:hidden space-y-3">
-                    {filtered31dData.map((operator, index) => {
+                  <div className="block lg:hidden space-y-4">
+                    <div className="space-y-3">
+                      {paginatedData31d.map((operator, index) => {
                       // Find original rank from the full unfiltered sorted data
                       const originalRank = attestation31dData.findIndex(op => op.address === operator.address) + 1;
                       
@@ -1586,6 +1646,40 @@ const PerformanceTab: React.FC = () => {
                         </div>
                       );
                     })}
+                    </div>
+                    
+                    {/* Mobile Pagination Controls for 31-day */}
+                    {totalPages31d > 1 && (
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 bg-white/5 dark:bg-white/2 backdrop-blur-sm rounded-xl border border-white/10 dark:border-white/15">
+                        <div className="text-sm text-gray-600 dark:text-gray-400 text-center sm:text-left">
+                          Page {currentPage31d} of {totalPages31d} • {filtered31dData.length} total operators
+                        </div>
+                        
+                        <div className="flex items-center justify-center gap-2">
+                          <GlassButton
+                            onClick={() => setCurrentPage31d(currentPage31d - 1)}
+                            disabled={currentPage31d === 1}
+                            variant="secondary"
+                            size="sm"
+                            className="min-h-[44px] px-4"
+                          >
+                            <Icon name="left" size="sm" />
+                            Previous
+                          </GlassButton>
+
+                          <GlassButton
+                            onClick={() => setCurrentPage31d(currentPage31d + 1)}
+                            disabled={currentPage31d === totalPages31d}
+                            variant="secondary"
+                            size="sm"
+                            className="min-h-[44px] px-4"
+                          >
+                            Next
+                            <Icon name="right" size="sm" />
+                          </GlassButton>
+                        </div>
+                      </div>
+                    )}
                   </div>
                   
                   {/* Desktop Table View */}
