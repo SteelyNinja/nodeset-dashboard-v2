@@ -68,6 +68,10 @@ const PerformanceTab: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [searchTerm7d, setSearchTerm7d] = useState('');
   const [searchTerm31d, setSearchTerm31d] = useState('');
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 20;
 
   // Calculate attestation-only performance analysis (matching original Streamlit logic exactly)
   const calculateAttestationPerformance = (
@@ -432,6 +436,11 @@ const PerformanceTab: React.FC = () => {
     fetchData();
   }, [fetchData]);
 
+  // Reset page when search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
+
   const downloadCSV = () => {
     analyticsService.trackDownload('performance_csv');
     
@@ -522,6 +531,13 @@ const PerformanceTab: React.FC = () => {
       operator.operator.toLowerCase().includes(searchTerm31d.toLowerCase()) ||
       operator.ens_name.toLowerCase().includes(searchTerm31d.toLowerCase())
     );
+
+  // Pagination logic
+  const totalPages = Math.ceil(filteredAndSortedData.length / itemsPerPage);
+  const paginatedData = filteredAndSortedData.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   return (
     <div className="p-6">
@@ -1070,8 +1086,9 @@ const PerformanceTab: React.FC = () => {
             </div>
             
             {/* Mobile Card View */}
-            <div className="block md:hidden space-y-3">
-              {filteredAndSortedData.map((operator, index) => {
+            <div className="block md:hidden space-y-4">
+              <div className="space-y-3">
+                {paginatedData.map((operator, index) => {
                 // Find original rank from the full unfiltered sorted data
                 const originalRank = performanceData
                   .slice()
@@ -1137,7 +1154,41 @@ const PerformanceTab: React.FC = () => {
                     </div>
                   </div>
                 );
-              })}
+                })}
+              </div>
+              
+              {/* Mobile Pagination Controls */}
+              {totalPages > 1 && (
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 bg-white/5 dark:bg-white/2 backdrop-blur-sm rounded-xl border border-white/10 dark:border-white/15">
+                  <div className="text-sm text-gray-600 dark:text-gray-400 text-center sm:text-left">
+                    Page {currentPage} of {totalPages} • {filteredAndSortedData.length} total operators
+                  </div>
+                  
+                  <div className="flex items-center justify-center gap-2">
+                    <GlassButton
+                      onClick={() => setCurrentPage(currentPage - 1)}
+                      disabled={currentPage === 1}
+                      variant="secondary"
+                      size="sm"
+                      className="min-h-[44px] px-4"
+                    >
+                      <Icon name="left" size="sm" />
+                      Previous
+                    </GlassButton>
+
+                    <GlassButton
+                      onClick={() => setCurrentPage(currentPage + 1)}
+                      disabled={currentPage === totalPages}
+                      variant="secondary"
+                      size="sm"
+                      className="min-h-[44px] px-4"
+                    >
+                      Next
+                      <Icon name="right" size="sm" />
+                    </GlassButton>
+                  </div>
+                </div>
+              )}
             </div>
             
             {/* Desktop Table View */}
