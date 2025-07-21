@@ -226,6 +226,12 @@ class ApiService {
     return this.extractData(response);
   }
 
+  async getOperatorRankHistory(operator: string, days?: number): Promise<any> {
+    const params = days ? `?days=${days}` : '';
+    const response = await this.apiClient.get<ApiResponse<any>>(`/api/operator-performance/operator/${encodeURIComponent(operator)}/rank-history${params}`);
+    return this.extractData(response);
+  }
+
   async getPerformanceTrends(days: number = 30): Promise<{trends: PerformanceTrend[]}> {
     const response = await this.apiClient.get<ApiResponse<{trends: PerformanceTrend[]}>>(`/api/operator-performance/trends?days=${days}`);
     return this.extractData(response);

@@ -26,6 +26,7 @@ interface LineChartProps {
   yAxisType?: 'number' | 'category';
   xDomain?: [number | string, number | string];
   yDomain?: [number | string, number | string];
+  yAxisReversed?: boolean;
   showLegend?: boolean;
 }
 
@@ -40,6 +41,7 @@ const LineChartComponent: React.FC<LineChartProps> = ({
   yAxisType = 'number',
   xDomain,
   yDomain,
+  yAxisReversed = false,
   showLegend = true
 }) => {
   // Active line state for enhanced interactivity
@@ -176,6 +178,7 @@ const LineChartComponent: React.FC<LineChartProps> = ({
           <YAxis 
             type={yAxisType}
             domain={yDomain}
+            reversed={yAxisReversed}
             tick={CHART_THEME.axis.tick}
             axisLine={CHART_THEME.axis.line}
             tickFormatter={formatYAxisTick}

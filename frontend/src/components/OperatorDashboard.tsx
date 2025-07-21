@@ -27,6 +27,7 @@ const OperatorDashboard: React.FC<OperatorDashboardProps> = ({ operatorAddress: 
   
   const [performanceData, setPerformanceData] = useState<OperatorPerformanceData | null>(null);
   const [chartData, setChartData] = useState<OperatorChartData | null>(null);
+  const [rankHistoryData, setRankHistoryData] = useState<any>(null);
   const [allOperatorsSummary, setAllOperatorsSummary] = useState<Record<string, OperatorSummary>>({});
   const [previousDayOperatorsSummary, setPreviousDayOperatorsSummary] = useState<Record<string, OperatorSummary>>({});
   const [validatorsList, setValidatorsList] = useState<any[]>([]);
@@ -63,9 +64,10 @@ const OperatorDashboard: React.FC<OperatorDashboardProps> = ({ operatorAddress: 
         analyticsService.trackOperatorDashboard(operatorAddress);
 
         // Load operator performance data and enhanced analytics in parallel
-        const [performance, chart, allSummary, previousDaySummary, validatorPerformanceData, exitData, mevData, syncData, comprehensiveAnalytics, validatorData] = await Promise.all([
+        const [performance, chart, rankHistory, allSummary, previousDaySummary, validatorPerformanceData, exitData, mevData, syncData, comprehensiveAnalytics, validatorData] = await Promise.all([
           apiService.getOperatorPerformance(operatorAddress, selectedDays),
           apiService.getOperatorChartData(operatorAddress, selectedDays),
+          apiService.getOperatorRankHistory(operatorAddress, selectedDays).catch(() => null), // Rank history data
           apiService.getOperatorsSummary(7), // Always use 7-day data for network ranking
           apiService.getOperatorsSummary(8).catch(() => ({})), // Get 8-day data to calculate previous day rank
           apiService.getValidatorPerformanceData(), // Get active validator data
@@ -138,6 +140,7 @@ const OperatorDashboard: React.FC<OperatorDashboardProps> = ({ operatorAddress: 
 
         setPerformanceData(performance);
         setChartData(chart);
+        setRankHistoryData(rankHistory);
         setAllOperatorsSummary(allSummary);
         setPreviousDayOperatorsSummary(previousDaySummary);
         setValidatorsList(operatorValidators);
@@ -441,6 +444,33 @@ const OperatorDashboard: React.FC<OperatorDashboardProps> = ({ operatorAddress: 
     };
   }, [chartData, summaryMetrics]);
 
+  // Rank History Chart configuration
+  const rankHistoryConfig = useMemo(() => {
+    if (!rankHistoryData?.rank_history || rankHistoryData.rank_history.length === 0) return null;
+
+    const rankData = rankHistoryData.rank_history.map((entry: any) => ({
+      date: entry.date,
+      rank: entry.rank,
+      totalOperators: entry.total_operators
+    }));
+
+    // Calculate max total operators for Y-axis domain
+    const maxOperators = Math.max(...rankData.map((d: any) => d.totalOperators));
+
+    return {
+      data: rankData,
+      maxOperators,
+      lines: [
+        {
+          dataKey: 'rank',
+          stroke: PROFESSIONAL_CHART_COLORS.status.danger,
+          strokeWidth: 3,
+          name: 'Network Rank'
+        }
+      ]
+    };
+  }, [rankHistoryData]);
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -658,11 +688,11 @@ const OperatorDashboard: React.FC<OperatorDashboardProps> = ({ operatorAddress: 
         </GlassCard>
       </div>
 
-      {/* Performance Chart */}
+      {/* Charts Section - Side by Side */}
       <div className="relative">
         <div className="absolute top-6 left-6 right-6 z-10 flex items-center justify-between">
           <h2 className="text-xl font-semibold text-neutral-900 dark:text-white">
-            Daily Performance Trends
+            Performance & Rank Trends
           </h2>
           <div className="flex space-x-2">
             {[7, 30, 90].map(days => (
@@ -678,20 +708,46 @@ const OperatorDashboard: React.FC<OperatorDashboardProps> = ({ operatorAddress: 
           </div>
         </div>
         
-        {chartConfig && (
-          <div className="pt-16">
-            <LineChart
-              data={chartConfig.data}
-              lines={chartConfig.lines}
-              xAxisDataKey="date"
-              xAxisType="category"
-              xAxisLabel="Date"
-              yAxisLabel="Percentage (%)"
-              yDomain={[95, 100]}
-              showLegend={true}
-            />
+        <div className="pt-16 grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Performance Chart */}
+          <div className="relative">
+            <h3 className="text-lg font-medium text-neutral-900 dark:text-white mb-4">
+              Daily Performance Trends
+            </h3>
+            {chartConfig && (
+              <LineChart
+                data={chartConfig.data}
+                lines={chartConfig.lines}
+                xAxisDataKey="date"
+                xAxisType="category"
+                xAxisLabel="Date"
+                yAxisLabel="Percentage (%)"
+                yDomain={[95, 100]}
+                showLegend={true}
+              />
+            )}
           </div>
-        )}
+
+          {/* Network Rank History Chart */}
+          <div className="relative">
+            <h3 className="text-lg font-medium text-neutral-900 dark:text-white mb-4">
+              Network Rank History
+            </h3>
+            {rankHistoryConfig && (
+              <LineChart
+                data={rankHistoryConfig.data}
+                lines={rankHistoryConfig.lines}
+                xAxisDataKey="date"
+                xAxisType="category"
+                xAxisLabel="Date"
+                yAxisLabel="Network Rank (1 = Best)"
+                yDomain={[1, rankHistoryConfig.maxOperators]}
+                yAxisReversed={true}
+                showLegend={true}
+              />
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Current Status Cards */}

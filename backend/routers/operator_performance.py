@@ -202,6 +202,69 @@ class OperatorPerformanceService:
             })
         
         return {"trends": trends}
+    
+    def get_operator_rank_history(self, operator: str, days: int = 30) -> Dict[str, Any]:
+        """Get daily rank history for a specific operator"""
+        cache = self._load_cache()
+        operators = cache.get("operators", {})
+        
+        if operator not in operators:
+            return None
+        
+        # Get all operators data for ranking comparisons
+        all_daily_data = {}
+        for op_addr, op_data in operators.items():
+            daily_performance = op_data.get("daily_performance", [])
+            for day_data in daily_performance[:days]:  # Limit to requested days
+                date = day_data.get("date")
+                if not date:
+                    continue
+                    
+                if date not in all_daily_data:
+                    all_daily_data[date] = []
+                
+                all_daily_data[date].append({
+                    "operator": op_addr,
+                    "performance": day_data.get("attestation_performance", 0)
+                })
+        
+        # Calculate daily ranks
+        rank_history = []
+        target_operator_data = operators[operator].get("daily_performance", [])
+        
+        for day_data in target_operator_data[:days]:
+            date = day_data.get("date")
+            if not date or date not in all_daily_data:
+                continue
+            
+            target_performance = day_data.get("attestation_performance", 0)
+            
+            # Calculate rank for this day
+            day_operators = all_daily_data[date]
+            day_operators.sort(key=lambda x: x["performance"], reverse=True)
+            
+            # Find the rank of the target operator
+            rank = 1
+            for i, op in enumerate(day_operators):
+                if op["operator"] == operator:
+                    rank = i + 1
+                    break
+            
+            rank_history.append({
+                "date": date,
+                "rank": rank,
+                "performance": target_performance,
+                "total_operators": len(day_operators)
+            })
+        
+        # Reverse to get chronological order (oldest first for charting)
+        rank_history.reverse()
+        
+        return {
+            "operator": operator,
+            "days": days,
+            "rank_history": rank_history
+        }
 
 # Global service instance
 operator_performance_service = OperatorPerformanceService()
@@ -345,3 +408,29 @@ async def get_operator_chart_data(
     except Exception as e:
         logger.error(f"Failed to get operator chart data: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to get chart data: {str(e)}")
+
+@router.get("/operator/{operator}/rank-history")
+async def get_operator_rank_history(
+    operator: str,
+    days: Optional[int] = Query(30, description="Number of days for rank history", ge=1, le=90)
+) -> Dict[str, Any]:
+    """Get daily rank history for a specific operator"""
+    try:
+        data = operator_performance_service.get_operator_rank_history(operator, days)
+        
+        if data is None:
+            raise HTTPException(status_code=404, detail=f"Operator {operator} not found")
+        
+        return {
+            "success": True,
+            "data": data,
+            "operator": operator,
+            "filters": {"days": days},
+            "source": "operator_daily_performance_cache"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to get operator rank history: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get rank history: {str(e)}")
