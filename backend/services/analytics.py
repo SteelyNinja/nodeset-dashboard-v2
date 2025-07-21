@@ -519,7 +519,8 @@ class AnalyticsService:
                 'analysis_note': f'Client diversity analysis based on graffiti patterns from {operators_with_proposals} operators ({graffiti_coverage}% coverage)',
                 'total_operators': total_operators,
                 'operators_with_proposals': operators_with_proposals,
-                'graffiti_coverage_percent': graffiti_coverage
+                'graffiti_coverage_percent': graffiti_coverage,
+                'operator_details': analysis_result.get('operator_details', {})
             }
             
         except Exception as e:

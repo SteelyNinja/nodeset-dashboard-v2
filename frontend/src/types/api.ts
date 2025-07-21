@@ -158,6 +158,13 @@ export interface ClientDiversity {
   total_operators?: number;
   operators_with_proposals?: number;
   graffiti_coverage_percent?: number;
+  operator_details?: Record<string, {
+    timestamp: number;
+    execution_client: string;
+    consensus_client: string;
+    setup_type: string;
+    graffiti_text: string;
+  }>;
 }
 
 export interface SyncCommitteeData {
