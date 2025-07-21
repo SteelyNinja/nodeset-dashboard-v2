@@ -159,7 +159,7 @@ const OperatorsTab: React.FC = () => {
           exited: op.exited_count,
           exit_rate: op.exit_rate,
           market_share: op.percentage,
-          performance_7d: Math.round((operatorSummary[op.full_address]?.avg_attestation_performance || 0) * 10000) / 10000, // 4 decimal precision
+          performance_7d: Math.round((operatorSummary[op.full_address]?.avg_attestation_performance || 0) * 100000) / 100000, // 5 decimal precision
           execution_client: clientDiversityData.operator_details?.[op.full_address] ? 
             getClientName(clientDiversityData.operator_details[op.full_address].execution_client, 'execution') : undefined,
           consensus_client: clientDiversityData.operator_details?.[op.full_address] ? 
@@ -218,7 +218,7 @@ const OperatorsTab: React.FC = () => {
         op.rank,
         op.address,
         op.ens_name,
-        `${op.performance_7d.toFixed(4)}%`,
+        `${op.performance_7d.toFixed(5)}%`,
         op.active,
         op.total,
         op.exited,
@@ -426,7 +426,7 @@ const OperatorsTab: React.FC = () => {
                       <div>
                         <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">7-Day Performance</div>
                         <div className="text-lg font-semibold text-neutral-800 dark:text-neutral-200">
-                          {operator.performance_7d ? `${operator.performance_7d.toFixed(4)}%` : '-'}
+                          {operator.performance_7d ? `${operator.performance_7d.toFixed(5)}%` : '-'}
                         </div>
                       </div>
                       <div>
@@ -579,7 +579,7 @@ const OperatorsTab: React.FC = () => {
                         {operator.ens_name || '-'}
                       </div>
                       <div className="font-medium">
-                        {operator.performance_7d ? `${operator.performance_7d.toFixed(4)}%` : '-'}
+                        {operator.performance_7d ? `${operator.performance_7d.toFixed(5)}%` : '-'}
                       </div>
                       <div>
                         {operator.active}

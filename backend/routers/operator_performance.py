@@ -289,8 +289,8 @@ class OperatorPerformanceService:
                 recent_days = op_daily_data[start_index:end_index]
                 if len(recent_days) > 0:
                     avg_performance = sum(day.get("attestation_performance", 0) for day in recent_days) / len(recent_days)
-                    # Use 4 decimal places for precise sorting
-                    avg_performance = round(avg_performance, 4)
+                    # Use 5 decimal places for precise sorting
+                    avg_performance = round(avg_performance, 5)
                     
                     operator_averages.append({
                         "operator": op_addr,
