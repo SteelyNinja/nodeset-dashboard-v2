@@ -112,13 +112,13 @@ const OperatorsTab: React.FC = () => {
         apiService.getTopOperators(1000), // Get all operators
         apiService.getValidatorData(), // Get validator data for ENS names
         apiService.getOperatorsSummary(7), // Get 7-day performance data for ranking
-        apiService.getOperatorsSummary(8).catch(() => ({})), // Get 8-day data to calculate previous day rank
+        apiService.getOperatorsSummaryPreviousDay().catch(() => ({})), // Get previous 7-day period (non-overlapping) for rank change
         apiService.getClientDiversity() // Get client diversity data for execution/consensus clients
       ]);
       
       setConcentrationMetrics(concentrationData);
       
-      // Calculate previous day ranks for rank change comparison
+      // Calculate previous period ranks for rank change comparison using non-overlapping 7-day periods
       const calculatePreviousRank = (operatorAddress: string): number | null => {
         if (Object.keys(previousDayOperatorsSummary).length === 0) {
           return null;
@@ -133,12 +133,12 @@ const OperatorsTab: React.FC = () => {
           return null;
         }
         
-        const previousOperator8DayPerf = previousOperatorData.avg_attestation_performance;
+        const previousOperator7DayPerf = previousOperatorData.avg_attestation_performance;
         const sortedPreviousOperators = previousOperatorSummaries.sort((a: any, b: any) => b.avg_attestation_performance - a.avg_attestation_performance);
         
         let previousRank = 1;
         for (const op of sortedPreviousOperators) {
-          if (op.avg_attestation_performance > previousOperator8DayPerf) {
+          if (op.avg_attestation_performance > previousOperator7DayPerf) {
             previousRank++;
           } else {
             break;
@@ -159,7 +159,7 @@ const OperatorsTab: React.FC = () => {
           exited: op.exited_count,
           exit_rate: op.exit_rate,
           market_share: op.percentage,
-          performance_7d: operatorSummary[op.full_address]?.avg_attestation_performance || 0,
+          performance_7d: Math.round((operatorSummary[op.full_address]?.avg_attestation_performance || 0) * 10000) / 10000, // 4 decimal precision
           execution_client: clientDiversityData.operator_details?.[op.full_address] ? 
             getClientName(clientDiversityData.operator_details[op.full_address].execution_client, 'execution') : undefined,
           consensus_client: clientDiversityData.operator_details?.[op.full_address] ? 
