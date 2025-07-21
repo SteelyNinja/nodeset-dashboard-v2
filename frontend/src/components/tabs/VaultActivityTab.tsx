@@ -44,6 +44,7 @@ const VaultActivityTab: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedPeriod, setSelectedPeriod] = useState<number>(30);
 
   const weiToEth = (wei: string): number => {
     return parseFloat(wei) / 1e18;
@@ -167,7 +168,7 @@ const VaultActivityTab: React.FC = () => {
     let cumulativeDeposits = 0;
     let cumulativeNetFlow = 0;
 
-    const result = sortedDates.map(date => {
+    const allData = sortedDates.map(date => {
       const data = dailyData.get(date)!;
       cumulativeDeposits += data.depositAmount;
       cumulativeNetFlow += (data.depositAmount - data.withdrawalAmount);
@@ -184,6 +185,9 @@ const VaultActivityTab: React.FC = () => {
       };
     });
 
+    // Filter by selected period (0 means all time)
+    const result = selectedPeriod === 0 ? allData : allData.slice(-selectedPeriod);
+
     // Debug final result once
     if (result.length > 0) {
       const maxNetFlow = Math.max(...result.map(d => d.cumulativeNetFlow));
@@ -192,7 +196,7 @@ const VaultActivityTab: React.FC = () => {
     }
 
     return result;
-  }, [vaultData]);
+  }, [vaultData, selectedPeriod]);
 
   const topDepositors = useMemo((): TopDepositor[] => {
     if (!vaultData || !vaultData.events || !Array.isArray(vaultData.events)) return [];
@@ -454,72 +458,95 @@ const VaultActivityTab: React.FC = () => {
         </GlassCard>
       </div>
 
-      {/* Time Series Chart */}
-      <GlassCard size="large" elevation="floating" hoverable={false} className="mb-8">
-        <h3 className="text-headline-small text-neutral-900 dark:text-neutral-100 mb-4">Net Flow Value</h3>
-        <div className="h-[450px]">
-          {(() => {
-            const chartData = timeSeriesData.map(d => ({ date: d.date, netFlow: d.cumulativeNetFlow }));
-            console.log('Chart component data:', chartData.slice(0, 3), '...', chartData.slice(-3));
-            return (
-              <LineChart
-                data={chartData}
-                lines={[
-                  {
-                    dataKey: 'netFlow',
-                    stroke: 'rgb(59, 130, 246)',
-                    strokeWidth: 2,
-                    name: 'Net Flow (ETH)'
-                  }
-                ]}
-                xAxisDataKey="date"
-                xAxisType="category"
-                xAxisLabel="Date"
-                yAxisLabel="ETH"
-                showLegend={true}
-              />
-            );
-          })()}
+      {/* Charts Section with Period Selection */}
+      <div className="mb-8">
+        <div className="flex justify-between items-center mb-6">
+          <h3 className="text-headline-small text-neutral-900 dark:text-neutral-100">Vault Activity Charts</h3>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-neutral-600 dark:text-neutral-400 mr-2">Period:</span>
+            {[7, 30, 90, 0].map(period => (
+              <GlassButton
+                key={period}
+                onClick={() => setSelectedPeriod(period)}
+                variant={selectedPeriod === period ? 'primary' : 'secondary'}
+                size="sm"
+                className="px-3 py-1"
+              >
+                {period === 0 ? 'All' : `${period}d`}
+              </GlassButton>
+            ))}
+          </div>
         </div>
-      </GlassCard>
 
-      {/* Flows Per Day Chart */}
-      <GlassCard size="large" elevation="floating" hoverable={false} className="mb-8">
-        <h3 className="text-headline-small text-neutral-900 dark:text-neutral-100 mb-4">Flows Per Day</h3>
-        <div className="h-[450px]">
-          {(() => {
-            const flowChartData = timeSeriesData.map(d => ({
-              date: d.date,
-              deposits: d.depositAmount,
-              withdrawals: d.withdrawalAmount
-            }));
-            return (
-              <LineChart
-                data={flowChartData}
-                lines={[
-                  {
-                    dataKey: 'deposits',
-                    stroke: 'rgb(34, 197, 94)',
-                    strokeWidth: 2,
-                    name: 'Deposits'
-                  },
-                  {
-                    dataKey: 'withdrawals',
-                    stroke: 'rgb(239, 68, 68)',
-                    strokeWidth: 2,
-                    name: 'Withdrawals'
-                  }
-                ]}
-                xAxisDataKey="date"
-                xAxisType="category"
-                xAxisLabel="Date"
-                yAxisLabel="ETH Amount"
-                showLegend={true}
-              />
-            );
-          })()}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Net Flow Value Chart */}
+          <GlassCard size="large" elevation="floating" hoverable={false}>
+            <h4 className="text-lg font-medium text-neutral-900 dark:text-neutral-100 mb-4">Net Flow Value</h4>
+            <div className="h-[400px]">
+              {(() => {
+                const chartData = timeSeriesData.map(d => ({ date: d.date, netFlow: d.cumulativeNetFlow }));
+                console.log('Chart component data:', chartData.slice(0, 3), '...', chartData.slice(-3));
+                return (
+                  <LineChart
+                    data={chartData}
+                    lines={[
+                      {
+                        dataKey: 'netFlow',
+                        stroke: 'rgb(59, 130, 246)',
+                        strokeWidth: 2,
+                        name: 'Net Flow (ETH)'
+                      }
+                    ]}
+                    xAxisDataKey="date"
+                    xAxisType="category"
+                    xAxisLabel="Date"
+                    yAxisLabel="ETH"
+                    showLegend={true}
+                  />
+                );
+              })()}
+            </div>
+          </GlassCard>
+
+          {/* Flows Per Day Chart */}
+          <GlassCard size="large" elevation="floating" hoverable={false}>
+            <h4 className="text-lg font-medium text-neutral-900 dark:text-neutral-100 mb-4">Flows Per Day</h4>
+            <div className="h-[400px]">
+              {(() => {
+                const flowChartData = timeSeriesData.map(d => ({
+                  date: d.date,
+                  deposits: d.depositAmount,
+                  withdrawals: d.withdrawalAmount
+                }));
+                return (
+                  <LineChart
+                    data={flowChartData}
+                    lines={[
+                      {
+                        dataKey: 'deposits',
+                        stroke: 'rgb(34, 197, 94)',
+                        strokeWidth: 2,
+                        name: 'Deposits'
+                      },
+                      {
+                        dataKey: 'withdrawals',
+                        stroke: 'rgb(239, 68, 68)',
+                        strokeWidth: 2,
+                        name: 'Withdrawals'
+                      }
+                    ]}
+                    xAxisDataKey="date"
+                    xAxisType="category"
+                    xAxisLabel="Date"
+                    yAxisLabel="ETH Amount"
+                    showLegend={true}
+                  />
+                );
+              })()}
+            </div>
+          </GlassCard>
         </div>
-      </GlassCard>
+      </div>
 
       {/* Vault Transactions */}
       <div className="mb-8">
