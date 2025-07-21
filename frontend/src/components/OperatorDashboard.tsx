@@ -280,7 +280,7 @@ const OperatorDashboard: React.FC<OperatorDashboardProps> = ({ operatorAddress: 
     });
 
     return metrics;
-  }, [performanceData, comprehensiveData, operatorAddress]);
+  }, [performanceData, comprehensiveData, operatorAddress, selectedDays]);
 
   // Calculate network comparison with rank change tracking
   const networkComparison = useMemo(() => {

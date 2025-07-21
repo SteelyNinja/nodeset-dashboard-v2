@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ConcentrationMetrics } from '../../types/api';
 import { apiService } from '../../services/api';
@@ -102,7 +102,7 @@ const OperatorsTab: React.FC = () => {
     return clients;
   };
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -194,11 +194,11 @@ const OperatorsTab: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [fetchData]);
 
   if (loading) {
     return <LoadingSpinner size="lg" className="py-8" />;
