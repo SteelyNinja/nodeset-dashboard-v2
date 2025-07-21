@@ -146,7 +146,7 @@ class OperatorPerformanceService:
         return summaries
     
     def get_operators_summary_previous_day(self) -> Dict[str, Any]:
-        """Get summary performance data for all operators based on previous 7-day period (non-overlapping)"""
+        """Get summary performance data for all operators based on yesterday's 7-day rolling average (overlapping)"""
         cache = self._load_cache()
         operators = cache.get("operators", {})
         
@@ -154,23 +154,23 @@ class OperatorPerformanceService:
         for operator, data in operators.items():
             daily_performance = data.get("daily_performance", [])
             
-            if len(daily_performance) < 14:  # Need at least 14 days for non-overlapping 7-day periods
+            if len(daily_performance) < 8:  # Need at least 8 days for yesterday's 7-day average
                 continue
             
-            # Get previous 7-day window (days 7-13, completely separate from current days 0-6)
-            previous_7_days = daily_performance[7:14]  # Skip current 7 days (0-6), take previous 7 days (7-13)
+            # Get yesterday's 7-day window (days 1-7, overlapping 6 days with current period days 0-6)
+            yesterday_7_days = daily_performance[1:8]  # Skip today (day 0), take days 1-7 (yesterday's 7-day window)
             
-            if len(previous_7_days) == 7:
-                # Calculate previous 7-day average metrics
-                avg_participation = sum(d.get("participation_rate", 0) for d in previous_7_days) / 7
-                avg_head_accuracy = sum(d.get("head_accuracy", 0) for d in previous_7_days) / 7
-                avg_target_accuracy = sum(d.get("target_accuracy", 0) for d in previous_7_days) / 7
-                avg_source_accuracy = sum(d.get("source_accuracy", 0) for d in previous_7_days) / 7
-                avg_inclusion_delay = sum(d.get("avg_inclusion_delay", 0) for d in previous_7_days) / 7
-                avg_performance = sum(d.get("attestation_performance", 0) for d in previous_7_days) / 7
+            if len(yesterday_7_days) == 7:
+                # Calculate yesterday's 7-day average metrics
+                avg_participation = sum(d.get("participation_rate", 0) for d in yesterday_7_days) / 7
+                avg_head_accuracy = sum(d.get("head_accuracy", 0) for d in yesterday_7_days) / 7
+                avg_target_accuracy = sum(d.get("target_accuracy", 0) for d in yesterday_7_days) / 7
+                avg_source_accuracy = sum(d.get("source_accuracy", 0) for d in yesterday_7_days) / 7
+                avg_inclusion_delay = sum(d.get("avg_inclusion_delay", 0) for d in yesterday_7_days) / 7
+                avg_performance = sum(d.get("attestation_performance", 0) for d in yesterday_7_days) / 7
                 
-                # Use the most recent day of the previous period as reference
-                reference_day = daily_performance[7]
+                # Use yesterday (day 1) as the reference date
+                reference_day = daily_performance[1]
                 
                 summaries[operator] = {
                     "validator_count": reference_day.get("validator_count", 0),
@@ -183,7 +183,7 @@ class OperatorPerformanceService:
                     "avg_inclusion_delay": round(avg_inclusion_delay, 3),
                     "avg_attestation_performance": round(avg_performance, 6),
                     "latest_performance": reference_day.get("attestation_performance", 0),
-                    "calculation_method": "previous_7_day_period_non_overlapping"
+                    "calculation_method": "yesterday_7_day_rolling_average_overlapping"
                 }
         
         return summaries
@@ -383,7 +383,7 @@ async def get_operators_summary(
 
 @router.get("/operators/summary/previous-day")
 async def get_operators_summary_previous_day() -> Dict[str, Any]:
-    """Get summary performance metrics for all operators based on previous 7-day period (non-overlapping)"""
+    """Get summary performance metrics for all operators based on yesterday's 7-day rolling average (overlapping)"""
     try:
         summaries = operator_performance_service.get_operators_summary_previous_day()
         return {

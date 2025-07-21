@@ -69,7 +69,7 @@ const OperatorDashboard: React.FC<OperatorDashboardProps> = ({ operatorAddress: 
           apiService.getOperatorChartData(operatorAddress, selectedDays),
           apiService.getOperatorRankHistory(operatorAddress, selectedDays).catch(() => null), // Rank history data
           apiService.getOperatorsSummary(7), // Always use 7-day data for network ranking
-          apiService.getOperatorsSummaryPreviousDay().catch(() => ({})), // Get previous 7-day period (non-overlapping) for rank change
+          apiService.getOperatorsSummaryPreviousDay().catch(() => ({})), // Get yesterday's 7-day rolling average (overlapping) for rank change
           apiService.getValidatorPerformanceData(), // Get active validator data
           apiService.getExitData(), // Get exit data for exited validators
           apiService.getOperatorMevAnalytics(operatorAddress).catch(() => null), // MEV analytics

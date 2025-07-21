@@ -112,13 +112,13 @@ const OperatorsTab: React.FC = () => {
         apiService.getTopOperators(1000), // Get all operators
         apiService.getValidatorData(), // Get validator data for ENS names
         apiService.getOperatorsSummary(7), // Get 7-day performance data for ranking
-        apiService.getOperatorsSummaryPreviousDay().catch(() => ({})), // Get previous 7-day period (non-overlapping) for rank change
+        apiService.getOperatorsSummaryPreviousDay().catch(() => ({})), // Get yesterday's 7-day rolling average (overlapping) for rank change
         apiService.getClientDiversity() // Get client diversity data for execution/consensus clients
       ]);
       
       setConcentrationMetrics(concentrationData);
       
-      // Calculate previous period ranks for rank change comparison using non-overlapping 7-day periods
+      // Calculate yesterday's ranks for rank change comparison using overlapping 7-day periods
       const calculatePreviousRank = (operatorAddress: string): number | null => {
         if (Object.keys(previousDayOperatorsSummary).length === 0) {
           return null;
