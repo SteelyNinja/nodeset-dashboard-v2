@@ -290,14 +290,14 @@ const OperatorsTab: React.FC = () => {
             
             {/* Client Filter Dropdowns */}
             <div className="flex flex-col lg:flex-row lg:items-center gap-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 flex-1">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full lg:w-auto lg:max-w-2xl">
                 {/* Execution Client Filter */}
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-gray-700 dark:text-gray-300 block">Execution Client:</label>
                   <select
                     value={executionClientFilter}
                     onChange={(e) => setExecutionClientFilter(e.target.value)}
-                    className="w-full px-4 py-3 text-sm border-2 border-blue-300 dark:border-blue-500 rounded-lg bg-blue-50 dark:bg-blue-900/30 backdrop-blur-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-400 text-gray-900 dark:text-white shadow-sm hover:border-blue-400 dark:hover:border-blue-400 transition-colors min-h-[44px]"
+                    className="w-full lg:w-48 px-4 py-3 text-sm border-2 border-blue-300 dark:border-blue-500 rounded-lg bg-blue-50 dark:bg-blue-900/30 backdrop-blur-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-400 text-gray-900 dark:text-white shadow-sm hover:border-blue-400 dark:hover:border-blue-400 transition-colors min-h-[44px]"
                   >
                     <option value="">All Execution</option>
                     {getUniqueExecutionClients().map(client => (
@@ -312,7 +312,7 @@ const OperatorsTab: React.FC = () => {
                   <select
                     value={consensusClientFilter}
                     onChange={(e) => setConsensusClientFilter(e.target.value)}
-                    className="w-full px-4 py-3 text-sm border-2 border-green-300 dark:border-green-500 rounded-lg bg-green-50 dark:bg-green-900/30 backdrop-blur-sm focus:ring-2 focus:ring-green-500 focus:border-green-400 text-gray-900 dark:text-white shadow-sm hover:border-green-400 dark:hover:border-green-400 transition-colors min-h-[44px]"
+                    className="w-full lg:w-48 px-4 py-3 text-sm border-2 border-green-300 dark:border-green-500 rounded-lg bg-green-50 dark:bg-green-900/30 backdrop-blur-sm focus:ring-2 focus:ring-green-500 focus:border-green-400 text-gray-900 dark:text-white shadow-sm hover:border-green-400 dark:hover:border-green-400 transition-colors min-h-[44px]"
                   >
                     <option value="">All Consensus</option>
                     {getUniqueConsensusClients().map(client => (
