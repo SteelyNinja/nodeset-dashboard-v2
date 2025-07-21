@@ -69,7 +69,7 @@ const OperatorDashboard: React.FC<OperatorDashboardProps> = ({ operatorAddress: 
           apiService.getOperatorChartData(operatorAddress, selectedDays),
           apiService.getOperatorRankHistory(operatorAddress, selectedDays).catch(() => null), // Rank history data
           apiService.getOperatorsSummary(7), // Always use 7-day data for network ranking
-          apiService.getOperatorsSummary(8).catch(() => ({})), // Get 8-day data to calculate previous day rank
+          apiService.getOperatorsSummaryPreviousDay().catch(() => ({})), // Get previous 7-day period (non-overlapping) for rank change
           apiService.getValidatorPerformanceData(), // Get active validator data
           apiService.getExitData(), // Get exit data for exited validators
           apiService.getOperatorMevAnalytics(operatorAddress).catch(() => null), // MEV analytics
@@ -325,12 +325,12 @@ const OperatorDashboard: React.FC<OperatorDashboardProps> = ({ operatorAddress: 
       const previousOperatorData = previousDayOperatorsSummary[operatorAddress];
       
       if (previousOperatorData) {
-        const previousOperator8DayPerf = previousOperatorData.avg_attestation_performance;
+        const previousOperator7DayPerf = previousOperatorData.avg_attestation_performance;
         const sortedPreviousOperators = previousOperatorSummaries.sort((a, b) => b.avg_attestation_performance - a.avg_attestation_performance);
         
         previousRank = 1;
         for (const op of sortedPreviousOperators) {
-          if (op.avg_attestation_performance > previousOperator8DayPerf) {
+          if (op.avg_attestation_performance > previousOperator7DayPerf) {
             previousRank++;
           } else {
             break;

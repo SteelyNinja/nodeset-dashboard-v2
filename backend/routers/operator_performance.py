@@ -145,6 +145,49 @@ class OperatorPerformanceService:
         
         return summaries
     
+    def get_operators_summary_previous_day(self) -> Dict[str, Any]:
+        """Get summary performance data for all operators based on previous 7-day period (non-overlapping)"""
+        cache = self._load_cache()
+        operators = cache.get("operators", {})
+        
+        summaries = {}
+        for operator, data in operators.items():
+            daily_performance = data.get("daily_performance", [])
+            
+            if len(daily_performance) < 14:  # Need at least 14 days for non-overlapping 7-day periods
+                continue
+            
+            # Get previous 7-day window (days 7-13, completely separate from current days 0-6)
+            previous_7_days = daily_performance[7:14]  # Skip current 7 days (0-6), take previous 7 days (7-13)
+            
+            if len(previous_7_days) == 7:
+                # Calculate previous 7-day average metrics
+                avg_participation = sum(d.get("participation_rate", 0) for d in previous_7_days) / 7
+                avg_head_accuracy = sum(d.get("head_accuracy", 0) for d in previous_7_days) / 7
+                avg_target_accuracy = sum(d.get("target_accuracy", 0) for d in previous_7_days) / 7
+                avg_source_accuracy = sum(d.get("source_accuracy", 0) for d in previous_7_days) / 7
+                avg_inclusion_delay = sum(d.get("avg_inclusion_delay", 0) for d in previous_7_days) / 7
+                avg_performance = sum(d.get("attestation_performance", 0) for d in previous_7_days) / 7
+                
+                # Use the most recent day of the previous period as reference
+                reference_day = daily_performance[7]
+                
+                summaries[operator] = {
+                    "validator_count": reference_day.get("validator_count", 0),
+                    "days_of_data": 7,
+                    "latest_date": reference_day.get("date"),
+                    "avg_participation_rate": round(avg_participation, 2),
+                    "avg_head_accuracy": round(avg_head_accuracy, 2),
+                    "avg_target_accuracy": round(avg_target_accuracy, 2),
+                    "avg_source_accuracy": round(avg_source_accuracy, 2),
+                    "avg_inclusion_delay": round(avg_inclusion_delay, 3),
+                    "avg_attestation_performance": round(avg_performance, 6),
+                    "latest_performance": reference_day.get("attestation_performance", 0),
+                    "calculation_method": "previous_7_day_period_non_overlapping"
+                }
+        
+        return summaries
+    
     def get_performance_trends(self, days: int = 30) -> Dict[str, List[Dict[str, Any]]]:
         """Get aggregated performance trends across all operators"""
         cache = self._load_cache()
@@ -337,6 +380,22 @@ async def get_operators_summary(
     except Exception as e:
         logger.error(f"Failed to get operators summary: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to get summary: {str(e)}")
+
+@router.get("/operators/summary/previous-day")
+async def get_operators_summary_previous_day() -> Dict[str, Any]:
+    """Get summary performance metrics for all operators based on previous 7-day period (non-overlapping)"""
+    try:
+        summaries = operator_performance_service.get_operators_summary_previous_day()
+        return {
+            "success": True,
+            "data": summaries,
+            "count": len(summaries),
+            "calculation_method": "previous_day_7_day_rolling_average",
+            "source": "operator_daily_performance_cache"
+        }
+    except Exception as e:
+        logger.error(f"Failed to get previous day operators summary: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get previous day summary: {str(e)}")
 
 @router.get("/operator/{operator}")
 async def get_operator_performance(

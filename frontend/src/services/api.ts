@@ -214,6 +214,11 @@ class ApiService {
     return this.extractData(response);
   }
 
+  async getOperatorsSummaryPreviousDay(): Promise<Record<string, OperatorSummary>> {
+    const response = await this.apiClient.get<ApiResponse<Record<string, OperatorSummary>>>(`/api/operator-performance/operators/summary/previous-day`);
+    return this.extractData(response);
+  }
+
   async getOperatorPerformance(operator: string, days?: number): Promise<OperatorPerformanceData> {
     const params = days ? `?days=${days}` : '';
     const response = await this.apiClient.get<ApiResponse<OperatorPerformanceData>>(`/api/operator-performance/operator/${encodeURIComponent(operator)}${params}`);
