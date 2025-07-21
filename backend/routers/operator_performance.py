@@ -204,57 +204,79 @@ class OperatorPerformanceService:
         return {"trends": trends}
     
     def get_operator_rank_history(self, operator: str, days: int = 30) -> Dict[str, Any]:
-        """Get daily rank history for a specific operator"""
+        """Get rank history for a specific operator using 7-day rolling averages"""
         cache = self._load_cache()
         operators = cache.get("operators", {})
         
         if operator not in operators:
             return None
         
-        # Get all operators data for ranking comparisons
-        all_daily_data = {}
+        # Build comprehensive daily data for all operators
+        all_operators_daily = {}
         for op_addr, op_data in operators.items():
             daily_performance = op_data.get("daily_performance", [])
-            for day_data in daily_performance[:days]:  # Limit to requested days
-                date = day_data.get("date")
-                if not date:
-                    continue
-                    
-                if date not in all_daily_data:
-                    all_daily_data[date] = []
-                
-                all_daily_data[date].append({
-                    "operator": op_addr,
-                    "performance": day_data.get("attestation_performance", 0)
-                })
+            all_operators_daily[op_addr] = daily_performance
         
-        # Calculate daily ranks
         rank_history = []
         target_operator_data = operators[operator].get("daily_performance", [])
         
-        for day_data in target_operator_data[:days]:
-            date = day_data.get("date")
-            if not date or date not in all_daily_data:
+        # Calculate rank for each day using 7-day rolling averages
+        for day_index in range(min(days, len(target_operator_data))):
+            date = target_operator_data[day_index].get("date")
+            if not date:
                 continue
             
-            target_performance = day_data.get("attestation_performance", 0)
+            # Calculate 7-day rolling averages for all operators as of this date
+            operator_averages = []
+            for op_addr, op_daily_data in all_operators_daily.items():
+                # Find the index for this date in this operator's data
+                op_day_index = None
+                for i, day_data in enumerate(op_daily_data):
+                    if day_data.get("date") == date:
+                        op_day_index = i
+                        break
+                
+                if op_day_index is None:
+                    continue
+                    
+                # Calculate 7-day average ending on this date
+                end_index = op_day_index + 1  # Include current day
+                start_index = max(0, end_index - 7)  # Go back 7 days or to start
+                
+                recent_days = op_daily_data[start_index:end_index]
+                if len(recent_days) > 0:
+                    avg_performance = sum(day.get("attestation_performance", 0) for day in recent_days) / len(recent_days)
+                    # Use 4 decimal places for precise sorting
+                    avg_performance = round(avg_performance, 4)
+                    
+                    operator_averages.append({
+                        "operator": op_addr,
+                        "avg_performance": avg_performance,
+                        "days_included": len(recent_days)
+                    })
             
-            # Calculate rank for this day
-            day_operators = all_daily_data[date]
-            day_operators.sort(key=lambda x: x["performance"], reverse=True)
+            # Sort by 7-day average performance (descending) with 4 decimal precision
+            operator_averages.sort(key=lambda x: x["avg_performance"], reverse=True)
             
-            # Find the rank of the target operator
+            # Find rank of target operator
             rank = 1
-            for i, op in enumerate(day_operators):
-                if op["operator"] == operator:
+            target_avg_performance = None
+            for i, op_avg in enumerate(operator_averages):
+                if op_avg["operator"] == operator:
                     rank = i + 1
+                    target_avg_performance = op_avg["avg_performance"]
                     break
+            
+            # Get single-day performance for display (but use 7-day avg for ranking)
+            single_day_performance = target_operator_data[day_index].get("attestation_performance", 0)
             
             rank_history.append({
                 "date": date,
                 "rank": rank,
-                "performance": target_performance,
-                "total_operators": len(day_operators)
+                "performance": target_avg_performance if target_avg_performance is not None else single_day_performance,
+                "single_day_performance": single_day_performance,
+                "total_operators": len(operator_averages),
+                "ranking_method": "7_day_rolling_average"
             })
         
         # Reverse to get chronological order (oldest first for charting)
