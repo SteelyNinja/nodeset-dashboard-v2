@@ -32,10 +32,14 @@ interface TimeSeriesData {
   cumulativeNetFlow: number;
 }
 
-interface TopDepositor {
+interface TopParticipant {
   address: string;
   totalDeposits: number;
-  transactions: number;
+  totalWithdrawals: number;
+  netAmount: number;
+  depositTransactions: number;
+  withdrawalTransactions: number;
+  totalTransactions: number;
   sharePercent: number;
 }
 
@@ -198,33 +202,79 @@ const VaultActivityTab: React.FC = () => {
     return result;
   }, [vaultData, selectedPeriod]);
 
-  const topDepositors = useMemo((): TopDepositor[] => {
+  const topParticipants = useMemo((): TopParticipant[] => {
     if (!vaultData || !vaultData.events || !Array.isArray(vaultData.events)) return [];
 
-    const depositorStats = new Map<string, { amount: number; count: number }>();
+    const participantStats = new Map<string, { 
+      deposits: number; 
+      depositCount: number; 
+      withdrawals: number; 
+      withdrawalCount: number; 
+    }>();
     
+    // Helper function to convert wei string to ETH (reused from above)
+    const weiToEth = (weiString: string): number => {
+      try {
+        const wei = parseFloat(weiString);
+        return wei / 1e18;
+      } catch (error) {
+        console.warn('Failed to parse wei amount:', weiString, error);
+        return 0;
+      }
+    };
+    
+    // Process deposits
     vaultData.events
       .filter(event => event && event.type === 'deposit' && event.caller)
       .forEach(event => {
-        const caller = event.caller!; // Safe because we filtered for truthy caller
-        const current = depositorStats.get(caller) || { amount: 0, count: 0 };
-        current.amount += (event.assets_eth || 0);
-        current.count += 1;
-        depositorStats.set(caller, current);
+        const caller = event.caller!;
+        const current = participantStats.get(caller) || { deposits: 0, depositCount: 0, withdrawals: 0, withdrawalCount: 0 };
+        current.deposits += (event.assets_eth || 0);
+        current.depositCount += 1;
+        participantStats.set(caller, current);
+      });
+    
+    // Process withdrawals
+    vaultData.events
+      .filter(event => event && event.type === 'withdrawal' && (event.caller || event.owner))
+      .forEach(event => {
+        const address = event.caller || event.owner!;
+        const current = participantStats.get(address) || { deposits: 0, depositCount: 0, withdrawals: 0, withdrawalCount: 0 };
+        
+        // Calculate withdrawal amount using same logic as in overviewMetrics
+        let withdrawalAmount = 0;
+        if (event.estimated_assets_eth && event.estimated_assets_eth > 0) {
+          withdrawalAmount = event.estimated_assets_eth;
+        } else if (event.estimated_assets) {
+          withdrawalAmount = weiToEth(event.estimated_assets);
+        } else {
+          withdrawalAmount = event.assets_eth || 0;
+        }
+        
+        current.withdrawals += withdrawalAmount;
+        current.withdrawalCount += 1;
+        participantStats.set(address, current);
       });
 
-    const totalDepositAmount = overviewMetrics.totalDepositAmount;
+    // Calculate remaining total (deposits - withdrawals) for percentage calculation
+    const remainingTotal = overviewMetrics.totalDepositAmount - overviewMetrics.totalWithdrawalAmount;
 
-    return Array.from(depositorStats.entries())
-      .map(([address, stats]) => ({
-        address,
-        totalDeposits: stats.amount,
-        transactions: stats.count,
-        sharePercent: totalDepositAmount > 0 ? (stats.amount / totalDepositAmount) * 100 : 0
-      }))
-      .sort((a, b) => b.totalDeposits - a.totalDeposits)
-      .slice(0, 10);
-  }, [vaultData, overviewMetrics.totalDepositAmount]);
+    return Array.from(participantStats.entries())
+      .map(([address, stats]) => {
+        const netAmount = stats.deposits - stats.withdrawals;
+        return {
+          address,
+          totalDeposits: stats.deposits,
+          totalWithdrawals: stats.withdrawals,
+          netAmount,
+          depositTransactions: stats.depositCount,
+          withdrawalTransactions: stats.withdrawalCount,
+          totalTransactions: stats.depositCount + stats.withdrawalCount,
+          sharePercent: remainingTotal > 0 ? (netAmount / remainingTotal) * 100 : 0
+        };
+      })
+      .sort((a, b) => b.netAmount - a.netAmount);
+  }, [vaultData, overviewMetrics.totalDepositAmount, overviewMetrics.totalWithdrawalAmount]);
 
   const allTransactions = useMemo(() => {
     if (!vaultData || !vaultData.events || !Array.isArray(vaultData.events)) return [];
@@ -608,36 +658,61 @@ const VaultActivityTab: React.FC = () => {
         </div>
       </div>
 
-      {/* Top Depositors */}
+      {/* Top Vault Participants */}
       <div className="mb-8">
-        <h3 className="text-headline-small text-neutral-900 dark:text-neutral-100 mb-4">Top Depositors</h3>
+        <h3 className="text-headline-small text-neutral-900 dark:text-neutral-100 mb-4">Top Vault Participants</h3>
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+          All vault participants ranked by net contribution (deposits - withdrawals). Share % represents portion of total remaining vault value.
+        </p>
         
         <div className="bg-white/5 dark:bg-white/2 backdrop-blur-sm rounded-xl border border-white/10 dark:border-white/15 shadow-sm overflow-hidden">
           {/* Sticky Header */}
           <div className="sticky top-0 z-10 bg-white/10 dark:bg-white/5 backdrop-blur-sm border-b border-white/10 dark:border-white/15">
-            <div className="grid px-4 py-4 font-semibold text-neutral-900 dark:text-neutral-100 text-body-medium" style={{gridTemplateColumns: "3fr 2fr 1.2fr 1fr", gap: "12px"}}>
+            <div className="grid px-4 py-4 font-semibold text-neutral-900 dark:text-neutral-100 text-body-medium" style={{gridTemplateColumns: "2.5fr 1.5fr 1.5fr 1.5fr 1.2fr 1fr", gap: "12px"}}>
               <div>Address</div>
-              <div>Total Deposits</div>
-              <div>Transactions</div>
+              <div>Deposits</div>
+              <div>Withdrawals</div>
+              <div>Net Amount</div>
+              <div>Total Txns</div>
               <div>Share %</div>
             </div>
           </div>
           
           {/* Scrollable Body */}
-          <div style={{ maxHeight: '300px', overflow: 'auto' }}>
+          <div style={{ maxHeight: '600px', overflow: 'auto' }}>
             <div className="divide-y divide-white/5 dark:divide-white/10">
-              {topDepositors.map((depositor, i) => (
+              {topParticipants.map((participant, i) => (
                 <div 
                   key={i}
                   className={`grid px-4 py-3 hover:bg-primary-500/8 dark:hover:bg-primary-500/5 hover:shadow-sm transition-all duration-200 ease-in-out border-b border-white/5 dark:border-white/10 last:border-b-0 text-neutral-800 dark:text-neutral-200 text-body-medium ${
                     i % 2 === 0 ? 'bg-gray-50/30 dark:bg-gray-800/15' : 'bg-transparent'
                   }`}
-                  style={{gridTemplateColumns: "3fr 2fr 1.2fr 1fr", gap: "12px"}}
+                  style={{gridTemplateColumns: "2.5fr 1.5fr 1.5fr 1.5fr 1.2fr 1fr", gap: "12px"}}
                 >
-                  <div>{depositor.address}</div>
-                  <div>{formatEth(depositor.totalDeposits)}</div>
-                  <div>{depositor.transactions}</div>
-                  <div>{depositor.sharePercent.toFixed(1)}%</div>
+                  <div className="font-mono text-xs">{participant.address}</div>
+                  <div className="text-success-600 dark:text-success-400">
+                    {formatEth(participant.totalDeposits)}
+                    {participant.depositTransactions > 0 && (
+                      <span className="text-xs text-gray-500 ml-1">({participant.depositTransactions})</span>
+                    )}
+                  </div>
+                  <div className="text-red-600 dark:text-red-400">
+                    {participant.totalWithdrawals > 0 ? formatEth(participant.totalWithdrawals) : '-'}
+                    {participant.withdrawalTransactions > 0 && (
+                      <span className="text-xs text-gray-500 ml-1">({participant.withdrawalTransactions})</span>
+                    )}
+                  </div>
+                  <div className={`font-semibold ${
+                    participant.netAmount >= 0 
+                      ? 'text-success-600 dark:text-success-400' 
+                      : 'text-red-600 dark:text-red-400'
+                  }`}>
+                    {participant.netAmount >= 0 ? '+' : ''}{formatEth(participant.netAmount)}
+                  </div>
+                  <div>{participant.totalTransactions}</div>
+                  <div className={participant.sharePercent >= 0 ? '' : 'text-red-600 dark:text-red-400'}>
+                    {participant.sharePercent.toFixed(1)}%
+                  </div>
                 </div>
               ))}
             </div>
