@@ -71,7 +71,7 @@ const OperatorDashboard: React.FC<OperatorDashboardProps> = ({ operatorAddress: 
           apiService.getOperatorsSummary(7), // Always use 7-day data for network ranking
           apiService.getOperatorsSummaryPreviousDay().catch(() => ({})), // Get yesterday's 7-day rolling average (overlapping) for rank change
           apiService.getValidatorPerformanceData(), // Get active validator data
-          apiService.getExitData(), // Get exit data for exited validators
+          apiService.getExitData(), // Get enhanced exit data for exited and active_exiting validators
           apiService.getOperatorMevAnalytics(operatorAddress).catch(() => null), // MEV analytics
           apiService.getOperatorSyncCommitteeAnalytics(operatorAddress).catch(() => null), // Sync committee data
           apiService.getOperatorComprehensiveAnalytics(operatorAddress).catch(() => null), // Comprehensive analytics
@@ -93,13 +93,27 @@ const OperatorDashboard: React.FC<OperatorDashboardProps> = ({ operatorAddress: 
             status: validator.activation_data?.status || 'Active'
           }));
 
-        // Get exited validators for this operator
-        const exitedValidators = (exitData.recent_exits || [])
+        // Get exited and active_exiting validators for this operator
+        const exitRelatedValidators = (exitData.recent_exits || [])
           .filter((exit: any) => exit.operator === operatorAddress)
           .map((exit: any) => {
             // Try to find the real public key from performance data
             const performanceValidator = Object.entries(validatorPerformanceData.validators || {})
               .find(([, validator]: [string, any]) => validator.validator_index === exit.validator_index);
+            
+            // Determine validator status based on the exit data
+            let status = 'Exited';
+            if (exit.slashed) {
+              status = 'Slashed';
+            } else {
+              // Check if validator is still in the active validators list (indicating active_exiting state)
+              const isStillActive = Object.entries(validatorPerformanceData.validators || {})
+                .some(([, validator]: [string, any]) => validator.validator_index === exit.validator_index);
+              
+              if (isStillActive) {
+                status = 'Active Exiting';
+              }
+            }
             
             return {
               validator_index: exit.validator_index,
@@ -110,11 +124,11 @@ const OperatorDashboard: React.FC<OperatorDashboardProps> = ({ operatorAddress: 
               exit_date: exit.exit_date || 
                 (exit.exit_timestamp ? 
                   new Date(exit.exit_timestamp * 1000).toISOString().split('T')[0] : null),
-              status: exit.slashed ? 'Slashed' : 'Exited'
+              status: status
             };
           });
 
-        // Combine and deduplicate validators (prioritize exit data over active data)
+        // Combine and deduplicate validators (prioritize exit-related data over active data)
         const validatorMap = new Map();
         
         // Add active validators first
@@ -122,8 +136,8 @@ const OperatorDashboard: React.FC<OperatorDashboardProps> = ({ operatorAddress: 
           validatorMap.set(validator.validator_index, validator);
         });
         
-        // Add/update with exited validators (overwrites active if same validator_index)
-        exitedValidators.forEach(validator => {
+        // Add/update with exit-related validators (overwrites active if same validator_index)
+        exitRelatedValidators.forEach(validator => {
           validatorMap.set(validator.validator_index, validator);
         });
         
@@ -768,7 +782,10 @@ const OperatorDashboard: React.FC<OperatorDashboardProps> = ({ operatorAddress: 
           <div className="text-center">
             <div className="text-lg font-semibold text-neutral-900 dark:text-white">Validators</div>
             <div className="text-label-medium text-neutral-600 dark:text-neutral-400 mt-2">
-              {validatorsList.filter(v => v.status?.toLowerCase().includes('active')).length} Active
+              {validatorsList.filter(v => v.status?.toLowerCase().includes('active') && !v.status?.toLowerCase().includes('exiting')).length} Active
+            </div>
+            <div className="text-label-small text-neutral-500 dark:text-neutral-500 mb-1">
+              {validatorsList.filter(v => v.status === 'Active Exiting').length} Active Exiting
             </div>
             <div className="text-label-small text-neutral-500 dark:text-neutral-500">
               {validatorsList.filter(v => v.status === 'Exited' || v.status === 'Slashed').length} Exited
@@ -1102,7 +1119,9 @@ const OperatorDashboard: React.FC<OperatorDashboardProps> = ({ operatorAddress: 
                   </div>
                   <div>
                     <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
-                      validator.status?.toLowerCase().includes('active') 
+                      validator.status === 'Active Exiting'
+                        ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+                        : validator.status?.toLowerCase().includes('active') 
                         ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
                         : validator.status?.toLowerCase().includes('exit') || validator.status?.toLowerCase().includes('slashed')
                         ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
@@ -1137,7 +1156,9 @@ const OperatorDashboard: React.FC<OperatorDashboardProps> = ({ operatorAddress: 
                   </div>
                   <div className="mt-1">
                     <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
-                      validator.status?.toLowerCase().includes('active') 
+                      validator.status === 'Active Exiting'
+                        ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+                        : validator.status?.toLowerCase().includes('active') 
                         ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
                         : validator.status?.toLowerCase().includes('exit') || validator.status?.toLowerCase().includes('slashed')
                         ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
