@@ -64,7 +64,7 @@ const ScatterChartComponent: React.FC<ScatterChartProps> = ({
             cursor={{ strokeDasharray: '3 3' }}
             formatter={(value: any, name: string) => [
               name === yDataKey ? `${value.toFixed(2)}%` : value,
-              name === yDataKey ? 'Performance' : 'Validators'
+              name === yDataKey ? 'Performance' : (name === xDataKey ? 'Validators' : name)
             ]}
             labelFormatter={(label, payload) => {
               if (payload && payload[0]) {
