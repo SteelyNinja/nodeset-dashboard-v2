@@ -134,13 +134,17 @@ const ClientDiversityTab: React.FC = () => {
     return setupColors[setup.toLowerCase()] || '#8884d8';
   };
 
-  const formatChartData = (clientData: Record<string, number>, type: 'execution' | 'consensus' = 'execution') => {
+  const formatChartData = (clientData: Record<string, number>, type: 'execution' | 'consensus' = 'execution', totalOperators: number = 0) => {
     if (!clientData) return [];
-    return Object.entries(clientData).map(([client, percentage]) => ({
-      name: getFullClientName(client, type),
-      value: percentage || 0,
-      fullName: getFullClientName(client, type)
-    }));
+    return Object.entries(clientData).map(([client, percentage]) => {
+      const actualCount = Math.round((percentage / 100) * totalOperators);
+      return {
+        name: getFullClientName(client, type),
+        value: percentage || 0,
+        fullName: getFullClientName(client, type),
+        actualCount: actualCount
+      };
+    });
   };
 
 
@@ -184,9 +188,9 @@ const ClientDiversityTab: React.FC = () => {
     );
   }
 
-  const executionChartData = formatChartData(clientData.execution_clients, 'execution');
-  const consensusChartData = formatChartData(clientData.consensus_clients, 'consensus');
-  const setupChartData = formatChartData(clientData.setup_types || {}, 'execution').map(item => ({
+  const executionChartData = formatChartData(clientData.execution_clients, 'execution', clientData.total_operators || 0);
+  const consensusChartData = formatChartData(clientData.consensus_clients, 'consensus', clientData.total_operators || 0);
+  const setupChartData = formatChartData(clientData.setup_types || {}, 'execution', clientData.total_operators || 0).map(item => ({
     ...item,
     name: item.name.charAt(0).toUpperCase() + item.name.slice(1)
   }));

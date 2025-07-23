@@ -6,6 +6,7 @@ interface PieChartData {
   name: string;
   value: number;
   color?: string;
+  actualCount?: number;
 }
 
 interface PieChartProps {
@@ -53,9 +54,9 @@ const PieChartComponent: React.FC<PieChartProps> = ({
         >
           <p className="font-medium">{data.payload.name}</p>
           <p className="text-primary-600">
-            {`${data.name}: ${data.value.toLocaleString()}`}
-            {data.payload.percentage && (
-              <span className="ml-2 text-neutral-500">({data.payload.percentage})</span>
+            {`${data.name}: ${data.value.toFixed(1)}%`}
+            {data.payload.actualCount !== undefined && (
+              <span className="ml-2 text-neutral-500">({data.payload.actualCount} operators)</span>
             )}
           </p>
         </div>
@@ -79,9 +80,9 @@ const PieChartComponent: React.FC<PieChartProps> = ({
         >
           <p className="font-medium">{data.payload.name}</p>
           <p className="text-primary-400">
-            {`${data.name}: ${data.value.toLocaleString()}`}
-            {data.payload.percentage && (
-              <span className="ml-2 text-neutral-300">({data.payload.percentage})</span>
+            {`${data.name}: ${data.value.toFixed(1)}%`}
+            {data.payload.actualCount !== undefined && (
+              <span className="ml-2 text-neutral-300">({data.payload.actualCount} operators)</span>
             )}
           </p>
         </div>
