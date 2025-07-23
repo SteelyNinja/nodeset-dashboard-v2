@@ -35,6 +35,7 @@ const OperatorDashboard: React.FC<OperatorDashboardProps> = ({ operatorAddress: 
   const [syncCommitteeData, setSyncCommitteeData] = useState<any>(null);
   const [comprehensiveData, setComprehensiveData] = useState<any>(null);
   const [costData, setCostData] = useState<any>(null);
+  const [operatorExitStats, setOperatorExitStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedDays, setSelectedDays] = useState<number>(7);
@@ -93,7 +94,13 @@ const OperatorDashboard: React.FC<OperatorDashboardProps> = ({ operatorAddress: 
             status: validator.activation_data?.status || 'Active'
           }));
 
-        // Get exited and active_exiting validators for this operator
+        // Find this operator's statistics from the exit data
+        const currentOperatorExitStats = (exitData.operators_with_exits || [])
+          .find((op: any) => op.operator === operatorAddress);
+        
+        setOperatorExitStats(currentOperatorExitStats);
+        
+        // Get all exit-related validators for this operator using the backend's is_active_exiting flag
         const exitRelatedValidators = (exitData.recent_exits || [])
           .filter((exit: any) => exit.operator === operatorAddress)
           .map((exit: any) => {
@@ -101,18 +108,14 @@ const OperatorDashboard: React.FC<OperatorDashboardProps> = ({ operatorAddress: 
             const performanceValidator = Object.entries(validatorPerformanceData.validators || {})
               .find(([, validator]: [string, any]) => validator.validator_index === exit.validator_index);
             
-            // Determine validator status based on the exit data
+            // Use the backend's is_active_exiting flag to determine status
             let status = 'Exited';
             if (exit.slashed) {
               status = 'Slashed';
+            } else if (exit.is_active_exiting) {
+              status = 'Active Exiting';
             } else {
-              // Check if validator is still in the active validators list (indicating active_exiting state)
-              const isStillActive = Object.entries(validatorPerformanceData.validators || {})
-                .some(([, validator]: [string, any]) => validator.validator_index === exit.validator_index);
-              
-              if (isStillActive) {
-                status = 'Active Exiting';
-              }
+              status = 'Exited';
             }
             
             return {
@@ -782,13 +785,13 @@ const OperatorDashboard: React.FC<OperatorDashboardProps> = ({ operatorAddress: 
           <div className="text-center">
             <div className="text-lg font-semibold text-neutral-900 dark:text-white">Validators</div>
             <div className="text-label-medium text-neutral-600 dark:text-neutral-400 mt-2">
-              {validatorsList.filter(v => v.status?.toLowerCase().includes('active') && !v.status?.toLowerCase().includes('exiting')).length} Active
+              {operatorExitStats?.still_active || validatorsList.filter(v => v.status?.toLowerCase().includes('active') && !v.status?.toLowerCase().includes('exiting')).length} Active
             </div>
             <div className="text-label-small text-neutral-500 dark:text-neutral-500 mb-1">
-              {validatorsList.filter(v => v.status === 'Active Exiting').length} Active Exiting
+              {operatorExitStats?.active_exiting || validatorsList.filter(v => v.status === 'Active Exiting').length} Active Exiting
             </div>
             <div className="text-label-small text-neutral-500 dark:text-neutral-500">
-              {validatorsList.filter(v => v.status === 'Exited' || v.status === 'Slashed').length} Exited
+              {operatorExitStats?.exits || validatorsList.filter(v => v.status === 'Exited' || v.status === 'Slashed').length} Exited
             </div>
           </div>
         </GlassCard>
