@@ -651,7 +651,7 @@ class AnalyticsService:
             
             # Process completed exits from exit_details
             for validator_pubkey, exit_info in exit_details.items():
-                exit_record = self._create_exit_record(validator_pubkey, exit_info, ens_names)
+                exit_record = self._create_exit_record(validator_pubkey, exit_info, ens_names, is_active_exiting=False)
                 all_exit_records.append(exit_record)
             
             # Process active exiting validators from active_exiting_details
@@ -663,7 +663,7 @@ class AnalyticsService:
                 if 'active_exiting_epoch' in exit_info:
                     exit_info['exit_epoch'] = exit_info['active_exiting_epoch']
                 
-                exit_record = self._create_exit_record(validator_pubkey, exit_info, ens_names)
+                exit_record = self._create_exit_record(validator_pubkey, exit_info, ens_names, is_active_exiting=True)
                 all_exit_records.append(exit_record)
             
             # Sort by exit timestamp (most recent first), then by validator index
@@ -680,7 +680,7 @@ class AnalyticsService:
         except Exception as e:
             return {"error": f"Failed to get all exit records: {str(e)}"}
     
-    def _create_exit_record(self, validator_pubkey, exit_info, ens_names):
+    def _create_exit_record(self, validator_pubkey, exit_info, ens_names, is_active_exiting=False):
         """Helper method to create a standardized exit record"""
         # Extract exit information
         validator_index = exit_info.get('validator_index', 'N/A')
@@ -715,10 +715,11 @@ class AnalyticsService:
             'status': status,
             'slashed': slashed,
             'balance_gwei': balance_gwei,
-            'exit_epoch': exit_epoch
+            'exit_epoch': exit_epoch,
+            'is_active_exiting': is_active_exiting  # Flag to distinguish active_exiting from completed exits
         }
     
-    def get_enhanced_exit_data(self):
+    def get_enhanced_exit_data(self, limit=100):
         """Generate enhanced exit data that includes both exited and active_exiting validators"""
         try:
             # Load validator data
@@ -774,7 +775,7 @@ class AnalyticsService:
                         operator_stats[operator]['latest_exit_date'] = 'N/A'
                 
                 # Add to all records
-                exit_record = self._create_exit_record(validator_pubkey, exit_info, ens_names)
+                exit_record = self._create_exit_record(validator_pubkey, exit_info, ens_names, is_active_exiting=False)
                 all_exit_records.append(exit_record)
             
             # Process active exiting validators
@@ -818,7 +819,7 @@ class AnalyticsService:
                 if 'active_exiting_epoch' in exit_info:
                     exit_info['exit_epoch'] = exit_info['active_exiting_epoch']
                 
-                exit_record = self._create_exit_record(validator_pubkey, exit_info, ens_names)
+                exit_record = self._create_exit_record(validator_pubkey, exit_info, ens_names, is_active_exiting=True)
                 all_exit_records.append(exit_record)
             
             # Get operator validator counts from main validator data
@@ -860,7 +861,7 @@ class AnalyticsService:
                     'last_updated': int(validator_data.get('last_block_timestamp', 0)) or int(__import__('time').time())
                 },
                 'operators_with_exits': operators_with_exits,
-                'recent_exits': all_exit_records[:100],  # Limit to most recent 100
+                'recent_exits': all_exit_records if limit == 0 else all_exit_records[:limit],
                 'total_operators_with_exits': len(operators_with_exits)
             }
             

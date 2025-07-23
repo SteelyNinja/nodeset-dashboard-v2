@@ -108,7 +108,7 @@ class ApiService {
   async getExitData(): Promise<ExitData> {
     // Try enhanced exit data first, fall back to original if not available
     try {
-      const response = await this.apiClient.get<ApiResponse<ExitData>>('/api/dashboard/enhanced-exit-data');
+      const response = await this.apiClient.get<ApiResponse<ExitData>>('/api/dashboard/enhanced-exit-data?limit=0');
       return this.extractData(response);
     } catch (error) {
       // Fall back to original exit data
