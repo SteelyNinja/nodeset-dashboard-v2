@@ -530,9 +530,9 @@ const VaultActivityTab: React.FC = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Net Flow Value Chart */}
-          <GlassCard size="large" elevation="floating" hoverable={false}>
+          <GlassCard size="large" elevation="floating" hoverable={false} className="border border-white/20 dark:border-white/10">
             <h4 className="text-lg font-medium text-neutral-900 dark:text-neutral-100 mb-4">Net Flow Value</h4>
-            <div className="h-[400px]">
+            <div className="h-[320px] overflow-hidden">
               {(() => {
                 const chartData = timeSeriesData.map(d => ({ date: d.date, netFlow: d.cumulativeNetFlow }));
                 console.log('Chart component data:', chartData.slice(0, 3), '...', chartData.slice(-3));
@@ -559,9 +559,9 @@ const VaultActivityTab: React.FC = () => {
           </GlassCard>
 
           {/* Flows Per Day Chart */}
-          <GlassCard size="large" elevation="floating" hoverable={false}>
+          <GlassCard size="large" elevation="floating" hoverable={false} className="border border-white/20 dark:border-white/10">
             <h4 className="text-lg font-medium text-neutral-900 dark:text-neutral-100 mb-4">Flows Per Day</h4>
-            <div className="h-[400px]">
+            <div className="h-[320px] overflow-hidden">
               {(() => {
                 const flowChartData = timeSeriesData.map(d => ({
                   date: d.date,
