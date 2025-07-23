@@ -487,10 +487,10 @@ const VaultActivityTab: React.FC = () => {
             <div className="text-sm font-medium text-neutral-900 dark:text-neutral-100">Withdrawal Rate</div>
           </div>
           <div className="text-2xl font-bold text-neutral-900 dark:text-neutral-100 mt-2">
-            {((overviewMetrics.totalWithdrawalAmount / (overviewMetrics.totalDepositAmount + overviewMetrics.totalWithdrawalAmount)) * 100 || 0).toFixed(1)}%
+            {((overviewMetrics.totalWithdrawalAmount / overviewMetrics.totalDepositAmount) * 100 || 0).toFixed(1)}%
           </div>
           <p className="text-xs text-neutral-800 dark:text-neutral-200 mt-1">
-            Of total ETH value
+            Of deposited capital
           </p>
         </GlassCard>
 
