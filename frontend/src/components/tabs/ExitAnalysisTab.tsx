@@ -127,7 +127,15 @@ const ExitAnalysisTab: React.FC = () => {
           </GlassCard>
           <GlassCard>
             <div className="text-sm font-medium text-gray-500 mb-1">Still Active</div>
-            <div className="text-2xl font-bold text-black dark:text-white">{exitData.exit_summary.total_active.toLocaleString()}</div>
+            <div className="text-2xl font-bold text-black dark:text-white">
+              {(() => {
+                if (!validatorData || !exitData) return 'Loading...';
+                const activeValidators = validatorData.total_validators - (validatorData.total_exited || 0);
+                const activeExiting = exitData.exit_summary.total_active_exiting || 0;
+                const stillActive = activeValidators - activeExiting;
+                return stillActive.toLocaleString();
+              })()}
+            </div>
             <div className="text-xs text-gray-400">Fully active validators</div>
           </GlassCard>
           <GlassCard>

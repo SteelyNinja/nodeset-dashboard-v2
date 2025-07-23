@@ -825,18 +825,28 @@ class AnalyticsService:
             # Get operator validator counts from main validator data
             operator_validators = validator_data.get('operator_validators', {})
             
-            # Finalize operator statistics
+            # Finalize operator statistics - include ALL operators for accurate totals
             operators_with_exits = []
+            total_still_active_all = 0  # Track total across all operators
+            
+            # First, process operators that have exits/active_exiting
             for operator, stats in operator_stats.items():
                 total_validators = operator_validators.get(operator, 0)
                 total_exits_and_exiting = stats['exits'] + stats['active_exiting']
-                stats['still_active'] = max(0, total_validators - stats['exits'])  # Only subtract completed exits
+                stats['still_active'] = max(0, total_validators - stats['exits'] - stats['active_exiting'])  # Subtract completed exits and active exiting
                 stats['total_ever'] = total_validators
                 stats['exit_rate'] = (total_exits_and_exiting / total_validators * 100) if total_validators > 0 else 0.0
                 
-                # Only include operators that have exits or active_exiting
+                total_still_active_all += stats['still_active']
+                
+                # Only include operators that have exits or active_exiting in the display list
                 if total_exits_and_exiting > 0:
                     operators_with_exits.append(stats)
+            
+            # Add still_active validators from operators with no exits/active_exiting
+            for operator, total_validators in operator_validators.items():
+                if operator not in operator_stats:
+                    total_still_active_all += total_validators
             
             # Sort operators by total exits + active_exiting (descending)
             operators_with_exits.sort(key=lambda x: (x['exits'] + x['active_exiting']), reverse=True)
@@ -844,7 +854,7 @@ class AnalyticsService:
             # Calculate summary statistics
             total_exited = sum(op['exits'] for op in operators_with_exits)
             total_active_exiting = sum(op['active_exiting'] for op in operators_with_exits)
-            total_active = sum(op['still_active'] for op in operators_with_exits)
+            total_active = total_still_active_all  # Use the complete total across all operators
             total_validators = total_exited + total_active_exiting + total_active
             exit_rate_percent = ((total_exited + total_active_exiting) / total_validators * 100) if total_validators > 0 else 0.0
             
