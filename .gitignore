@@ -42,3 +42,4 @@ CLAUDE.md
 
 # JSON data files
 json_data/*.json
+backend/backend.log
