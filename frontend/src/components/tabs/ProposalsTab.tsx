@@ -541,6 +541,7 @@ const ProposalsTab: React.FC = () => {
               data={mevRelayBreakdown.map((relay, index) => ({
                 name: relay.name,
                 value: relay.count,
+                actualCount: relay.count,
                 percentage: relay.percentage
               }))}
               title="MEV Relay Distribution"
