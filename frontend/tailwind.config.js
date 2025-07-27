@@ -3,7 +3,7 @@ module.exports = {
   content: [
     "./src/**/*.{js,jsx,ts,tsx}",
   ],
-  darkMode: 'media', // Auto-detect system theme preference
+  darkMode: 'class', // Class-based dark mode for manual control
   theme: {
     extend: {
       colors: {

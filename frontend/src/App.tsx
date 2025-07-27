@@ -3,6 +3,7 @@ import { Routes, Route, useLocation } from 'react-router-dom';
 import { TabId } from './types/api';
 import { apiService } from './services/api';
 import Icon from './components/common/Icon';
+import ThemeToggle from './components/common/ThemeToggle';
 import { analyticsService } from './services/analytics';
 import AnalyticsPage from './components/AnalyticsPage';
 import TheoreticalPerformancePage from './components/TheoreticalPerformancePage';
@@ -151,8 +152,8 @@ function MainDashboard() {
         <div className="px-4 sm:px-6 lg:px-8">
           {/* Mobile Layout: Stack vertically */}
           <div className="flex flex-col space-y-4 py-4 lg:hidden">
-            {/* Logo Row */}
-            <div className="flex justify-center">
+            {/* Logo Row with Theme Toggle */}
+            <div className="flex justify-center items-center relative">
               <div className="flex-shrink-0">
                 <a 
                   href="https://nodeset.io/" 
@@ -171,6 +172,10 @@ function MainDashboard() {
                     className="h-16 w-auto hidden dark:block cursor-pointer"
                   />
                 </a>
+              </div>
+              {/* Theme Toggle - positioned absolute at the right */}
+              <div className="absolute right-0">
+                <ThemeToggle size="sm" />
               </div>
             </div>
             
@@ -230,8 +235,8 @@ function MainDashboard() {
             </div>
           </div>
           
-          {/* Desktop Layout: Logo, Main Content, Disclaimer, Connection Status */}
-          <div className="hidden lg:flex items-center space-x-6 py-4">
+          {/* Desktop Layout: Logo, Main Content, Disclaimer, Theme Toggle */}
+          <div className="hidden lg:flex items-center py-4 relative">
             {/* NodeSet Logo */}
             <div className="flex-shrink-0">
               <a 
@@ -262,6 +267,7 @@ function MainDashboard() {
               shadow-glass-light dark:shadow-glass-dark
               p-4
               flex-shrink-0
+              ml-6
             ">
               <div className="flex items-start space-x-3">
                 <Icon name="metrics" size="xl" color="primary" className="flex-shrink-0" />
@@ -288,6 +294,7 @@ function MainDashboard() {
               p-4
               max-w-sm
               flex-shrink-0
+              ml-6
             ">
               <div className="text-gray-700 dark:text-gray-300">
                 <div className="text-base font-medium mb-2">
@@ -305,6 +312,11 @@ function MainDashboard() {
                   </a>.
                 </div>
               </div>
+            </div>
+            
+            {/* Theme Toggle - positioned absolute at the far right */}
+            <div className="absolute top-4 right-0">
+              <ThemeToggle size="md" />
             </div>
           </div>
         </div>
