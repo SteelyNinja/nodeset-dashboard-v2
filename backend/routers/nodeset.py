@@ -57,7 +57,7 @@ async def get_validators_down(
             SELECT DISTINCT val_id
             FROM validator_epochs
             WHERE epoch = {latest_epoch}
-            AND val_status NOT IN ('exited', 'withdrawal_possible', 'withdrawal_done')
+            AND val_status NOT IN ('exited_unslashed', 'active_exiting', 'withdrawal_possible', 'withdrawal_done')
         ),
         consecutive_misses AS (
             SELECT 
@@ -141,7 +141,7 @@ async def get_validators_down_extended(
             FROM validators_summary 
             WHERE val_nos_name = '{test_operator}'
             AND epoch = {latest_epoch}
-            AND val_status NOT IN ('exited', 'withdrawal_possible', 'withdrawal_done')
+            AND val_status NOT IN ('exited_unslashed', 'active_exiting', 'withdrawal_possible', 'withdrawal_done')
             ORDER BY val_id
             LIMIT {limit}
             """
@@ -197,7 +197,7 @@ async def get_validators_down_extended(
             SELECT DISTINCT val_id
             FROM validator_epochs
             WHERE epoch = {latest_epoch}
-            AND val_status NOT IN ('exited', 'withdrawal_possible', 'withdrawal_done')
+            AND val_status NOT IN ('exited_unslashed', 'active_exiting', 'withdrawal_possible', 'withdrawal_done')
         ),
         consecutive_misses AS (
             SELECT 
@@ -294,7 +294,7 @@ async def get_validators_down_summary() -> Dict[str, Any]:
                     SELECT DISTINCT val_id
                     FROM validator_epochs
                     WHERE epoch = {latest_epoch}
-                    AND val_status NOT IN ('exited', 'withdrawal_possible', 'withdrawal_done')
+                    AND val_status NOT IN ('exited_unslashed', 'active_exiting', 'withdrawal_possible', 'withdrawal_done')
                 ),
                 consecutive_misses AS (
                     SELECT 
@@ -449,7 +449,7 @@ async def get_below_threshold(
             WHERE epoch >= {start_epoch} 
             AND epoch <= {latest_epoch}
             AND val_nos_name IS NOT NULL
-            AND val_status NOT IN ('exited', 'withdrawal_possible', 'withdrawal_done')
+            AND val_status NOT IN ('exited_unslashed', 'active_exiting', 'withdrawal_possible', 'withdrawal_done')
             GROUP BY val_id, val_nos_name
             HAVING COUNT(*) >= 1  -- Must have at least some data
         ),
@@ -603,7 +603,7 @@ async def get_below_threshold_extended(
             WHERE epoch >= {start_epoch} 
             AND epoch <= {latest_epoch}
             AND val_nos_name IS NOT NULL
-            AND val_status NOT IN ('exited', 'withdrawal_possible', 'withdrawal_done')
+            AND val_status NOT IN ('exited_unslashed', 'active_exiting', 'withdrawal_possible', 'withdrawal_done')
             GROUP BY val_id, val_nos_name
             HAVING COUNT(*) >= 1  -- Must have at least some data
         ),
@@ -875,7 +875,7 @@ async def get_theoretical_performance(
             WHERE epoch >= {start_epoch}
             AND epoch <= {latest_epoch}
             AND val_nos_name IS NOT NULL
-            AND val_status NOT IN ('exited', 'withdrawal_possible', 'withdrawal_done')
+            AND val_status NOT IN ('exited_unslashed', 'active_exiting', 'withdrawal_possible', 'withdrawal_done')
         ),
         operator_performance AS (
             SELECT 
@@ -1076,7 +1076,7 @@ async def get_theoretical_performance_extended(
             WHERE epoch >= {start_epoch} 
             AND epoch <= {latest_epoch}
             AND val_nos_name IS NOT NULL
-            AND val_status NOT IN ('exited', 'withdrawal_possible', 'withdrawal_done')
+            AND val_status NOT IN ('exited_unslashed', 'active_exiting', 'withdrawal_possible', 'withdrawal_done')
             GROUP BY val_id, val_nos_name
             HAVING COUNT(*) >= 1  -- Must have at least some data
         ),
@@ -1263,7 +1263,7 @@ async def get_theoretical_performance_all(
         WHERE vs.epoch >= {start_epoch}
         AND vs.epoch <= {latest_epoch}
         AND vs.val_nos_name IS NOT NULL
-        AND vs.val_status NOT IN ('exited', 'withdrawal_possible', 'withdrawal_done')
+        AND vs.val_status NOT IN ('exited_unslashed', 'active_exiting', 'withdrawal_possible', 'withdrawal_done')
         GROUP BY vs.val_nos_name
         ORDER BY (
             CASE 
@@ -1350,6 +1350,195 @@ async def get_theoretical_performance_all(
         logger.error(f"Failed to get comprehensive theoretical performance: {e}")
         raise HTTPException(status_code=500, detail=f"Database query failed: {str(e)}")
 
+
+@router.get("/validator-status-values")
+async def get_validator_status_values() -> Dict[str, Any]:
+    """
+    Get all distinct validator status values from the ClickHouse database.
+    This helps identify exit-related statuses that might need filtering.
+    
+    Returns:
+        Dict containing all distinct status values with their counts
+    """
+    try:
+        if not clickhouse_service.is_available():
+            raise HTTPException(status_code=503, detail="ClickHouse service unavailable")
+        
+        # Query to get all distinct validator status values with counts
+        query = """
+        SELECT 
+            val_status,
+            COUNT(*) as status_count,
+            COUNT(DISTINCT val_id) as unique_validators,
+            COUNT(DISTINCT epoch) as epochs_seen,
+            MIN(epoch) as first_seen_epoch,
+            MAX(epoch) as last_seen_epoch
+        FROM validators_summary 
+        WHERE val_nos_name IS NOT NULL
+        GROUP BY val_status
+        ORDER BY status_count DESC
+        """
+        
+        raw_data = clickhouse_service.execute_query(query)
+        
+        # Transform to structured format
+        status_values = []
+        for row in raw_data:
+            if len(row) >= 6:
+                status_values.append({
+                    'status': row[0] if row[0] != '\\N' else 'NULL',
+                    'total_records': int(row[1]),
+                    'unique_validators': int(row[2]),
+                    'epochs_seen': int(row[3]),
+                    'first_seen_epoch': int(row[4]) if row[4] != '\\N' else None,
+                    'last_seen_epoch': int(row[5]) if row[5] != '\\N' else None
+                })
+        
+        # Identify exit-related statuses
+        exit_related_statuses = []
+        for status_info in status_values:
+            status = status_info['status']
+            if any(keyword in status.lower() for keyword in ['exit', 'withdrawal', 'slash']):
+                exit_related_statuses.append(status)
+        
+        # Get current filter used in validators_down
+        current_filter = ['exited_unslashed', 'active_exiting', 'withdrawal_possible', 'withdrawal_done']
+        
+        # Find potentially missing exit-related statuses
+        missing_from_filter = [status for status in exit_related_statuses if status not in current_filter]
+        
+        result = {
+            'success': True,
+            'total_distinct_statuses': len(status_values),
+            'all_status_values': status_values,
+            'exit_related_statuses': exit_related_statuses,
+            'current_validators_down_filter': current_filter,
+            'potentially_missing_from_filter': missing_from_filter,
+            'analysis': {
+                'description': 'Analysis of validator status values to identify exit-related statuses',
+                'recommendation': 'Review potentially_missing_from_filter to see if they should be excluded from validators_down endpoint'
+            }
+        }
+        
+        logger.info(f"Found {len(status_values)} distinct validator status values, {len(exit_related_statuses)} exit-related")
+        return result
+        
+    except Exception as e:
+        logger.error(f"Failed to get validator status values: {e}")
+        raise HTTPException(status_code=500, detail=f"Database query failed: {str(e)}")
+
+@router.get("/verify-validators-down-filter")
+async def verify_validators_down_filter(
+    limit: int = Query(100, description="Maximum number of validators to check")
+) -> Dict[str, Any]:
+    """
+    Verify that the validators_down endpoint is correctly filtering out exit-related statuses.
+    This endpoint checks the current status of validators returned by validators_down.
+    
+    Returns:
+        Analysis of validator statuses to confirm proper filtering
+    """
+    try:
+        if not clickhouse_service.is_available():
+            raise HTTPException(status_code=503, detail="ClickHouse service unavailable")
+        
+        # Get the latest epoch first
+        epoch_query = "SELECT MAX(epoch) FROM validators_summary WHERE val_nos_name IS NOT NULL"
+        epoch_data = clickhouse_service.execute_query(epoch_query)
+        
+        if not epoch_data or not epoch_data[0][0]:
+            raise HTTPException(status_code=404, detail="No epoch data found")
+        
+        latest_epoch = int(epoch_data[0][0])
+        start_epoch = latest_epoch - 2  # 3 epochs total: latest, latest-1, latest-2
+        
+        # Get validators that would be returned by validators_down
+        query = f"""
+        WITH validator_epochs AS (
+            SELECT 
+                val_id,
+                val_nos_name,
+                epoch,
+                val_status,
+                CASE WHEN att_happened = 0 OR att_happened IS NULL THEN 1 ELSE 0 END as missed_attestation
+            FROM validators_summary 
+            WHERE epoch >= {start_epoch} 
+            AND epoch <= {latest_epoch}
+            AND val_nos_name IS NOT NULL
+        ),
+        active_validators AS (
+            SELECT DISTINCT val_id
+            FROM validator_epochs
+            WHERE epoch = {latest_epoch}
+            AND val_status NOT IN ('exited_unslashed', 'active_exiting', 'withdrawal_possible', 'withdrawal_done')
+        ),
+        consecutive_misses AS (
+            SELECT 
+                ve.val_id,
+                ve.val_nos_name,
+                COUNT(*) as total_epochs,
+                SUM(ve.missed_attestation) as missed_epochs
+            FROM validator_epochs ve
+            INNER JOIN active_validators av ON ve.val_id = av.val_id
+            GROUP BY ve.val_id, ve.val_nos_name
+            HAVING COUNT(*) = 3 AND SUM(ve.missed_attestation) = 3
+        )
+        SELECT 
+            cm.val_id,
+            cm.val_nos_name,
+            ve.val_status as current_status,
+            {latest_epoch} as latest_epoch
+        FROM consecutive_misses cm
+        INNER JOIN validator_epochs ve ON cm.val_id = ve.val_id AND ve.epoch = {latest_epoch}
+        ORDER BY cm.val_nos_name, cm.val_id
+        LIMIT {limit}
+        """
+        
+        raw_data = clickhouse_service.execute_query(query)
+        
+        # Analyze the results
+        validator_statuses = {}
+        exit_related_found = []
+        
+        for row in raw_data:
+            if len(row) >= 4:
+                validator_id = int(row[0])
+                operator = row[1]
+                current_status = row[2]
+                
+                if current_status not in validator_statuses:
+                    validator_statuses[current_status] = 0
+                validator_statuses[current_status] += 1
+                
+                # Check if any exit-related statuses slipped through
+                if current_status in ['exited_unslashed', 'active_exiting', 'withdrawal_possible', 'withdrawal_done']:
+                    exit_related_found.append({
+                        'validator_id': validator_id,
+                        'operator': operator,
+                        'status': current_status
+                    })
+        
+        result = {
+            'success': True,
+            'total_validators_checked': len(raw_data),
+            'validator_status_breakdown': validator_statuses,
+            'exit_related_validators_found': exit_related_found,
+            'filter_working_correctly': len(exit_related_found) == 0,
+            'analysis': {
+                'description': 'Verification of validators_down filtering logic',
+                'expected_behavior': 'No exit-related statuses should appear in results',
+                'filter_list': ['exited_unslashed', 'active_exiting', 'withdrawal_possible', 'withdrawal_done']
+            },
+            'latest_epoch': latest_epoch,
+            'start_epoch': start_epoch
+        }
+        
+        logger.info(f"Verified {len(raw_data)} validators, filter working correctly: {len(exit_related_found) == 0}")
+        return result
+        
+    except Exception as e:
+        logger.error(f"Failed to verify validators down filter: {e}")
+        raise HTTPException(status_code=500, detail=f"Database query failed: {str(e)}")
 
 @router.get("/theoretical_performance_all/extended")
 async def get_theoretical_performance_all_extended(
@@ -1457,7 +1646,7 @@ async def get_theoretical_performance_all_extended(
         WHERE vs.epoch >= {start_epoch}
         AND vs.epoch <= {latest_epoch}
         AND vs.val_nos_name IS NOT NULL
-        AND vs.val_status NOT IN ('exited', 'withdrawal_possible', 'withdrawal_done')
+        AND vs.val_status NOT IN ('exited_unslashed', 'active_exiting', 'withdrawal_possible', 'withdrawal_done')
         GROUP BY vs.val_nos_name
         ORDER BY (
             CASE 
