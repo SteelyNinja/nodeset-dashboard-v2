@@ -147,9 +147,9 @@ const ConcentrationTab: React.FC = () => {
                     }}
                   />
                   <Tooltip 
-                    formatter={(value: number, name: string) => [
+                    formatter={(value: number, name: string, props: any) => [
                       `${value.toFixed(1)}%`, 
-                      name === 'actual' ? 'Actual Distribution' : 'Perfect Equality'
+                      props.dataKey === 'actual' ? 'Actual Distribution' : 'Perfect Equality'
                     ]}
                     labelFormatter={(value: number) => `${value.toFixed(1)}% of Operators`}
                   />
