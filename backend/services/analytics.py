@@ -237,9 +237,11 @@ class AnalyticsService:
         return operator_performance, operator_relative_scores
     
     def calculate_concentration_metrics(self) -> Dict[str, Any]:
-        """Calculate concentration metrics including Gini coefficient"""
+        """Calculate concentration metrics including Gini coefficient using active validators (excluding exits)"""
         try:
             validator_data, _ = load_validator_data()
+            exit_data, _ = load_exit_data()
+            
             if not validator_data:
                 return {"error": "Validator data not available"}
             
@@ -247,30 +249,48 @@ class AnalyticsService:
             
             if not operator_validators:
                 return {"error": "No operator data found"}
+            
+            # Create a map of exits by operator
+            operator_exits = {}
+            if exit_data and exit_data.get('operators_with_exits'):
+                for op in exit_data['operators_with_exits']:
+                    operator_exits[op['operator']] = op.get('exits', 0)
+            
+            # Calculate active validators for each operator (total - exits)
+            active_operator_validators = {}
+            for operator, total in operator_validators.items():
+                exits = operator_exits.get(operator, 0)
+                active = max(0, total - exits)  # Ensure non-negative
+                if active > 0:  # Only include operators with active validators
+                    active_operator_validators[operator] = active
+            
+            if not active_operator_validators:
+                return {"error": "No active operator data found"}
 
-            total_validators = sum(operator_validators.values())
-            operator_counts = list(operator_validators.values())
-            operator_counts.sort()
+            # Use active validators for calculations
+            total_active_validators = sum(active_operator_validators.values())
+            active_operator_counts = list(active_operator_validators.values())
+            active_operator_counts.sort()
 
-            n = len(operator_counts)
-            if n == 0 or total_validators == 0:
+            n = len(active_operator_counts)
+            if n == 0 or total_active_validators == 0:
                 return {"error": "Invalid data for concentration calculation"}
 
-            # Calculate Gini coefficient
+            # Calculate Gini coefficient using active validators
             index = np.arange(1, n + 1)
-            gini = (2 * np.sum(index * operator_counts)) / (n * total_validators) - (n + 1) / n
+            gini = (2 * np.sum(index * active_operator_counts)) / (n * total_active_validators) - (n + 1) / n
             gini = max(0, min(1, gini))
 
-            # Calculate top operator concentrations
-            operator_counts_desc = sorted(operator_counts, reverse=True)
+            # Calculate top operator concentrations using active validators
+            active_operator_counts_desc = sorted(active_operator_counts, reverse=True)
             
-            top_1_pct = (operator_counts_desc[0] / total_validators) * 100 if operator_counts_desc else 0
-            top_5_pct = (sum(operator_counts_desc[:min(5, len(operator_counts_desc))]) / total_validators) * 100
-            top_10_pct = (sum(operator_counts_desc[:min(10, len(operator_counts_desc))]) / total_validators) * 100
-            top_20_pct = (sum(operator_counts_desc[:min(20, len(operator_counts_desc))]) / total_validators) * 100
+            top_1_pct = (active_operator_counts_desc[0] / total_active_validators) * 100 if active_operator_counts_desc else 0
+            top_5_pct = (sum(active_operator_counts_desc[:min(5, len(active_operator_counts_desc))]) / total_active_validators) * 100
+            top_10_pct = (sum(active_operator_counts_desc[:min(10, len(active_operator_counts_desc))]) / total_active_validators) * 100
+            top_20_pct = (sum(active_operator_counts_desc[:min(20, len(active_operator_counts_desc))]) / total_active_validators) * 100
             
-            # Calculate Herfindahl index
-            market_shares = [count / total_validators for count in operator_counts]
+            # Calculate Herfindahl index using active validators
+            market_shares = [count / total_active_validators for count in active_operator_counts]
             herfindahl_index = sum(share ** 2 for share in market_shares)
 
             return {
@@ -280,8 +300,8 @@ class AnalyticsService:
                 'top_10_percent': round(top_10_pct, 2),
                 'top_20_percent': round(top_20_pct, 2),
                 'herfindahl_index': round(herfindahl_index, 4),
-                'total_validators': total_validators,
-                'total_operators': len(operator_validators)
+                'total_validators': total_active_validators,
+                'total_operators': len(active_operator_validators)
             }
             
         except Exception as e:

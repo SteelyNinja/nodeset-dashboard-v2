@@ -24,16 +24,36 @@ const ConcentrationTab: React.FC = () => {
       setLoading(true);
       setError(null);
       
-      const [concentrationData, validatorData] = await Promise.all([
+      const [concentrationData, validatorData, exitData] = await Promise.all([
         apiService.getConcentrationMetrics(),
-        apiService.getValidatorData()
+        apiService.getValidatorData(),
+        apiService.getData<any>('exit-data')
       ]);
       
       setConcentrationMetrics(concentrationData);
       
-      // Calculate Lorenz curve data
+      // Calculate Lorenz curve data using active validators (excluding exits)
       const operatorValidators = validatorData.operator_validators || {};
-      const validatorCounts = Object.values(operatorValidators).sort((a, b) => a - b);
+      
+      // Create a map of exits by operator
+      const operatorExits: Record<string, number> = {};
+      if (exitData?.operators_with_exits) {
+        exitData.operators_with_exits.forEach((op: any) => {
+          operatorExits[op.operator] = op.exits || 0;
+        });
+      }
+      
+      // Calculate active validators for each operator (total - exits)
+      const activeValidatorsByOperator: Record<string, number> = {};
+      Object.entries(operatorValidators).forEach(([operator, total]) => {
+        const exits = operatorExits[operator] || 0;
+        const active = Math.max(0, total - exits);
+        if (active > 0) {
+          activeValidatorsByOperator[operator] = active;
+        }
+      });
+      
+      const validatorCounts = Object.values(activeValidatorsByOperator).sort((a, b) => a - b);
       const totalValidators = validatorCounts.reduce((sum, count) => sum + count, 0);
       const n = validatorCounts.length;
       
