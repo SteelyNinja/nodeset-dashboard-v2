@@ -274,6 +274,7 @@ async def get_validators_down_summary() -> Dict[str, Any]:
                 COUNT(DISTINCT val_nos_name) as total_operators
             FROM validators_summary 
             WHERE epoch = {latest_epoch} AND val_nos_name IS NOT NULL
+            AND val_status NOT IN ('exited_unslashed', 'withdrawal_possible', 'withdrawal_done')
         ),
         three_epoch_consecutive AS (
             SELECT COUNT(*) as consecutive_down_3
@@ -319,6 +320,7 @@ async def get_validators_down_summary() -> Dict[str, Any]:
             WHERE epoch >= {start_epoch} 
             AND epoch <= {latest_epoch}
             AND val_nos_name IS NOT NULL
+            AND val_status NOT IN ('exited_unslashed', 'withdrawal_possible', 'withdrawal_done')
             GROUP BY epoch
             ORDER BY epoch DESC
         )
