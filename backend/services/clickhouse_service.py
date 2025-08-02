@@ -94,7 +94,8 @@ class ClickHouseService:
         """Get validator accuracy metrics by operator with optional epoch filtering"""
         
         # Build WHERE clause with filters
-        where_conditions = ["val_nos_name IS NOT NULL"]
+        where_conditions = ["val_nos_name IS NOT NULL", 
+                          "val_status NOT IN ('exited_unslashed', 'active_exiting', 'withdrawal_possible', 'withdrawal_done')"]
         
         if start_epoch is not None:
             where_conditions.append(f"epoch >= {start_epoch}")
@@ -194,7 +195,8 @@ class ClickHouseService:
             att_valid_source,
             epoch
         FROM validators_summary 
-        WHERE val_nos_name IS NOT NULL {where_clause}
+        WHERE val_nos_name IS NOT NULL 
+        AND val_status NOT IN ('exited_unslashed', 'active_exiting', 'withdrawal_possible', 'withdrawal_done') {where_clause}
         ORDER BY epoch DESC, val_id DESC
         LIMIT 1000
         """
@@ -260,6 +262,7 @@ class ClickHouseService:
             
         FROM validators_summary 
         WHERE epoch = {epoch} AND val_nos_name IS NOT NULL
+        AND val_status NOT IN ('exited_unslashed', 'active_exiting', 'withdrawal_possible', 'withdrawal_done')
         GROUP BY epoch
         """
         
@@ -483,7 +486,8 @@ class ClickHouseService:
                                      end_epoch: Optional[int] = None) -> List[Dict[str, Any]]:
         """Get epoch-by-epoch performance for a specific operator"""
         
-        where_conditions = [f"val_nos_name = '{operator}'"]
+        where_conditions = [f"val_nos_name = '{operator}'",
+                          "val_status NOT IN ('exited_unslashed', 'active_exiting', 'withdrawal_possible', 'withdrawal_done')"]
         if start_epoch is not None:
             where_conditions.append(f"epoch >= {start_epoch}")
         if end_epoch is not None:
@@ -557,7 +561,8 @@ class ClickHouseService:
         """Get validator accuracy metrics for NodeSet operators only"""
         
         # Build WHERE clause with filters - always include NodeSet filter
-        where_conditions = ["val_nos_name IS NOT NULL"]
+        where_conditions = ["val_nos_name IS NOT NULL",
+                          "val_status NOT IN ('exited_unslashed', 'active_exiting', 'withdrawal_possible', 'withdrawal_done')"]
         
         if start_epoch is not None:
             where_conditions.append(f"epoch >= {start_epoch}")
@@ -649,7 +654,8 @@ class ClickHouseService:
                                      end_epoch: Optional[int] = None) -> List[Dict[str, Any]]:
         """Get NodeSet performance trends across epochs"""
         
-        where_conditions = ["val_nos_name IS NOT NULL"]
+        where_conditions = ["val_nos_name IS NOT NULL",
+                          "val_status NOT IN ('exited_unslashed', 'active_exiting', 'withdrawal_possible', 'withdrawal_done')"]
         if start_epoch is not None:
             where_conditions.append(f"epoch >= {start_epoch}")
         if end_epoch is not None:
@@ -730,7 +736,8 @@ class ClickHouseService:
                                     limit: int = 1000) -> List[Dict[str, Any]]:
         """Get detailed NodeSet validator performance data only"""
         
-        where_conditions = ["val_nos_name IS NOT NULL"]  # NodeSet validators only
+        where_conditions = ["val_nos_name IS NOT NULL",  # NodeSet validators only
+                          "val_status NOT IN ('exited_unslashed', 'active_exiting', 'withdrawal_possible', 'withdrawal_done')"]
         if validator_id is not None:
             where_conditions.append(f"val_id = {validator_id}")
         if start_epoch is not None:
