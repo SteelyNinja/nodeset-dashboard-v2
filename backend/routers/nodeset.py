@@ -57,7 +57,7 @@ async def get_validators_down(
             SELECT DISTINCT val_id
             FROM validator_epochs
             WHERE epoch = {latest_epoch}
-            AND val_status NOT IN ('exited_unslashed', 'active_exiting', 'withdrawal_possible', 'withdrawal_done')
+            AND val_status NOT IN ('exited_unslashed', 'withdrawal_possible', 'withdrawal_done')
         ),
         consecutive_misses AS (
             SELECT 
@@ -141,7 +141,7 @@ async def get_validators_down_extended(
             FROM validators_summary 
             WHERE val_nos_name = '{test_operator}'
             AND epoch = {latest_epoch}
-            AND val_status NOT IN ('exited_unslashed', 'active_exiting', 'withdrawal_possible', 'withdrawal_done')
+            AND val_status NOT IN ('exited_unslashed', 'withdrawal_possible', 'withdrawal_done')
             ORDER BY val_id
             LIMIT {limit}
             """
@@ -197,7 +197,7 @@ async def get_validators_down_extended(
             SELECT DISTINCT val_id
             FROM validator_epochs
             WHERE epoch = {latest_epoch}
-            AND val_status NOT IN ('exited_unslashed', 'active_exiting', 'withdrawal_possible', 'withdrawal_done')
+            AND val_status NOT IN ('exited_unslashed', 'withdrawal_possible', 'withdrawal_done')
         ),
         consecutive_misses AS (
             SELECT 
@@ -294,7 +294,7 @@ async def get_validators_down_summary() -> Dict[str, Any]:
                     SELECT DISTINCT val_id
                     FROM validator_epochs
                     WHERE epoch = {latest_epoch}
-                    AND val_status NOT IN ('exited_unslashed', 'active_exiting', 'withdrawal_possible', 'withdrawal_done')
+                    AND val_status NOT IN ('exited_unslashed', 'withdrawal_possible', 'withdrawal_done')
                 ),
                 consecutive_misses AS (
                     SELECT 
@@ -449,7 +449,7 @@ async def get_below_threshold(
             WHERE epoch >= {start_epoch} 
             AND epoch <= {latest_epoch}
             AND val_nos_name IS NOT NULL
-            AND val_status NOT IN ('exited_unslashed', 'active_exiting', 'withdrawal_possible', 'withdrawal_done')
+            AND val_status NOT IN ('exited_unslashed', 'withdrawal_possible', 'withdrawal_done')
             GROUP BY val_id, val_nos_name
             HAVING COUNT(*) >= 1  -- Must have at least some data
         ),
@@ -603,7 +603,7 @@ async def get_below_threshold_extended(
             WHERE epoch >= {start_epoch} 
             AND epoch <= {latest_epoch}
             AND val_nos_name IS NOT NULL
-            AND val_status NOT IN ('exited_unslashed', 'active_exiting', 'withdrawal_possible', 'withdrawal_done')
+            AND val_status NOT IN ('exited_unslashed', 'withdrawal_possible', 'withdrawal_done')
             GROUP BY val_id, val_nos_name
             HAVING COUNT(*) >= 1  -- Must have at least some data
         ),
@@ -875,7 +875,7 @@ async def get_theoretical_performance(
             WHERE epoch >= {start_epoch}
             AND epoch <= {latest_epoch}
             AND val_nos_name IS NOT NULL
-            AND val_status NOT IN ('exited_unslashed', 'active_exiting', 'withdrawal_possible', 'withdrawal_done')
+            AND val_status NOT IN ('exited_unslashed', 'withdrawal_possible', 'withdrawal_done')
         ),
         operator_performance AS (
             SELECT 
@@ -1076,7 +1076,7 @@ async def get_theoretical_performance_extended(
             WHERE epoch >= {start_epoch} 
             AND epoch <= {latest_epoch}
             AND val_nos_name IS NOT NULL
-            AND val_status NOT IN ('exited_unslashed', 'active_exiting', 'withdrawal_possible', 'withdrawal_done')
+            AND val_status NOT IN ('exited_unslashed', 'withdrawal_possible', 'withdrawal_done')
             GROUP BY val_id, val_nos_name
             HAVING COUNT(*) >= 1  -- Must have at least some data
         ),
@@ -1263,7 +1263,7 @@ async def get_theoretical_performance_all(
         WHERE vs.epoch >= {start_epoch}
         AND vs.epoch <= {latest_epoch}
         AND vs.val_nos_name IS NOT NULL
-        AND vs.val_status NOT IN ('exited_unslashed', 'active_exiting', 'withdrawal_possible', 'withdrawal_done')
+        AND vs.val_status NOT IN ('exited_unslashed', 'withdrawal_possible', 'withdrawal_done')
         GROUP BY vs.val_nos_name
         ORDER BY (
             CASE 
@@ -1470,7 +1470,7 @@ async def verify_validators_down_filter(
             SELECT DISTINCT val_id
             FROM validator_epochs
             WHERE epoch = {latest_epoch}
-            AND val_status NOT IN ('exited_unslashed', 'active_exiting', 'withdrawal_possible', 'withdrawal_done')
+            AND val_status NOT IN ('exited_unslashed', 'withdrawal_possible', 'withdrawal_done')
         ),
         consecutive_misses AS (
             SELECT 
@@ -1646,7 +1646,7 @@ async def get_theoretical_performance_all_extended(
         WHERE vs.epoch >= {start_epoch}
         AND vs.epoch <= {latest_epoch}
         AND vs.val_nos_name IS NOT NULL
-        AND vs.val_status NOT IN ('exited_unslashed', 'active_exiting', 'withdrawal_possible', 'withdrawal_done')
+        AND vs.val_status NOT IN ('exited_unslashed', 'withdrawal_possible', 'withdrawal_done')
         GROUP BY vs.val_nos_name
         ORDER BY (
             CASE 
