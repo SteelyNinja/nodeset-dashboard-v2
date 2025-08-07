@@ -60,7 +60,7 @@ def calculate_corrected_theoretical_performance(
             WHERE epoch >= {start_epoch}
             AND epoch <= {end_epoch}
             AND val_nos_name = '{operator_name}'
-            AND val_status NOT IN ('exited_unslashed', 'withdrawal_possible', 'withdrawal_done')
+            AND val_status NOT IN ('exited_unslashed', 'active_exiting', 'withdrawal_possible', 'withdrawal_done')
         ),
         aggregated_data AS (
             SELECT 
