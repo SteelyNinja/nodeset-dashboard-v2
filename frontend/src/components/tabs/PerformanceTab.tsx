@@ -81,7 +81,8 @@ const PerformanceTab: React.FC = () => {
     proposalsData: any,
     syncCommitteeData: any,
     days: number,
-    validatorData: any // Add main validator data for ENS names
+    validatorData: any, // Add main validator data for ENS names
+    exitData: any // Add exit data to properly identify exited validators
   ): AttestationPerformanceData[] => {
     const now = Date.now() / 1000;
     const lookbackDays = days === 7 ? 10 : 34; // 10 days for 7-day analysis, 34 for 31-day
@@ -167,6 +168,18 @@ const PerformanceTab: React.FC = () => {
       console.log('No sync committee data available');
     }
 
+    // Build set of actually exited validators using detailed exit records
+    const exitedValidators = new Set<number>();
+    if (exitData?.recent_exits) {
+      exitData.recent_exits.forEach((exitRecord: any) => {
+        if (exitRecord.validator_index) {
+          exitedValidators.add(exitRecord.validator_index);
+        }
+      });
+    }
+    
+    console.log(`Built exit set with ${exitedValidators.size} exited validators`);
+
     // Combine excluded validators (those with proposals or sync duties)
     const excludedValidators = new Set<number>();
     validatorsWithProposals.forEach(val => excludedValidators.add(val));
@@ -211,6 +224,7 @@ const PerformanceTab: React.FC = () => {
         if (activationTimestamp > activityTimestamp) {
           return; // Skip validators that haven't been active long enough
         }
+
         
         activeValidatorCount++;
 
@@ -239,6 +253,20 @@ const PerformanceTab: React.FC = () => {
           };
         }
 
+        // Check if this specific validator has exited
+        if (exitedValidators.has(validatorIndexNum)) {
+          // Skip this validator as it has actually exited
+          if (operator === '0x273e0A1031d75D3Eee554628E3a578A57274175c') {
+            console.log(`DEBUG: SKIPPING validator ${validatorIndex} (${validatorIndexNum}) - found in exit records`);
+          }
+          return;
+        }
+
+        // Debug logging for the specific operator
+        if (operator === '0x273e0A1031d75D3Eee554628E3a578A57274175c') {
+          console.log(`DEBUG: Processing ACTIVE validator ${validatorIndex} (${validatorIndexNum}) - performance: ${performanceGwei}`);
+        }
+
         operatorData[operator].totalValidators++;
         processedCount++;
 
@@ -251,6 +279,13 @@ const PerformanceTab: React.FC = () => {
           // This is an attestation-only validator with positive performance
           operatorData[operator].attestationOnlyValidators++;
           operatorData[operator].regularPerformances.push(performanceGwei);
+        } else {
+          // Validator has zero or negative performance - count as excluded
+          operatorData[operator].excludedValidators++;
+          excludedCount++;
+          if (operator === '0x273e0A1031d75D3Eee554628E3a578A57274175c') {
+            console.log(`DEBUG: EXCLUDED validator ${validatorIndex} due to zero/negative performance: ${performanceGwei}`);
+          }
         }
       });
       
@@ -302,14 +337,15 @@ const PerformanceTab: React.FC = () => {
     try {
       setLoading(true);
       
-      const [validatorData, exitData] = await Promise.all([
+      const [validatorData, exitData, detailedExitData] = await Promise.all([
         apiService.getValidatorData(),
-        apiService.getData<ExitData>('exit-data')
+        apiService.getData<ExitData>('exit-data'),
+        apiService.getAllExitRecords()
       ]);
 
       // Try to fetch performance data
       try {
-        const performanceResponse = await apiService.getPerformanceAnalysis();
+        const performanceResponse = await apiService.getPerformanceAnalysis('7d');
         
         if (performanceResponse && performanceResponse.operator_details) {
           // We have performance data
@@ -411,8 +447,8 @@ const PerformanceTab: React.FC = () => {
           
           
           // Calculate 7-day and 31-day attestation performance
-          const attestation7d = calculateAttestationPerformance(validatorPerformanceData, proposalsData, syncCommitteeData, 7, validatorData);
-          const attestation31d = calculateAttestationPerformance(validatorPerformanceData, proposalsData, syncCommitteeData, 31, validatorData);
+          const attestation7d = calculateAttestationPerformance(validatorPerformanceData, proposalsData, syncCommitteeData, 7, validatorData, detailedExitData);
+          const attestation31d = calculateAttestationPerformance(validatorPerformanceData, proposalsData, syncCommitteeData, 31, validatorData, detailedExitData);
           
           console.log('Attestation 7d data:', attestation7d.length, 'operators');
           console.log('Attestation 31d data:', attestation31d.length, 'operators');

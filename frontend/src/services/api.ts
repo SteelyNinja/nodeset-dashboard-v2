@@ -138,8 +138,9 @@ class ApiService {
     return this.extractData(response);
   }
 
-  async getPerformanceAnalysis(): Promise<PerformanceAnalysis> {
-    const response = await this.apiClient.get<ApiResponse<PerformanceAnalysis>>('/api/dashboard/performance-analysis');
+  async getPerformanceAnalysis(period?: string): Promise<PerformanceAnalysis> {
+    const params = period ? `?period=${period}` : '';
+    const response = await this.apiClient.get<ApiResponse<PerformanceAnalysis>>(`/api/dashboard/performance-analysis${params}`);
     return this.extractData(response);
   }
 
