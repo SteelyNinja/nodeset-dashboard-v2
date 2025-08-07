@@ -25,6 +25,9 @@ async def lifespan(app: FastAPI):
     yield
     # Shutdown
     print("🔄 FastAPI Backend Shutting Down...")
+    # Close ClickHouse service connections
+    from services.clickhouse_service import clickhouse_service
+    await clickhouse_service.close()
 
 # Create FastAPI app
 app = FastAPI(

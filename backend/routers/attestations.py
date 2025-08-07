@@ -15,14 +15,14 @@ router = APIRouter()
 async def get_epoch_range() -> Dict[str, Any]:
     """Get the available epoch range in the database"""
     
-    if not clickhouse_service.is_available():
+    if not await clickhouse_service.is_available():
         raise HTTPException(
             status_code=503, 
             detail="ClickHouse service is not available"
         )
     
     try:
-        result = clickhouse_service.get_epoch_range()
+        result = await clickhouse_service.get_epoch_range()
         return {
             "success": True,
             "data": result,
@@ -45,14 +45,14 @@ async def get_validator_accuracy(
 ) -> Dict[str, Any]:
     """Get comprehensive validator accuracy metrics by operator with optional filtering (ALL validators)"""
     
-    if not clickhouse_service.is_available():
+    if not await clickhouse_service.is_available():
         raise HTTPException(
             status_code=503, 
             detail="ClickHouse service is not available"
         )
     
     try:
-        results = clickhouse_service.get_validator_accuracy(start_epoch, end_epoch, operator)
+        results = await clickhouse_service.get_validator_accuracy(start_epoch, end_epoch, operator)
         
         return {
             "success": True,
@@ -78,14 +78,14 @@ async def get_validator_accuracy(
 async def get_nodeset_epoch_summary(epoch: int) -> Dict[str, Any]:
     """Get comprehensive summary statistics for NodeSet validators only in a specific epoch"""
     
-    if not clickhouse_service.is_available():
+    if not await clickhouse_service.is_available():
         raise HTTPException(
             status_code=503, 
             detail="ClickHouse service is not available"
         )
     
     try:
-        result = clickhouse_service.get_nodeset_epoch_summary(epoch)
+        result = await clickhouse_service.get_nodeset_epoch_summary(epoch)
         
         if not result:
             raise HTTPException(
@@ -113,14 +113,14 @@ async def get_nodeset_epoch_summary(epoch: int) -> Dict[str, Any]:
 async def get_epoch_summary(epoch: int) -> Dict[str, Any]:
     """Get comprehensive summary statistics for ALL validators in a specific epoch (network-wide)"""
     
-    if not clickhouse_service.is_available():
+    if not await clickhouse_service.is_available():
         raise HTTPException(
             status_code=503, 
             detail="ClickHouse service is not available"
         )
     
     try:
-        result = clickhouse_service.get_epoch_summary(epoch)
+        result = await clickhouse_service.get_epoch_summary(epoch)
         
         if not result:
             raise HTTPException(
@@ -155,14 +155,14 @@ async def get_validator_details(
 ) -> Dict[str, Any]:
     """Get detailed validator performance data with comprehensive metrics (ALL validators)"""
     
-    if not clickhouse_service.is_available():
+    if not await clickhouse_service.is_available():
         raise HTTPException(
             status_code=503, 
             detail="ClickHouse service is not available"
         )
     
     try:
-        results = clickhouse_service.get_validator_details(validator_id, start_epoch, end_epoch, limit)
+        results = await clickhouse_service.get_validator_details(validator_id, start_epoch, end_epoch, limit)
         
         return {
             "success": True,
@@ -193,14 +193,14 @@ async def get_operator_epoch_performance(
 ) -> Dict[str, Any]:
     """Get epoch-by-epoch performance metrics for a specific operator"""
     
-    if not clickhouse_service.is_available():
+    if not await clickhouse_service.is_available():
         raise HTTPException(
             status_code=503, 
             detail="ClickHouse service is not available"
         )
     
     try:
-        results = clickhouse_service.get_operator_epoch_performance(operator, start_epoch, end_epoch)
+        results = await clickhouse_service.get_operator_epoch_performance(operator, start_epoch, end_epoch)
         
         return {
             "success": True,
@@ -226,7 +226,7 @@ async def get_operator_epoch_performance(
 async def clickhouse_health() -> Dict[str, Any]:
     """Check ClickHouse connection health and get database info"""
     
-    is_available = clickhouse_service.is_available()
+    is_available = await clickhouse_service.is_available()
     result = {
         "clickhouse_available": is_available,
         "enabled": clickhouse_service.enabled,
@@ -236,7 +236,7 @@ async def clickhouse_health() -> Dict[str, Any]:
     
     if is_available:
         try:
-            epoch_info = clickhouse_service.get_epoch_range()
+            epoch_info = await clickhouse_service.get_epoch_range()
             result["epoch_range"] = epoch_info
         except Exception as e:
             logger.warning(f"Could not get epoch range: {e}")

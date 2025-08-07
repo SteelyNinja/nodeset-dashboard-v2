@@ -2,7 +2,8 @@
 """
 ClickHouse HTTP client service for Ethereum validator data
 """
-import requests
+import aiohttp
+import asyncio
 import logging
 from typing import List, Dict, Any, Optional
 from urllib.parse import quote
@@ -11,29 +12,58 @@ from config import settings
 logger = logging.getLogger(__name__)
 
 class ClickHouseService:
-    """HTTP client for ClickHouse database"""
+    """Async HTTP client for ClickHouse database"""
     
     def __init__(self):
         self.base_url = settings.clickhouse_url
         self.timeout = settings.CLICKHOUSE_TIMEOUT
         self.enabled = settings.CLICKHOUSE_ENABLED
+        self._session = None
+        self._connector = None
         
-    def is_available(self) -> bool:
+    async def get_session(self) -> aiohttp.ClientSession:
+        """Get or create aiohttp session with connection pooling"""
+        if self._session is None or self._session.closed:
+            if self._connector is None:
+                self._connector = aiohttp.TCPConnector(
+                    limit=100,  # Total connection pool size
+                    limit_per_host=30,  # Per-host connection limit
+                    ttl_dns_cache=300,  # DNS cache TTL
+                    use_dns_cache=True,
+                    enable_cleanup_closed=True
+                )
+            
+            timeout = aiohttp.ClientTimeout(total=self.timeout)
+            self._session = aiohttp.ClientSession(
+                connector=self._connector,
+                timeout=timeout
+            )
+        return self._session
+    
+    async def close(self):
+        """Close the aiohttp session and connector"""
+        if self._session and not self._session.closed:
+            await self._session.close()
+        if self._connector:
+            await self._connector.close()
+    
+    async def is_available(self) -> bool:
         """Check if ClickHouse is available"""
         if not self.enabled:
             return False
             
         try:
-            response = requests.get(
+            session = await self.get_session()
+            async with session.get(
                 f"{self.base_url}/",
                 params={'query': 'SELECT 1'},
-                timeout=5
-            )
-            return response.status_code == 200
+                timeout=aiohttp.ClientTimeout(total=5)
+            ) as response:
+                return response.status == 200
         except Exception:
             return False
     
-    def execute_query(self, query: str) -> List[List[str]]:
+    async def execute_query(self, query: str) -> List[List[str]]:
         """Execute ClickHouse query via HTTP interface"""
         if not self.enabled:
             logger.warning("ClickHouse is disabled")
@@ -42,18 +72,25 @@ class ClickHouseService:
         try:
             logger.debug(f"Executing query: {query[:100]}...")
             
-            response = requests.get(
+            session = await self.get_session()
+            async with session.get(
                 f"{self.base_url}/",
-                params={'query': query},
-                timeout=self.timeout
-            )
-            response.raise_for_status()
+                params={'query': query}
+            ) as response:
+                response.raise_for_status()
+                text = await response.text()
+                
+                # Parse TSV response (ClickHouse default)
+                return self._parse_tsv_response(text)
             
-            # Parse TSV response (ClickHouse default)
-            return self._parse_tsv_response(response.text)
-            
-        except requests.exceptions.RequestException as e:
+        except aiohttp.ClientError as e:
             logger.error(f"ClickHouse query failed: {e}")
+            raise
+        except asyncio.TimeoutError as e:
+            logger.error(f"ClickHouse query timeout: {e}")
+            raise
+        except Exception as e:
+            logger.error(f"Unexpected error in ClickHouse query: {e}")
             raise
     
     def _parse_tsv_response(self, tsv_data: str) -> List[List[str]]:
@@ -70,12 +107,12 @@ class ClickHouseService:
         
         return data
     
-    def get_epoch_range(self) -> Dict[str, int]:
+    async def get_epoch_range(self) -> Dict[str, int]:
         """Get the available epoch range in the database"""
         query = "SELECT MIN(epoch), MAX(epoch), COUNT(DISTINCT epoch) FROM validators_summary"
         
         try:
-            raw_data = self.execute_query(query)
+            raw_data = await self.execute_query(query)
             if raw_data and len(raw_data[0]) >= 3:
                 return {
                     'min_epoch': int(raw_data[0][0]),
@@ -87,7 +124,7 @@ class ClickHouseService:
             logger.error(f"Failed to get epoch range: {e}")
             raise
 
-    def get_validator_accuracy(self, 
+    async def get_validator_accuracy(self, 
                              start_epoch: Optional[int] = None, 
                              end_epoch: Optional[int] = None,
                              operator: Optional[str] = None) -> List[Dict[str, Any]]:
@@ -143,7 +180,7 @@ class ClickHouseService:
         """
         
         try:
-            raw_data = self.execute_query(query)
+            raw_data = await self.execute_query(query)
             
             # Helper functions for safe conversion
             def safe_float(value):
@@ -182,7 +219,7 @@ class ClickHouseService:
             logger.error(f"Failed to get validator accuracy: {e}")
             raise
     
-    def get_operator_performance(self, operator: Optional[str] = None) -> List[Dict[str, Any]]:
+    async def get_operator_performance(self, operator: Optional[str] = None) -> List[Dict[str, Any]]:
         """Get detailed operator performance metrics"""
         where_clause = f"AND val_nos_name = '{operator}'" if operator else ""
         
@@ -202,7 +239,7 @@ class ClickHouseService:
         """
         
         try:
-            raw_data = self.execute_query(query)
+            raw_data = await self.execute_query(query)
             
             # Helper functions for safe conversion
             def safe_int(value):
@@ -229,7 +266,7 @@ class ClickHouseService:
             logger.error(f"Failed to get operator performance: {e}")
             raise
     
-    def get_nodeset_epoch_summary(self, epoch: int) -> Dict[str, Any]:
+    async def get_nodeset_epoch_summary(self, epoch: int) -> Dict[str, Any]:
         """Get summary statistics for NodeSet validators only in a specific epoch"""
         query = f"""
         SELECT 
@@ -267,7 +304,7 @@ class ClickHouseService:
         """
         
         try:
-            raw_data = self.execute_query(query)
+            raw_data = await self.execute_query(query)
             if raw_data and len(raw_data[0]) >= 15:
                 def safe_float(value):
                     return float(value) if value not in ['\\N', None, ''] else 0.0
@@ -299,7 +336,7 @@ class ClickHouseService:
             logger.error(f"Failed to get NodeSet epoch summary: {e}")
             raise
 
-    def get_epoch_summary(self, epoch: int) -> Dict[str, Any]:
+    async def get_epoch_summary(self, epoch: int) -> Dict[str, Any]:
         """Get summary statistics for a specific epoch"""
         query = f"""
         SELECT 
@@ -336,7 +373,7 @@ class ClickHouseService:
         """
         
         try:
-            raw_data = self.execute_query(query)
+            raw_data = await self.execute_query(query)
             if raw_data and len(raw_data[0]) >= 15:
                 def safe_float(value):
                     return float(value) if value not in ['\\N', None, ''] else 0.0
@@ -368,7 +405,7 @@ class ClickHouseService:
             logger.error(f"Failed to get epoch summary: {e}")
             raise
     
-    def get_validator_details(self, 
+    async def get_validator_details(self, 
                             validator_id: Optional[int] = None,
                             start_epoch: Optional[int] = None,
                             end_epoch: Optional[int] = None,
@@ -426,7 +463,7 @@ class ClickHouseService:
         """
         
         try:
-            raw_data = self.execute_query(query)
+            raw_data = await self.execute_query(query)
             
             def safe_float(value):
                 return float(value) if value not in ['\\N', None, ''] else 0.0
@@ -480,7 +517,7 @@ class ClickHouseService:
             logger.error(f"Failed to get validator details: {e}")
             raise
     
-    def get_operator_epoch_performance(self, 
+    async def get_operator_epoch_performance(self, 
                                      operator: str,
                                      start_epoch: Optional[int] = None,
                                      end_epoch: Optional[int] = None) -> List[Dict[str, Any]]:
@@ -519,7 +556,7 @@ class ClickHouseService:
         """
         
         try:
-            raw_data = self.execute_query(query)
+            raw_data = await self.execute_query(query)
             
             def safe_float(value):
                 return float(value) if value not in ['\\N', None, ''] else 0.0
@@ -554,7 +591,7 @@ class ClickHouseService:
             logger.error(f"Failed to get operator epoch performance: {e}")
             raise
     
-    def get_nodeset_validator_accuracy(self, 
+    async def get_nodeset_validator_accuracy(self, 
                                      start_epoch: Optional[int] = None, 
                                      end_epoch: Optional[int] = None,
                                      operator: Optional[str] = None) -> List[Dict[str, Any]]:
@@ -610,7 +647,7 @@ class ClickHouseService:
         """
         
         try:
-            raw_data = self.execute_query(query)
+            raw_data = await self.execute_query(query)
             
             # Helper functions for safe conversion
             def safe_float(value):
@@ -649,7 +686,7 @@ class ClickHouseService:
             logger.error(f"Failed to get NodeSet validator accuracy: {e}")
             raise
     
-    def get_nodeset_performance_trends(self, 
+    async def get_nodeset_performance_trends(self, 
                                      start_epoch: Optional[int] = None,
                                      end_epoch: Optional[int] = None) -> List[Dict[str, Any]]:
         """Get NodeSet performance trends across epochs"""
@@ -695,7 +732,7 @@ class ClickHouseService:
         """
         
         try:
-            raw_data = self.execute_query(query)
+            raw_data = await self.execute_query(query)
             
             def safe_float(value):
                 return float(value) if value not in ['\\N', None, ''] else 0.0
@@ -729,7 +766,7 @@ class ClickHouseService:
             logger.error(f"Failed to get NodeSet performance trends: {e}")
             raise
     
-    def get_nodeset_validator_details(self, 
+    async def get_nodeset_validator_details(self, 
                                     validator_id: Optional[int] = None,
                                     start_epoch: Optional[int] = None,
                                     end_epoch: Optional[int] = None,
@@ -788,7 +825,7 @@ class ClickHouseService:
         """
         
         try:
-            raw_data = self.execute_query(query)
+            raw_data = await self.execute_query(query)
             
             def safe_float(value):
                 return float(value) if value not in ['\\N', None, ''] else 0.0

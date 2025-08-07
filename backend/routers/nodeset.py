@@ -25,12 +25,12 @@ async def get_validators_down(
         List of active validators with operator and validator_id that have missed 3 consecutive attestations
     """
     try:
-        if not clickhouse_service.is_available():
+        if not await clickhouse_service.is_available():
             raise HTTPException(status_code=503, detail="ClickHouse service unavailable")
         
         # Get the latest epoch first
         epoch_query = "SELECT MAX(epoch) FROM validators_summary WHERE val_nos_name IS NOT NULL"
-        epoch_data = clickhouse_service.execute_query(epoch_query)
+        epoch_data = await clickhouse_service.execute_query(epoch_query)
         
         if not epoch_data or not epoch_data[0][0]:
             raise HTTPException(status_code=404, detail="No epoch data found")
@@ -80,7 +80,7 @@ async def get_validators_down(
         LIMIT {limit}
         """
         
-        raw_data = clickhouse_service.execute_query(query)
+        raw_data = await clickhouse_service.execute_query(query)
         
         # Transform to structured format
         results = []
@@ -122,12 +122,12 @@ async def get_validators_down_extended(
     try:
         # If test_operator is provided, return mock test data
         if test_operator:
-            if not clickhouse_service.is_available():
+            if not await clickhouse_service.is_available():
                 raise HTTPException(status_code=503, detail="ClickHouse service unavailable for test data")
             
             # Get current epoch for realistic test data
             epoch_query = "SELECT MAX(epoch) FROM validators_summary WHERE val_nos_name IS NOT NULL"
-            epoch_data = clickhouse_service.execute_query(epoch_query)
+            epoch_data = await clickhouse_service.execute_query(epoch_query)
             
             if not epoch_data or not epoch_data[0][0]:
                 raise HTTPException(status_code=404, detail="No epoch data found for test data")
@@ -146,7 +146,7 @@ async def get_validators_down_extended(
             LIMIT {limit}
             """
             
-            validator_data = clickhouse_service.execute_query(validator_query)
+            validator_data = await clickhouse_service.execute_query(validator_query)
             
             if not validator_data:
                 raise HTTPException(status_code=404, detail=f"No active validators found for operator {test_operator}")
@@ -165,12 +165,12 @@ async def get_validators_down_extended(
             
             logger.info(f"Generated {len(test_results)} test validators for operator {test_operator} using real validator IDs")
             return test_results
-        if not clickhouse_service.is_available():
+        if not await clickhouse_service.is_available():
             raise HTTPException(status_code=503, detail="ClickHouse service unavailable")
         
         # Get the latest epoch first
         epoch_query = "SELECT MAX(epoch) FROM validators_summary WHERE val_nos_name IS NOT NULL"
-        epoch_data = clickhouse_service.execute_query(epoch_query)
+        epoch_data = await clickhouse_service.execute_query(epoch_query)
         
         if not epoch_data or not epoch_data[0][0]:
             raise HTTPException(status_code=404, detail="No epoch data found")
@@ -221,7 +221,7 @@ async def get_validators_down_extended(
         LIMIT {limit}
         """
         
-        raw_data = clickhouse_service.execute_query(query)
+        raw_data = await clickhouse_service.execute_query(query)
         
         # Transform to structured format
         results = []
@@ -252,12 +252,12 @@ async def get_validators_down_summary() -> Dict[str, Any]:
         Summary statistics about active validator downtime (3 consecutive epochs)
     """
     try:
-        if not clickhouse_service.is_available():
+        if not await clickhouse_service.is_available():
             raise HTTPException(status_code=503, detail="ClickHouse service unavailable")
         
         # Get the latest epoch first
         epoch_query = "SELECT MAX(epoch) FROM validators_summary WHERE val_nos_name IS NOT NULL"
-        epoch_data = clickhouse_service.execute_query(epoch_query)
+        epoch_data = await clickhouse_service.execute_query(epoch_query)
         
         if not epoch_data or not epoch_data[0][0]:
             raise HTTPException(status_code=404, detail="No epoch data found")
@@ -339,7 +339,7 @@ async def get_validators_down_summary() -> Dict[str, Any]:
         CROSS JOIN three_epoch_consecutive c
         """
         
-        raw_data = clickhouse_service.execute_query(query)
+        raw_data = await clickhouse_service.execute_query(query)
         
         if not raw_data or len(raw_data[0]) < 9:
             raise HTTPException(status_code=404, detail="No summary data found")
@@ -391,12 +391,12 @@ async def get_below_threshold(
         List of validators with their attestation reward performance below the 97% threshold
     """
     try:
-        if not clickhouse_service.is_available():
+        if not await clickhouse_service.is_available():
             raise HTTPException(status_code=503, detail="ClickHouse service unavailable")
         
         # Get the latest epoch first
         epoch_query = "SELECT MAX(epoch) FROM validators_summary WHERE val_nos_name IS NOT NULL"
-        epoch_data = clickhouse_service.execute_query(epoch_query)
+        epoch_data = await clickhouse_service.execute_query(epoch_query)
         
         if not epoch_data or not epoch_data[0][0]:
             raise HTTPException(status_code=404, detail="No epoch data found")
@@ -407,7 +407,7 @@ async def get_below_threshold(
         
         # Check if we have sufficient data availability
         min_epoch_query = "SELECT MIN(epoch) FROM validators_summary WHERE val_nos_name IS NOT NULL"
-        min_epoch_data = clickhouse_service.execute_query(min_epoch_query)
+        min_epoch_data = await clickhouse_service.execute_query(min_epoch_query)
         
         if not min_epoch_data or not min_epoch_data[0][0]:
             raise HTTPException(status_code=404, detail="No minimum epoch data found")
@@ -495,7 +495,7 @@ async def get_below_threshold(
         LIMIT {limit}
         """
         
-        raw_data = clickhouse_service.execute_query(query)
+        raw_data = await clickhouse_service.execute_query(query)
         
         # Transform to structured format
         results = []
@@ -547,12 +547,12 @@ async def get_below_threshold_extended(
         List of validators with their attestation reward performance below the specified threshold
     """
     try:
-        if not clickhouse_service.is_available():
+        if not await clickhouse_service.is_available():
             raise HTTPException(status_code=503, detail="ClickHouse service unavailable")
         
         # Get the latest epoch first
         epoch_query = "SELECT MAX(epoch) FROM validators_summary WHERE val_nos_name IS NOT NULL"
-        epoch_data = clickhouse_service.execute_query(epoch_query)
+        epoch_data = await clickhouse_service.execute_query(epoch_query)
         
         if not epoch_data or not epoch_data[0][0]:
             raise HTTPException(status_code=404, detail="No epoch data found")
@@ -563,7 +563,7 @@ async def get_below_threshold_extended(
         
         # Check if we have sufficient data availability
         min_epoch_query = "SELECT MIN(epoch) FROM validators_summary WHERE val_nos_name IS NOT NULL"
-        min_epoch_data = clickhouse_service.execute_query(min_epoch_query)
+        min_epoch_data = await clickhouse_service.execute_query(min_epoch_query)
         
         if not min_epoch_data or not min_epoch_data[0][0]:
             raise HTTPException(status_code=404, detail="No minimum epoch data found")
@@ -660,7 +660,7 @@ async def get_below_threshold_extended(
         LIMIT {limit}
         """
         
-        raw_data = clickhouse_service.execute_query(query)
+        raw_data = await clickhouse_service.execute_query(query)
         
         # Transform to structured format
         results = []
@@ -709,7 +709,7 @@ async def get_validator_accuracy(
         )
     
     try:
-        results = clickhouse_service.get_nodeset_validator_accuracy(start_epoch, end_epoch, operator)
+        results = await clickhouse_service.get_nodeset_validator_accuracy(start_epoch, end_epoch, operator)
         
         return {
             "success": True,
@@ -745,7 +745,7 @@ async def get_performance_trends(
         )
     
     try:
-        results = clickhouse_service.get_nodeset_performance_trends(start_epoch, end_epoch)
+        results = await clickhouse_service.get_nodeset_performance_trends(start_epoch, end_epoch)
         
         return {
             "success": True,
@@ -782,7 +782,7 @@ async def get_validator_details(
         )
     
     try:
-        results = clickhouse_service.get_nodeset_validator_details(validator_id, start_epoch, end_epoch, limit)
+        results = await clickhouse_service.get_nodeset_validator_details(validator_id, start_epoch, end_epoch, limit)
         
         return {
             "success": True,
@@ -822,12 +822,12 @@ async def get_theoretical_performance(
         List of operators with their theoretical attestation performance metrics
     """
     try:
-        if not clickhouse_service.is_available():
+        if not await clickhouse_service.is_available():
             raise HTTPException(status_code=503, detail="ClickHouse service unavailable")
         
         # Get the latest epoch first
         epoch_query = "SELECT MAX(epoch) FROM validators_summary WHERE val_nos_name IS NOT NULL"
-        epoch_data = clickhouse_service.execute_query(epoch_query)
+        epoch_data = await clickhouse_service.execute_query(epoch_query)
         
         if not epoch_data or not epoch_data[0][0]:
             raise HTTPException(status_code=404, detail="No epoch data found")
@@ -837,7 +837,7 @@ async def get_theoretical_performance(
         
         # Check if we have sufficient data availability
         min_epoch_query = "SELECT MIN(epoch) FROM validators_summary WHERE val_nos_name IS NOT NULL"
-        min_epoch_data = clickhouse_service.execute_query(min_epoch_query)
+        min_epoch_data = await clickhouse_service.execute_query(min_epoch_query)
         
         if not min_epoch_data or not min_epoch_data[0][0]:
             raise HTTPException(status_code=404, detail="No minimum epoch data found")
@@ -938,7 +938,7 @@ async def get_theoretical_performance(
         LIMIT {limit}
         """
         
-        raw_data = clickhouse_service.execute_query(query)
+        raw_data = await clickhouse_service.execute_query(query)
         
         # Transform to structured format
         results = []
@@ -1009,12 +1009,12 @@ async def get_theoretical_performance_extended(
         List of operators with their averaged theoretical attestation performance metrics
     """
     try:
-        if not clickhouse_service.is_available():
+        if not await clickhouse_service.is_available():
             raise HTTPException(status_code=503, detail="ClickHouse service unavailable")
         
         # Get the latest epoch first
         epoch_query = "SELECT MAX(epoch) FROM validators_summary WHERE val_nos_name IS NOT NULL"
-        epoch_data = clickhouse_service.execute_query(epoch_query)
+        epoch_data = await clickhouse_service.execute_query(epoch_query)
         
         if not epoch_data or not epoch_data[0][0]:
             raise HTTPException(status_code=404, detail="No epoch data found")
@@ -1025,7 +1025,7 @@ async def get_theoretical_performance_extended(
         
         # Check if we have sufficient data availability
         min_epoch_query = "SELECT MIN(epoch) FROM validators_summary WHERE val_nos_name IS NOT NULL"
-        min_epoch_data = clickhouse_service.execute_query(min_epoch_query)
+        min_epoch_data = await clickhouse_service.execute_query(min_epoch_query)
         
         if not min_epoch_data or not min_epoch_data[0][0]:
             raise HTTPException(status_code=404, detail="No minimum epoch data found")
@@ -1137,7 +1137,7 @@ async def get_theoretical_performance_extended(
         LIMIT {limit}
         """
         
-        raw_data = clickhouse_service.execute_query(query)
+        raw_data = await clickhouse_service.execute_query(query)
         
         # Transform to structured format
         results = []
@@ -1196,12 +1196,12 @@ async def get_theoretical_performance_all(
         List of operators with their comprehensive efficiency metrics over 1 day period (225 epochs)
     """
     try:
-        if not clickhouse_service.is_available():
+        if not await clickhouse_service.is_available():
             raise HTTPException(status_code=503, detail="ClickHouse service unavailable")
         
         # Get the latest epoch first
         epoch_query = "SELECT MAX(epoch) FROM validators_summary WHERE val_nos_name IS NOT NULL"
-        epoch_data = clickhouse_service.execute_query(epoch_query)
+        epoch_data = await clickhouse_service.execute_query(epoch_query)
         
         if not epoch_data or not epoch_data[0][0]:
             raise HTTPException(status_code=404, detail="No epoch data found")
@@ -1211,7 +1211,7 @@ async def get_theoretical_performance_all(
         
         # Check if we have sufficient data availability
         min_epoch_query = "SELECT MIN(epoch) FROM validators_summary WHERE val_nos_name IS NOT NULL"
-        min_epoch_data = clickhouse_service.execute_query(min_epoch_query)
+        min_epoch_data = await clickhouse_service.execute_query(min_epoch_query)
         
         if not min_epoch_data or not min_epoch_data[0][0]:
             raise HTTPException(status_code=404, detail="No minimum epoch data found")
@@ -1284,7 +1284,7 @@ async def get_theoretical_performance_all(
         LIMIT {limit}
         """
         
-        raw_data = clickhouse_service.execute_query(query)
+        raw_data = await clickhouse_service.execute_query(query)
         
         # Transform to structured format
         results = []
@@ -1363,7 +1363,7 @@ async def get_validator_status_values() -> Dict[str, Any]:
         Dict containing all distinct status values with their counts
     """
     try:
-        if not clickhouse_service.is_available():
+        if not await clickhouse_service.is_available():
             raise HTTPException(status_code=503, detail="ClickHouse service unavailable")
         
         # Query to get all distinct validator status values with counts
@@ -1381,7 +1381,7 @@ async def get_validator_status_values() -> Dict[str, Any]:
         ORDER BY status_count DESC
         """
         
-        raw_data = clickhouse_service.execute_query(query)
+        raw_data = await clickhouse_service.execute_query(query)
         
         # Transform to structured format
         status_values = []
@@ -1441,12 +1441,12 @@ async def verify_validators_down_filter(
         Analysis of validator statuses to confirm proper filtering
     """
     try:
-        if not clickhouse_service.is_available():
+        if not await clickhouse_service.is_available():
             raise HTTPException(status_code=503, detail="ClickHouse service unavailable")
         
         # Get the latest epoch first
         epoch_query = "SELECT MAX(epoch) FROM validators_summary WHERE val_nos_name IS NOT NULL"
-        epoch_data = clickhouse_service.execute_query(epoch_query)
+        epoch_data = await clickhouse_service.execute_query(epoch_query)
         
         if not epoch_data or not epoch_data[0][0]:
             raise HTTPException(status_code=404, detail="No epoch data found")
@@ -1496,7 +1496,7 @@ async def verify_validators_down_filter(
         LIMIT {limit}
         """
         
-        raw_data = clickhouse_service.execute_query(query)
+        raw_data = await clickhouse_service.execute_query(query)
         
         # Analyze the results
         validator_statuses = {}
@@ -1570,12 +1570,12 @@ async def get_theoretical_performance_all_extended(
         List of operators with their comprehensive efficiency metrics over specified time period
     """
     try:
-        if not clickhouse_service.is_available():
+        if not await clickhouse_service.is_available():
             raise HTTPException(status_code=503, detail="ClickHouse service unavailable")
         
         # Get the latest epoch first
         epoch_query = "SELECT MAX(epoch) FROM validators_summary WHERE val_nos_name IS NOT NULL"
-        epoch_data = clickhouse_service.execute_query(epoch_query)
+        epoch_data = await clickhouse_service.execute_query(epoch_query)
         
         if not epoch_data or not epoch_data[0][0]:
             raise HTTPException(status_code=404, detail="No epoch data found")
@@ -1586,7 +1586,7 @@ async def get_theoretical_performance_all_extended(
         
         # Check if we have sufficient data availability
         min_epoch_query = "SELECT MIN(epoch) FROM validators_summary WHERE val_nos_name IS NOT NULL"
-        min_epoch_data = clickhouse_service.execute_query(min_epoch_query)
+        min_epoch_data = await clickhouse_service.execute_query(min_epoch_query)
         
         if not min_epoch_data or not min_epoch_data[0][0]:
             raise HTTPException(status_code=404, detail="No minimum epoch data found")
@@ -1667,7 +1667,7 @@ async def get_theoretical_performance_all_extended(
         LIMIT {limit}
         """
         
-        raw_data = clickhouse_service.execute_query(query)
+        raw_data = await clickhouse_service.execute_query(query)
         
         # Transform to structured format
         results = []
