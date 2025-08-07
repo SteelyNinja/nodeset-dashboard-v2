@@ -236,6 +236,45 @@ class AnalyticsService:
         
         return operator_performance, operator_relative_scores
     
+    def _get_operator_performance_from_daily_cache(self, period: str) -> Tuple[Dict[str, float], Dict[str, float]]:
+        """Get operator performance data from daily performance cache for consistency with operator overview"""
+        try:
+            from routers.operator_performance import OperatorPerformanceService
+            
+            # Get the same data the operator overview uses
+            service = OperatorPerformanceService()
+            
+            if period == "7d":
+                summaries = service.get_operators_summary(limit_days=7)
+            else:
+                summaries = service.get_operators_summary()
+            
+            operator_performance = {}
+            operator_averages = []
+            
+            # Extract attestation performance (percentages) from daily cache
+            for addr, summary in summaries.items():
+                # Use avg_attestation_performance which is already a percentage
+                perf = summary.get("avg_attestation_performance", 0)
+                operator_performance[addr] = perf
+                operator_averages.append(perf)
+            
+            # Calculate relative scores (top performer = 100%)
+            highest_performance = max(operator_averages) if operator_averages else 1
+            operator_relative_scores = {}
+            
+            for operator, performance in operator_performance.items():
+                if highest_performance > 0:
+                    operator_relative_scores[operator] = (performance / highest_performance) * 100
+                else:
+                    operator_relative_scores[operator] = 0
+                    
+            return operator_performance, operator_relative_scores
+            
+        except Exception as e:
+            print(f"Error loading from daily cache: {e}")
+            return {}, {}
+    
     def calculate_concentration_metrics(self) -> Dict[str, Any]:
         """Calculate concentration metrics including Gini coefficient using active validators (excluding exits)"""
         try:
@@ -313,14 +352,35 @@ class AnalyticsService:
             validator_data, _ = load_validator_data()
             performance_data, _ = load_validator_performance_data()
             ens_names, _ = load_ens_names()
+            exit_data, _ = load_exit_data()
             
             if not validator_data:
                 return {"error": "Validator data not available"}
             
             operator_validators = self._get_operator_validators_from_data(validator_data)
             
-            # If period is specified, use period-specific performance data
-            if period and performance_data:
+            # Calculate active validator counts (total - exits)
+            operator_active_validators = {}
+            if exit_data and "operators_with_exits" in exit_data:
+                for addr, total_count in operator_validators.items():
+                    # Find exit count for this operator
+                    exit_count = 0
+                    for operator_exit in exit_data["operators_with_exits"]:
+                        if operator_exit.get("operator") == addr:
+                            exit_count = operator_exit.get("exits", 0)
+                            break
+                    
+                    # Calculate active validators (total - exits), ensure non-negative
+                    active_count = max(0, total_count - exit_count)
+                    operator_active_validators[addr] = active_count
+            else:
+                # Fallback to total counts if exit data not available
+                operator_active_validators = operator_validators
+            
+            # If period is specified, use operator daily performance data for consistency
+            if period == "7d":
+                operator_performance, operator_ranks = self._get_operator_performance_from_daily_cache(period)
+            elif period and performance_data:
                 operator_performance, operator_ranks = self._get_operator_performance_by_period(performance_data, period)
             else:
                 operator_performance = self._get_operator_performance_from_data(validator_data, performance_data)
@@ -335,7 +395,8 @@ class AnalyticsService:
             
             perf_data = []
             for addr, performance in operator_performance.items():
-                validator_count = operator_validators.get(addr, 0)
+                # Use active validator count instead of total historical count
+                validator_count = operator_active_validators.get(addr, 0)
                 if validator_count > 0:
                     category = get_performance_category(performance)
                     performance_counts[category.lower()] += validator_count
