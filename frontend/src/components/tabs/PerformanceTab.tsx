@@ -657,7 +657,7 @@ const PerformanceTab: React.FC = () => {
             </div>
             <div className="ml-3">
               <p className="text-sm text-blue-700 dark:text-blue-200">
-                24 hour data refreshes every hour. Scroll down for 7 / 31 day data
+                24 Hour / 7 day / 31 day data. Refreshes daily.
               </p>
             </div>
           </div>
@@ -1161,7 +1161,7 @@ const PerformanceTab: React.FC = () => {
           <div className="space-y-4">
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                <Icon name="trophy" size="lg" color="primary" className="inline mr-2" />Operators by Performance
+                <Icon name="trophy" size="lg" color="primary" className="inline mr-2" />Operators by Performance - 24 hours
               </h3>
               <div className="w-full sm:w-72">
                 <input
