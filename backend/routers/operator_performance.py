@@ -120,26 +120,20 @@ class OperatorPerformanceService:
             if limit_days:
                 daily_performance = daily_performance[:limit_days]
             
-            # Calculate summary metrics
+            # Calculate summary metrics using only latest day (24-hour display)
             if daily_performance:
                 latest_day = daily_performance[0]  # Newest first
-                avg_participation = sum(d.get("participation_rate", 0) for d in daily_performance) / len(daily_performance)
-                avg_head_accuracy = sum(d.get("head_accuracy", 0) for d in daily_performance) / len(daily_performance)
-                avg_target_accuracy = sum(d.get("target_accuracy", 0) for d in daily_performance) / len(daily_performance)
-                avg_source_accuracy = sum(d.get("source_accuracy", 0) for d in daily_performance) / len(daily_performance)
-                avg_inclusion_delay = sum(d.get("avg_inclusion_delay", 0) for d in daily_performance) / len(daily_performance)
-                avg_performance = sum(d.get("attestation_performance", 0) for d in daily_performance) / len(daily_performance)
                 
                 summaries[operator] = {
                     "validator_count": latest_day.get("validator_count", 0),
                     "days_of_data": len(daily_performance),
                     "latest_date": latest_day.get("date"),
-                    "avg_participation_rate": round(avg_participation, 2),
-                    "avg_head_accuracy": round(avg_head_accuracy, 2),
-                    "avg_target_accuracy": round(avg_target_accuracy, 2),
-                    "avg_source_accuracy": round(avg_source_accuracy, 2),
-                    "avg_inclusion_delay": round(avg_inclusion_delay, 3),
-                    "avg_attestation_performance": round(avg_performance, 6),
+                    "avg_participation_rate": round(latest_day.get("participation_rate", 0), 2),
+                    "avg_head_accuracy": round(latest_day.get("head_accuracy", 0), 2),
+                    "avg_target_accuracy": round(latest_day.get("target_accuracy", 0), 2),
+                    "avg_source_accuracy": round(latest_day.get("source_accuracy", 0), 2),
+                    "avg_inclusion_delay": round(latest_day.get("avg_inclusion_delay", 0), 3),
+                    "avg_attestation_performance": round(latest_day.get("attestation_performance", 0), 6),
                     "latest_performance": latest_day.get("attestation_performance", 0)
                 }
         
