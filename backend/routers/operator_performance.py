@@ -105,7 +105,7 @@ class OperatorPerformanceService:
         return operator_data
     
     def get_operators_summary(self, limit_days: Optional[int] = None) -> Dict[str, Any]:
-        """Get summary performance data for all operators"""
+        """Get summary performance data for all operators with proper 7-day averaging"""
         cache = self._load_cache()
         operators = cache.get("operators", {})
         
@@ -120,21 +120,35 @@ class OperatorPerformanceService:
             if limit_days:
                 daily_performance = daily_performance[:limit_days]
             
-            # Calculate summary metrics using only latest day (24-hour display)
+            # Calculate 7-day averages (or available days if less than 7)
             if daily_performance:
+                days_to_average = min(7, len(daily_performance))
+                recent_days = daily_performance[:days_to_average]
+                
+                # Calculate averages across the period
+                avg_participation = sum(d.get("participation_rate", 0) for d in recent_days) / days_to_average
+                avg_head_accuracy = sum(d.get("head_accuracy", 0) for d in recent_days) / days_to_average
+                avg_target_accuracy = sum(d.get("target_accuracy", 0) for d in recent_days) / days_to_average
+                avg_source_accuracy = sum(d.get("source_accuracy", 0) for d in recent_days) / days_to_average
+                avg_inclusion_delay = sum(d.get("avg_inclusion_delay", 0) for d in recent_days) / days_to_average
+                avg_performance = sum(d.get("attestation_performance", 0) for d in recent_days) / days_to_average
+                
+                # Use latest day for reference data
                 latest_day = daily_performance[0]  # Newest first
                 
                 summaries[operator] = {
                     "validator_count": latest_day.get("validator_count", 0),
                     "days_of_data": len(daily_performance),
+                    "days_averaged": days_to_average,
                     "latest_date": latest_day.get("date"),
-                    "avg_participation_rate": round(latest_day.get("participation_rate", 0), 2),
-                    "avg_head_accuracy": round(latest_day.get("head_accuracy", 0), 2),
-                    "avg_target_accuracy": round(latest_day.get("target_accuracy", 0), 2),
-                    "avg_source_accuracy": round(latest_day.get("source_accuracy", 0), 2),
-                    "avg_inclusion_delay": round(latest_day.get("avg_inclusion_delay", 0), 3),
-                    "avg_attestation_performance": round(latest_day.get("attestation_performance", 0), 6),
-                    "latest_performance": latest_day.get("attestation_performance", 0)
+                    "avg_participation_rate": round(avg_participation, 2),
+                    "avg_head_accuracy": round(avg_head_accuracy, 2),
+                    "avg_target_accuracy": round(avg_target_accuracy, 2),
+                    "avg_source_accuracy": round(avg_source_accuracy, 2),
+                    "avg_inclusion_delay": round(avg_inclusion_delay, 3),
+                    "avg_attestation_performance": round(avg_performance, 6),
+                    "latest_performance": latest_day.get("attestation_performance", 0),
+                    "calculation_method": f"{days_to_average}_day_rolling_average"
                 }
         
         return summaries
@@ -154,21 +168,24 @@ class OperatorPerformanceService:
             # Get yesterday's 7-day window (days 1-7, overlapping 6 days with current period days 0-6)
             yesterday_7_days = daily_performance[1:8]  # Skip today (day 0), take days 1-7 (yesterday's 7-day window)
             
-            if len(yesterday_7_days) == 7:
+            if len(yesterday_7_days) >= 1:  # Allow for shorter periods if less than 7 days
+                days_to_average = len(yesterday_7_days)
+                
                 # Calculate yesterday's 7-day average metrics
-                avg_participation = sum(d.get("participation_rate", 0) for d in yesterday_7_days) / 7
-                avg_head_accuracy = sum(d.get("head_accuracy", 0) for d in yesterday_7_days) / 7
-                avg_target_accuracy = sum(d.get("target_accuracy", 0) for d in yesterday_7_days) / 7
-                avg_source_accuracy = sum(d.get("source_accuracy", 0) for d in yesterday_7_days) / 7
-                avg_inclusion_delay = sum(d.get("avg_inclusion_delay", 0) for d in yesterday_7_days) / 7
-                avg_performance = sum(d.get("attestation_performance", 0) for d in yesterday_7_days) / 7
+                avg_participation = sum(d.get("participation_rate", 0) for d in yesterday_7_days) / days_to_average
+                avg_head_accuracy = sum(d.get("head_accuracy", 0) for d in yesterday_7_days) / days_to_average
+                avg_target_accuracy = sum(d.get("target_accuracy", 0) for d in yesterday_7_days) / days_to_average
+                avg_source_accuracy = sum(d.get("source_accuracy", 0) for d in yesterday_7_days) / days_to_average
+                avg_inclusion_delay = sum(d.get("avg_inclusion_delay", 0) for d in yesterday_7_days) / days_to_average
+                avg_performance = sum(d.get("attestation_performance", 0) for d in yesterday_7_days) / days_to_average
                 
                 # Use yesterday (day 1) as the reference date
                 reference_day = daily_performance[1]
                 
                 summaries[operator] = {
                     "validator_count": reference_day.get("validator_count", 0),
-                    "days_of_data": 7,
+                    "days_of_data": len(daily_performance),
+                    "days_averaged": days_to_average,
                     "latest_date": reference_day.get("date"),
                     "avg_participation_rate": round(avg_participation, 2),
                     "avg_head_accuracy": round(avg_head_accuracy, 2),
@@ -177,7 +194,7 @@ class OperatorPerformanceService:
                     "avg_inclusion_delay": round(avg_inclusion_delay, 3),
                     "avg_attestation_performance": round(avg_performance, 6),
                     "latest_performance": reference_day.get("attestation_performance", 0),
-                    "calculation_method": "yesterday_7_day_rolling_average_overlapping"
+                    "calculation_method": f"previous_day_{days_to_average}_day_rolling_average_overlapping"
                 }
         
         return summaries
