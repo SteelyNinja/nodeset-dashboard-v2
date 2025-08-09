@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { ValidatorPerformanceData, ExitData } from '../../types/api';
 import { apiService } from '../../services/api';
 import { analyticsService } from '../../services/analytics';
@@ -68,6 +68,7 @@ const PerformanceTab: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [searchTerm7d, setSearchTerm7d] = useState('');
   const [searchTerm31d, setSearchTerm31d] = useState('');
+  const hasInitialized = useRef(false);
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -75,7 +76,105 @@ const PerformanceTab: React.FC = () => {
   const [currentPage31d, setCurrentPage31d] = useState(1);
   const itemsPerPage = 20;
 
-  // Calculate attestation-only performance analysis (matching original Streamlit logic exactly)
+  const calculateAttestationPerformanceFromOperatorData = (
+    operatorSummaryData: any,
+    proposalsData: any,
+    syncCommitteeData: any,
+    days: number,
+    validatorData: any
+  ): AttestationPerformanceData[] => {
+    const now = Date.now() / 1000;
+    const lookbackDays = days === 7 ? 10 : 34; // 10 days for 7-day analysis, 34 for 31-day
+    const lookbackTimestamp = now - (lookbackDays * 24 * 60 * 60);
+
+    console.log(`=== NEW METHOD: Calculating ${days}-day attestation performance using operator daily data ===`);
+    console.log(`Lookback period: ${lookbackDays} days (timestamp: ${lookbackTimestamp})`);
+    console.log(`Operator summary data contains ${Object.keys(operatorSummaryData).length} operators`);
+    
+    const validatorsWithProposals = new Set<number>();
+    if (proposalsData?.proposals) {
+      console.log(`Processing ${proposalsData.proposals.length} proposals`);
+      proposalsData.proposals.forEach((proposal: any) => {
+        const proposalTimestamp = proposal.timestamp || 0;
+        if (proposalTimestamp >= lookbackTimestamp) {
+          const validatorIndex = proposal.validator_index || proposal.proposer_index;
+          if (validatorIndex) {
+            validatorsWithProposals.add(validatorIndex);
+          }
+        }
+      });
+    }
+
+    const validatorsWithSyncDuties = new Set<number>();
+    if (syncCommitteeData?.detailed_stats) {
+      const GENESIS_TIME = 1606824023;
+      console.log(`Processing ${syncCommitteeData.detailed_stats.length} sync committee entries`);
+      
+      syncCommitteeData.detailed_stats.forEach((stat: any) => {
+        if (stat.validator_index && stat.end_slot) {
+          const endTimestamp = GENESIS_TIME + (stat.end_slot * 12);
+          if (endTimestamp >= lookbackTimestamp) {
+            validatorsWithSyncDuties.add(stat.validator_index);
+          }
+        }
+      });
+    }
+
+    const excludedOperators = new Set<string>();
+    
+    if (validatorData?.operator_validators) {
+      Object.entries(validatorData.operator_validators).forEach(([operatorAddress, validatorCount]: [string, any]) => {
+        const operatorValidators = Object.entries(validatorData.validators || {})
+          .filter(([_, validator]: [string, any]) => validator.operator === operatorAddress)
+          .map(([_, validator]: [string, any]) => validator.validator_index)
+          .filter(Boolean);
+
+        const hasExcludedValidator = operatorValidators.some(validatorIndex => 
+          validatorsWithProposals.has(validatorIndex) || 
+          validatorsWithSyncDuties.has(validatorIndex)
+        );
+
+        if (hasExcludedValidator) {
+          excludedOperators.add(operatorAddress);
+        }
+      });
+    }
+
+    console.log(`Found ${validatorsWithProposals.size} validators with proposals, ${validatorsWithSyncDuties.size} with sync duties`);
+    console.log(`Excluding ${excludedOperators.size} operators with recent proposals/sync duties`);
+    console.log(`Remaining attestation-only operators: ${Object.keys(operatorSummaryData).length - excludedOperators.size}`);
+
+    const attestationOnlyOperators = Object.entries(operatorSummaryData)
+      .filter(([operatorAddress, _]) => !excludedOperators.has(operatorAddress))
+      .map(([operatorAddress, summary]: [string, any]) => ({
+        operator: operatorAddress,
+        address: operatorAddress,
+        ens_name: validatorData?.ens_names?.[operatorAddress] || '',
+        regular_performance_gwei: summary.avg_attestation_performance || 0,
+        attestation_validators: summary.validator_count || 0,
+        excluded_validators: 0,
+        total_validators: summary.validator_count || 0,
+        relative_score: 0
+      }));
+
+    if (attestationOnlyOperators.length > 0) {
+      const highestPerformance = Math.max(...attestationOnlyOperators.map(op => op.regular_performance_gwei));
+      console.log(`Highest attestation performance: ${highestPerformance}%`);
+      
+      // Debug: Show performance range
+      const lowestPerformance = Math.min(...attestationOnlyOperators.map(op => op.regular_performance_gwei));
+      console.log(`Performance range: ${lowestPerformance}% to ${highestPerformance}%`);
+      
+      attestationOnlyOperators.forEach(op => {
+        op.relative_score = highestPerformance > 0 ? (op.regular_performance_gwei / highestPerformance) * 100 : 0;
+      });
+
+      attestationOnlyOperators.sort((a, b) => b.regular_performance_gwei - a.regular_performance_gwei);
+    }
+
+    return attestationOnlyOperators;
+  };
+
   const calculateAttestationPerformance = (
     validators: any,
     proposalsData: any,
@@ -92,7 +191,7 @@ const PerformanceTab: React.FC = () => {
     const activityDays = days === 7 ? 7 : 32; // Must be active for 7+ days for 7-day analysis, 32+ days for 31-day
     const activityTimestamp = now - (activityDays * 24 * 60 * 60);
 
-    console.log(`Calculating ${days}-day attestation performance, excluding proposals/sync from last ${lookbackDays} days`);
+    console.log(`=== Calculating ${days}-day attestation performance, excluding proposals/sync from last ${lookbackDays} days ===`);
     
     // Debug: Check the ENS names data structure from validatorData
     console.log(`=== ${days}-day Attestation Performance Debug ===`);
@@ -179,6 +278,14 @@ const PerformanceTab: React.FC = () => {
     }
     
     console.log(`Built exit set with ${exitedValidators.size} exited validators`);
+    
+    // Debug: Log specific operator's exited validators
+    if (exitData?.recent_exits) {
+      const targetOperatorExits = exitData.recent_exits.filter((exitRecord: any) => 
+        exitRecord.operator === '0x1eCfb39B5053B9BE44B919a5E19de4c11383274a'
+      );
+      console.log(`waqwaqattack.eth exited validators:`, targetOperatorExits.map((e: any) => e.validator_index));
+    }
 
     // Combine excluded validators (those with proposals or sync duties)
     const excludedValidators = new Set<number>();
@@ -256,14 +363,14 @@ const PerformanceTab: React.FC = () => {
         // Check if this specific validator has exited
         if (exitedValidators.has(validatorIndexNum)) {
           // Skip this validator as it has actually exited
-          if (operator === '0x273e0A1031d75D3Eee554628E3a578A57274175c') {
-            console.log(`DEBUG: SKIPPING validator ${validatorIndex} (${validatorIndexNum}) - found in exit records`);
+          if (operator === '0x1eCfb39B5053B9BE44B919a5E19de4c11383274a') {
+            console.log(`DEBUG: SKIPPING EXITED validator ${validatorIndex} (${validatorIndexNum}) - found in exit records, performance: ${performanceGwei}`);
           }
           return;
         }
 
         // Debug logging for the specific operator
-        if (operator === '0x273e0A1031d75D3Eee554628E3a578A57274175c') {
+        if (operator === '0x1eCfb39B5053B9BE44B919a5E19de4c11383274a') {
           console.log(`DEBUG: Processing ACTIVE validator ${validatorIndex} (${validatorIndexNum}) - performance: ${performanceGwei}`);
         }
 
@@ -279,11 +386,14 @@ const PerformanceTab: React.FC = () => {
           // This is an attestation-only validator with positive performance
           operatorData[operator].attestationOnlyValidators++;
           operatorData[operator].regularPerformances.push(performanceGwei);
+          if (operator === '0x1eCfb39B5053B9BE44B919a5E19de4c11383274a') {
+            console.log(`DEBUG: INCLUDED validator ${validatorIndex} with performance: ${performanceGwei}`);
+          }
         } else {
           // Validator has zero or negative performance - count as excluded
           operatorData[operator].excludedValidators++;
           excludedCount++;
-          if (operator === '0x273e0A1031d75D3Eee554628E3a578A57274175c') {
+          if (operator === '0x1eCfb39B5053B9BE44B919a5E19de4c11383274a') {
             console.log(`DEBUG: EXCLUDED validator ${validatorIndex} due to zero/negative performance: ${performanceGwei}`);
           }
         }
@@ -329,11 +439,31 @@ const PerformanceTab: React.FC = () => {
       relative_score: highestPerformance > 0 ? (op.average_performance_per_validator / highestPerformance) * 100 : 0
     }));
 
+    // Debug logging for target operator
+    const targetOperator = operatorResults.find(op => op.operator === '0x1eCfb39B5053B9BE44B919a5E19de4c11383274a');
+    if (targetOperator) {
+      console.log(`DEBUG: waqwaqattack.eth final results:`, {
+        totalValidators: targetOperator.total_validators,
+        attestationValidators: targetOperator.attestation_validators,
+        excludedValidators: targetOperator.excluded_validators,
+        averagePerformance: targetOperator.average_performance_per_validator,
+        highestPerformance: highestPerformance,
+        relativeScore: highestPerformance > 0 ? (targetOperator.average_performance_per_validator / highestPerformance) * 100 : 0
+      });
+    }
+
     
     return results;
   };
 
   const fetchData = useCallback(async () => {
+    // Prevent double execution in React strict mode
+    if (hasInitialized.current) {
+      console.log('fetchData already running, skipping...');
+      return;
+    }
+    hasInitialized.current = true;
+    
     try {
       setLoading(true);
       
@@ -434,26 +564,28 @@ const PerformanceTab: React.FC = () => {
         setHasPerformanceData(false);
       }
 
-      // Fetch attestation-only performance data
+      // Fetch attestation-only performance data using operator daily performance cache
       try {
-        const [validatorPerformanceData, proposalsData, syncCommitteeData] = await Promise.all([
-          apiService.getData<ValidatorPerformanceData>('validator-performance'),
+        const [operatorSummary7d, operatorSummary31d, proposalsData, syncCommitteeData] = await Promise.all([
+          apiService.getOperatorsSummary(7),
+          apiService.getOperatorsSummary(31), 
           apiService.getData('proposals'),
           apiService.getData('sync-committee')
         ]);
 
-        if (validatorPerformanceData?.validators) {
+        if (operatorSummary7d && Object.keys(operatorSummary7d).length > 0) {
           setHasAttestationData(true);
           
-          
-          // Calculate 7-day and 31-day attestation performance
-          const attestation7d = calculateAttestationPerformance(validatorPerformanceData, proposalsData, syncCommitteeData, 7, validatorData, detailedExitData);
-          const attestation31d = calculateAttestationPerformance(validatorPerformanceData, proposalsData, syncCommitteeData, 31, validatorData, detailedExitData);
-          
-          console.log('Attestation 7d data:', attestation7d.length, 'operators');
-          console.log('Attestation 31d data:', attestation31d.length, 'operators');
-          
+          // Calculate 7-day attestation performance using operator daily performance data
+          console.log('=== STARTING 7-DAY CALCULATION (NEW METHOD) ===');
+          const attestation7d = calculateAttestationPerformanceFromOperatorData(operatorSummary7d, proposalsData, syncCommitteeData, 7, validatorData);
+          console.log('=== COMPLETED 7-DAY CALCULATION (NEW METHOD) ===', attestation7d.length, 'operators');
           setAttestation7dData(attestation7d);
+          
+          // Calculate 31-day attestation performance using operator daily performance data
+          console.log('=== STARTING 31-DAY CALCULATION (NEW METHOD) ===');
+          const attestation31d = calculateAttestationPerformanceFromOperatorData(operatorSummary31d, proposalsData, syncCommitteeData, 31, validatorData);
+          console.log('=== COMPLETED 31-DAY CALCULATION (NEW METHOD) ===', attestation31d.length, 'operators');
           setAttestation31dData(attestation31d);
         } else {
           setHasAttestationData(false);

@@ -120,9 +120,12 @@ class OperatorPerformanceService:
             if limit_days:
                 daily_performance = daily_performance[:limit_days]
             
-            # Calculate 7-day averages (or available days if less than 7)
+            # Calculate averages for requested period (or available days if less)
             if daily_performance:
-                days_to_average = min(7, len(daily_performance))
+                if limit_days:
+                    days_to_average = min(limit_days, len(daily_performance))
+                else:
+                    days_to_average = min(7, len(daily_performance))  # Default to 7-day
                 recent_days = daily_performance[:days_to_average]
                 
                 # Calculate averages across the period
