@@ -302,7 +302,7 @@ const OutagesTab: React.FC = () => {
       <div className="mb-8">
         <GlassCard elevation="elevated" className="p-6" hoverable={false}>
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-            <Icon name="time" size="sm" color="primary" className="inline mr-2" />
+            <Icon name="clock" size="sm" color="primary" className="inline mr-2" />
             All Outages
           </h3>
           <div className="max-h-96 overflow-y-auto">
