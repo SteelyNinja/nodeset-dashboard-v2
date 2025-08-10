@@ -402,6 +402,7 @@ export type TabId =
   | 'concentration'
   | 'operators'
   | 'performance'
+  | 'outages'
   | 'proposals'
   | 'sync-committee'
   | 'exit-analysis'
@@ -543,4 +544,46 @@ export interface PerformanceTrend {
   avg_source_accuracy: number;
   avg_inclusion_delay: number;
   avg_attestation_performance: number;
+}
+
+// Outages Types
+export interface OutageEvent {
+  start: string;
+  end: string;
+  duration_seconds: number;
+}
+
+export interface ValidatorOutageHistory {
+  count: number;
+  last_outage: string;
+  total_downtime_seconds: number;
+  outages: OutageEvent[];
+}
+
+export interface OutagesData {
+  down_validators: string[];
+  down_since: Record<string, string>;
+  initial_misses: Record<string, number>;
+  outage_history: Record<string, ValidatorOutageHistory>;
+  summary_message_id: number;
+  last_update: string;
+}
+
+export interface OutagesSummary {
+  total_validators_with_outages: number;
+  total_outage_events: number;
+  total_downtime_hours: number;
+  currently_down: number;
+  worst_performers: Array<{
+    validator: string;
+    outage_count: number;
+    total_downtime_seconds: number;
+    uptime_percentage: number;
+  }>;
+  recent_outages: Array<{
+    validator: string;
+    start: string;
+    end: string;
+    duration_seconds: number;
+  }>;
 }

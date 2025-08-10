@@ -18,11 +18,12 @@ interface TabNavigationProps {
 
 const tabs: Tab[] = [
   { id: 'information', label: 'Information', icon: 'info' },
-  { id: 'operators', label: 'Operators Ranking', icon: 'trophy' },
+  { id: 'operators', label: 'Leaderboard', icon: 'trophy' },
   { id: 'vault-activity', label: 'Vault Activity', icon: 'vault' },
   { id: 'distribution', label: 'Distribution', icon: 'distribution' },
   { id: 'concentration', label: 'Concentration', icon: 'concentration' },
   { id: 'performance', label: 'Performance', icon: 'performance' },
+  { id: 'outages', label: 'Outages', icon: 'warning' },
   { id: 'proposals', label: 'Proposals', icon: 'proposals' },
   { id: 'sync-committee', label: 'Sync Committee', icon: 'syncCommittee' },
   { id: 'exit-analysis', label: 'Exit Analysis', icon: 'exitAnalysis' },

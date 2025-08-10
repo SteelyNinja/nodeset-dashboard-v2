@@ -23,6 +23,8 @@ import {
   OperatorSummary,
   OperatorChartData,
   PerformanceTrend,
+  OutagesData,
+  OutagesSummary,
 } from '../types/api';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL;
@@ -283,6 +285,22 @@ class ApiService {
       console.error('Data availability check failed:', error);
       return false;
     }
+  }
+
+  // Outages API methods
+  async getOutagesData(): Promise<OutagesData> {
+    const response = await this.apiClient.get<ApiResponse<OutagesData>>('/api/outages/data');
+    return this.extractData(response);
+  }
+
+  async getOutagesSummary(): Promise<OutagesSummary> {
+    const response = await this.apiClient.get<ApiResponse<OutagesSummary>>('/api/outages/summary');
+    return this.extractData(response);
+  }
+
+  async getValidatorOutageHistory(validatorAddress: string): Promise<any> {
+    const response: AxiosResponse<any> = await this.apiClient.get(`/api/outages/validator/${validatorAddress}`);
+    return response.data;
   }
 }
 
