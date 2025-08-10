@@ -48,6 +48,7 @@ import {
   ServerIcon,
   ComputerDesktopIcon,
   CloudIcon,
+  ClockIcon,
   
   // Professional Business Icons
   BuildingOfficeIcon,
@@ -115,6 +116,8 @@ export const IconMap = {
   computer: ComputerDesktopIcon,
   cloud: CloudIcon,
   cube: CubeIcon,
+  clock: ClockIcon,
+  time: ClockIcon,
   
   // Business & Finance
   building: BuildingOfficeIcon,
