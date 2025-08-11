@@ -5,6 +5,7 @@ import LoadingSpinner from '../common/LoadingSpinner';
 import ErrorMessage from '../common/ErrorMessage';
 import Icon from '../common/Icon';
 import BarChartComponent from '../charts/BarChart';
+import LineChartComponent from '../charts/LineChart';
 import PieChartComponent from '../charts/PieChart';
 import { OutagesData, OutagesSummary, ValidatorData } from '../../types/api';
 import { apiService } from '../../services/api';
@@ -87,6 +88,38 @@ const getOperatorName = (operatorAddress: string, validatorData: ValidatorData |
   return validatorData.ens_names[operatorAddress] || '';
 };
 
+// Helper function to process outages data into daily metrics
+const processDailyOutagesData = (outagesData: OutagesData): Array<{date: string, outages: number, downtime: number}> => {
+  const dailyMetrics = new Map<string, {outages: number, downtime: number}>();
+  
+  Object.values(outagesData.outage_history || {}).forEach(history => {
+    history.outages.forEach(outage => {
+      const startDate = new Date(outage.start).toISOString().split('T')[0];
+      const endDate = new Date(outage.end).toISOString().split('T')[0];
+      
+      // If outage spans multiple days, we'll count it on the start date for simplicity
+      const date = startDate;
+      
+      if (!dailyMetrics.has(date)) {
+        dailyMetrics.set(date, {outages: 0, downtime: 0});
+      }
+      
+      const dayMetrics = dailyMetrics.get(date)!;
+      dayMetrics.outages += 1;
+      dayMetrics.downtime += outage.duration_seconds / 3600; // Convert to hours
+    });
+  });
+  
+  // Convert to array and sort by date
+  return Array.from(dailyMetrics.entries())
+    .map(([date, metrics]) => ({
+      date,
+      outages: metrics.outages,
+      downtime: Math.round(metrics.downtime * 100) / 100 // Round to 2 decimal places
+    }))
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+};
+
 const OutagesTab: React.FC = () => {
   const [summary, setSummary] = useState<OutagesSummary | null>(null);
   const [outagesData, setOutagesData] = useState<OutagesData | null>(null);
@@ -151,13 +184,7 @@ const OutagesTab: React.FC = () => {
   }
 
   // Prepare chart data
-  const worstPerformersChartData = summary.worst_performers.map(wp => ({
-    name: wp.validator.slice(0, 8) + '...',
-    value: wp.outage_count,
-    fullAddress: wp.validator,
-    downtime: Math.round(wp.total_downtime_seconds / 3600), // Convert to hours
-    uptime: wp.uptime_percentage
-  }));
+  const dailyOutagesChartData = processDailyOutagesData(outagesData);
 
   const uptimeDistributionData = summary.worst_performers.map(wp => ({
     name: wp.validator.slice(0, 8) + '...',
@@ -169,7 +196,7 @@ const OutagesTab: React.FC = () => {
       <div className="mb-6">
         <h1 className="text-headline-large font-semibold text-neutral-900 dark:text-neutral-100 mb-2 flex items-center gap-3">
           <Icon name="warning" size="lg" color="warning" />
-          Validator Outages (&gt; August 3rd)
+          Validator Outages
         </h1>
         <p className="text-gray-600 dark:text-gray-400">
           Monitor validator downtime and outage history
@@ -206,21 +233,33 @@ const OutagesTab: React.FC = () => {
 
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        {/* Outage Frequency Chart */}
+        {/* Daily Outages and Downtime Chart */}
         <GlassCard elevation="elevated" className="p-6">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
             <Icon name="chart" size="sm" color="primary" className="inline mr-2" />
-            Outage Frequency by Validator
+            Daily Outages & Downtime Trends
           </h3>
-          <BarChartComponent
-            data={worstPerformersChartData}
-            dataKey="value"
-            title=""
-            xAxisDataKey="name"
-            xAxisLabel="Validator"
-            yAxisLabel="Number of Outages"
-            color="#ef4444"
-            enableAnimations={true}
+          <LineChartComponent
+            data={dailyOutagesChartData}
+            lines={[
+              {
+                dataKey: "outages",
+                stroke: "#ef4444",
+                strokeWidth: 2,
+                name: "Outages per Day"
+              },
+              {
+                dataKey: "downtime", 
+                stroke: "#f59e0b",
+                strokeWidth: 2,
+                name: "Downtime (Hours)"
+              }
+            ]}
+            xAxisDataKey="date"
+            xAxisLabel="Date"
+            yAxisLabel="Count / Hours"
+            xAxisType="category"
+            showLegend={true}
           />
         </GlassCard>
 
