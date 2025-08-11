@@ -14,7 +14,6 @@ import DistributionTab from './components/tabs/DistributionTab';
 import ConcentrationTab from './components/tabs/ConcentrationTab';
 import OperatorsTab from './components/tabs/OperatorsTab';
 import PerformanceTab from './components/tabs/PerformanceTab';
-import OutagesTab from './components/tabs/OutagesTab';
 import ProposalsTab from './components/tabs/ProposalsTab';
 import SyncCommitteeTab from './components/tabs/SyncCommitteeTab';
 import ExitAnalysisTab from './components/tabs/ExitAnalysisTab';
@@ -127,8 +126,6 @@ function MainDashboard() {
         return <OperatorsTab />;
       case 'performance':
         return <PerformanceTab />;
-      case 'outages':
-        return <OutagesTab />;
       case 'proposals':
         return <ProposalsTab />;
       case 'sync-committee':

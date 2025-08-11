@@ -402,7 +402,6 @@ export type TabId =
   | 'concentration'
   | 'operators'
   | 'performance'
-  | 'outages'
   | 'proposals'
   | 'sync-committee'
   | 'exit-analysis'
