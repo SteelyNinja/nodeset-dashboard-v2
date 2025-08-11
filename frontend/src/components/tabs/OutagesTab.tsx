@@ -4,7 +4,6 @@ import { GlassTable, GlassTableHeader, GlassTableBody, GlassTableRow, GlassTable
 import LoadingSpinner from '../common/LoadingSpinner';
 import ErrorMessage from '../common/ErrorMessage';
 import Icon from '../common/Icon';
-import BarChartComponent from '../charts/BarChart';
 import LineChartComponent from '../charts/LineChart';
 import PieChartComponent from '../charts/PieChart';
 import { OutagesData, OutagesSummary, ValidatorData } from '../../types/api';
@@ -95,7 +94,6 @@ const processDailyOutagesData = (outagesData: OutagesData): Array<{date: string,
   Object.values(outagesData.outage_history || {}).forEach(history => {
     history.outages.forEach(outage => {
       const startDate = new Date(outage.start).toISOString().split('T')[0];
-      const endDate = new Date(outage.end).toISOString().split('T')[0];
       
       // If outage spans multiple days, we'll count it on the start date for simplicity
       const date = startDate;
@@ -385,7 +383,6 @@ const OutagesTab: React.FC = () => {
       <GlassCard elevation="flat" className="p-4">
         <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
           <span>Last Updated: {formatTimestamp(outagesData?.last_update || '')}</span>
-          <span>Data Source: validator_state.json</span>
         </div>
       </GlassCard>
     </div>
