@@ -47,7 +47,9 @@ async def get_validators_down(
                 val_nos_name,
                 epoch,
                 val_status,
-                CASE WHEN att_happened = 0 OR att_happened IS NULL THEN 1 ELSE 0 END as missed_attestation
+                CASE WHEN att_happened = 0 OR att_happened IS NULL THEN 1 ELSE 0 END as missed_attestation,
+                -- Track if validator was actually supposed to attest (active status)
+                CASE WHEN val_status IN ('active_ongoing', 'active_slashed') THEN 1 ELSE 0 END as should_attest
             FROM validators_summary 
             WHERE epoch >= {start_epoch} 
             AND epoch <= {latest_epoch}
@@ -64,11 +66,15 @@ async def get_validators_down(
                 ve.val_id,
                 ve.val_nos_name,
                 COUNT(*) as total_epochs,
-                SUM(ve.missed_attestation) as missed_epochs
+                SUM(ve.missed_attestation) as missed_epochs,
+                SUM(ve.should_attest) as active_epochs,
+                -- Only count epochs where validator was active
+                SUM(CASE WHEN ve.should_attest = 1 AND ve.missed_attestation = 1 THEN 1 ELSE 0 END) as active_missed_epochs
             FROM validator_epochs ve
             INNER JOIN active_validators av ON ve.val_id = av.val_id
             GROUP BY ve.val_id, ve.val_nos_name
-            HAVING COUNT(*) = 3 AND SUM(ve.missed_attestation) = 3
+            -- Require: full 3 epochs of data, all active epochs, and all active epochs missed attestations
+            HAVING COUNT(*) = 3 AND SUM(ve.should_attest) = 3 AND SUM(CASE WHEN ve.should_attest = 1 AND ve.missed_attestation = 1 THEN 1 ELSE 0 END) = 3
         )
         SELECT 
             val_nos_name as operator,
