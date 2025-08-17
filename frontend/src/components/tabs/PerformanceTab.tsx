@@ -209,25 +209,27 @@ const PerformanceTab: React.FC = () => {
           }
 
           // Transform the getOperatorsSummary data to match expected format
-          const data = Object.entries(performanceResponse).map(([address, operatorData]) => {
-            const exits = operatorExits[address] || 0;
-            const totalValidators = validatorData.operator_validators[address] || operatorData.validator_count;
-            const activeValidators = Math.max(0, totalValidators - exits);
-            const ensName = validatorData.ens_names?.[address] || '';
-            const performance = operatorData.avg_attestation_performance || 0;
-            
-            return {
-              operator: ensName || address,
-              address: address,
-              performance: performance,
-              validator_count: activeValidators,
-              category: getPerformanceCategory(performance),
-              active: activeValidators,
-              total: totalValidators,
-              exited: exits,
-              ens_name: ensName
-            };
-          });
+          const data = Object.entries(performanceResponse)
+            .map(([address, operatorData]) => {
+              const exits = operatorExits[address] || 0;
+              const totalValidators = validatorData.operator_validators[address] || operatorData.validator_count;
+              const activeValidators = Math.max(0, totalValidators - exits);
+              const ensName = validatorData.ens_names?.[address] || '';
+              const performance = operatorData.avg_attestation_performance || 0;
+              
+              return {
+                operator: ensName || address,
+                address: address,
+                performance: performance,
+                validator_count: activeValidators,
+                category: getPerformanceCategory(performance),
+                active: activeValidators,
+                total: totalValidators,
+                exited: exits,
+                ens_name: ensName
+              };
+            })
+            .filter(operator => operator.active > 0); // Only include operators with active validators
 
           // Sort by performance (high to low), then by active validators (high to low) as tiebreaker
           data.sort((a, b) => {
