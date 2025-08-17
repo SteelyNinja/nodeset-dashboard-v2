@@ -133,9 +133,27 @@ class AnalyticsService:
         for validator_id, validator_info in performance_data["validators"].items():
             operator = validator_info.get("operator", "Unknown")
             performance_metrics = validator_info.get("performance_metrics", {})
+            activation_data = validator_info.get("activation_data", {})
             
             if performance_field in performance_metrics:
                 performance_value = performance_metrics[performance_field]
+                
+                # Check if validator was activated recently and should be excluded from performance calculation
+                activation_timestamp = activation_data.get("activation_timestamp", 0)
+                if activation_timestamp > 0:
+                    import time
+                    current_timestamp = time.time()
+                    period_days = {"performance_1d": 1, "performance_7d": 7, "performance_31d": 31}.get(performance_field, 1)
+                    period_start_timestamp = current_timestamp - (period_days * 24 * 60 * 60)
+                    
+                    # If validator was activated after the period started, check activity ratio
+                    if activation_timestamp > period_start_timestamp:
+                        active_duration = current_timestamp - activation_timestamp
+                        period_duration = period_days * 24 * 60 * 60
+                        activity_ratio = min(1.0, active_duration / period_duration)
+                        
+                        # Skip validators that were not active for the entire period
+                        continue
                 
                 if operator not in operator_totals:
                     operator_totals[operator] = 0
@@ -192,8 +210,25 @@ class AnalyticsService:
             if activation_timestamp > min_activation_timestamp:
                 continue  # Skip validators that haven't been active long enough
             
+            # For validators that were activated after the period start, adjust performance calculation
+            import time
+            current_timestamp = time.time()
+            period_days = {"performance_1d": 1, "performance_7d": 7, "performance_31d": 31}.get(performance_field, 7)
+            period_start_timestamp = current_timestamp - (period_days * 24 * 60 * 60)
+            
             if performance_field in performance_metrics and validator_index is not None:
                 performance_gwei = performance_metrics[performance_field]
+                
+                # If validator was activated after the period started, we need to prorate or skip
+                if activation_timestamp > period_start_timestamp:
+                    # Calculate how much of the period the validator was actually active
+                    active_duration = current_timestamp - activation_timestamp
+                    period_duration = period_days * 24 * 60 * 60
+                    activity_ratio = min(1.0, active_duration / period_duration)
+                    
+                    # Only include validators that were active for the entire period
+                    # Skip any validator that was activated after the period started
+                    continue  # Skip validators that were not active for the full period
                 
                 if operator not in operator_data:
                     operator_data[operator] = {

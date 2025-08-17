@@ -192,12 +192,12 @@ const PerformanceTab: React.FC = () => {
         apiService.getData<ExitData>('exit-data')
       ]);
 
-      // Try to fetch performance data
+      // Try to fetch 24-hour performance data
       try {
-        const performanceResponse = await apiService.getPerformanceAnalysis('7d');
+        const performanceResponse = await apiService.getOperatorsSummary(1);
         
-        if (performanceResponse && performanceResponse.operator_details) {
-          // We have performance data
+        if (performanceResponse && Object.keys(performanceResponse).length > 0) {
+          // We have 24-hour performance data
           setHasPerformanceData(true);
           
           // Create a map of exits by operator
@@ -208,18 +208,20 @@ const PerformanceTab: React.FC = () => {
             });
           }
 
-          const data = performanceResponse.operator_details.map((item) => {
-            const exits = operatorExits[item.full_address] || 0;
-            const totalValidators = validatorData.operator_validators[item.full_address] || item.validator_count;
+          // Transform the getOperatorsSummary data to match expected format
+          const data = Object.entries(performanceResponse).map(([address, operatorData]) => {
+            const exits = operatorExits[address] || 0;
+            const totalValidators = validatorData.operator_validators[address] || operatorData.validator_count;
             const activeValidators = Math.max(0, totalValidators - exits);
-            const ensName = validatorData.ens_names?.[item.full_address] || '';
+            const ensName = validatorData.ens_names?.[address] || '';
+            const performance = operatorData.avg_attestation_performance || 0;
             
             return {
-              operator: item.operator,
-              address: item.full_address,
-              performance: item.performance,
+              operator: ensName || address,
+              address: address,
+              performance: performance,
               validator_count: activeValidators,
-              category: getPerformanceCategory(item.performance),
+              category: getPerformanceCategory(performance),
               active: activeValidators,
               total: totalValidators,
               exited: exits,
