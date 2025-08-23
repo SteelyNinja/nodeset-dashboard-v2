@@ -398,9 +398,17 @@ async def get_below_threshold(
     
     Theoretical maximum attestation rewards = (att_earned_reward + att_missed_reward).
     This represents what a validator could have earned with perfect attestation performance.
+    Only includes epochs where validators were actively supposed to earn rewards (active duty periods).
+    
+    IMPORTANT: Only includes validators that have 100% active duty data coverage for the entire 1-day period.
+    Validators must have active duty epochs for all 225 epochs in the day.
+    
+    Args:
+        limit: Maximum number of validators to return
     
     Returns:
         List of validators with their attestation reward performance below the 97% threshold
+        and complete active duty data coverage for the entire 1-day period
     """
     try:
         if not await clickhouse_service.is_available():
@@ -443,35 +451,39 @@ async def get_below_threshold(
         
         # Query to find validators below threshold
         # Calculate theoretical maximum rewards vs actual rewards
+        # Only include epochs where validators were actively supposed to earn rewards
         query = f"""
         WITH validator_rewards AS (
             SELECT 
                 val_id,
                 val_nos_name,
+                -- Count all epochs and active duty epochs separately
                 COUNT(*) as total_epochs,
-                -- Actual attestation rewards earned
-                SUM(COALESCE(att_earned_reward, 0)) as actual_rewards,
-                -- Theoretical maximum attestation rewards (earned + missed)
-                SUM(COALESCE(att_earned_reward, 0) + COALESCE(att_missed_reward, 0)) as theoretical_max_rewards,
-                -- Performance metrics
-                SUM(CASE WHEN att_happened = 1 THEN 1 ELSE 0 END) as attestations_made,
-                SUM(CASE WHEN att_happened = 0 OR att_happened IS NULL THEN 1 ELSE 0 END) as attestations_missed,
-                SUM(CASE WHEN is_proposer = 1 AND block_proposed = 1 THEN 1 ELSE 0 END) as blocks_proposed,
-                SUM(CASE WHEN is_proposer = 1 AND (block_proposed = 0 OR block_proposed IS NULL) THEN 1 ELSE 0 END) as blocks_missed,
-                AVG(CASE WHEN sync_percent IS NOT NULL THEN sync_percent ELSE NULL END) as avg_sync_performance
+                SUM(CASE WHEN val_status IN ('active_ongoing', 'active_slashed') THEN 1 ELSE 0 END) as active_duty_epochs,
+                -- Actual attestation rewards earned (only during active duty)
+                SUM(CASE WHEN val_status IN ('active_ongoing', 'active_slashed') THEN COALESCE(att_earned_reward, 0) ELSE 0 END) as actual_rewards,
+                -- Theoretical maximum attestation rewards (earned + missed, only during active duty)
+                SUM(CASE WHEN val_status IN ('active_ongoing', 'active_slashed') THEN COALESCE(att_earned_reward, 0) + COALESCE(att_missed_reward, 0) ELSE 0 END) as theoretical_max_rewards,
+                -- Performance metrics (only during active duty)
+                SUM(CASE WHEN val_status IN ('active_ongoing', 'active_slashed') AND att_happened = 1 THEN 1 ELSE 0 END) as attestations_made,
+                SUM(CASE WHEN val_status IN ('active_ongoing', 'active_slashed') AND (att_happened = 0 OR att_happened IS NULL) THEN 1 ELSE 0 END) as attestations_missed,
+                SUM(CASE WHEN val_status IN ('active_ongoing', 'active_slashed') AND is_proposer = 1 AND block_proposed = 1 THEN 1 ELSE 0 END) as blocks_proposed,
+                SUM(CASE WHEN val_status IN ('active_ongoing', 'active_slashed') AND is_proposer = 1 AND (block_proposed = 0 OR block_proposed IS NULL) THEN 1 ELSE 0 END) as blocks_missed,
+                AVG(CASE WHEN val_status IN ('active_ongoing', 'active_slashed') AND sync_percent IS NOT NULL THEN sync_percent ELSE NULL END) as avg_sync_performance
             FROM validators_summary 
             WHERE epoch >= {start_epoch} 
             AND epoch <= {latest_epoch}
             AND val_nos_name IS NOT NULL
             AND val_status NOT IN ('exited_unslashed', 'active_exiting', 'withdrawal_possible', 'withdrawal_done')
             GROUP BY val_id, val_nos_name
-            HAVING COUNT(*) >= 1  -- Must have at least some data
+            HAVING SUM(CASE WHEN val_status IN ('active_ongoing', 'active_slashed') THEN 1 ELSE 0 END) = 225  -- Must have 100% active duty data coverage for 1 day (225 epochs)
         ),
         performance_analysis AS (
             SELECT 
                 val_id,
                 val_nos_name,
                 total_epochs,
+                active_duty_epochs,
                 actual_rewards,
                 theoretical_max_rewards,
                 attestations_made,
@@ -490,6 +502,7 @@ async def get_below_threshold(
             val_nos_name as operator,
             val_id as validator_id,
             total_epochs,
+            active_duty_epochs,
             actual_rewards,
             theoretical_max_rewards,
             reward_percentage,
@@ -512,22 +525,23 @@ async def get_below_threshold(
         # Transform to structured format
         results = []
         for row in raw_data:
-            if len(row) >= 14:
+            if len(row) >= 15:
                 results.append({
                     'operator': row[0],
                     'validator_id': int(row[1]),
                     'total_epochs': int(row[2]),
-                    'actual_rewards': int(row[3]),
-                    'theoretical_max_rewards': int(row[4]),
-                    'reward_percentage': float(row[5]),
-                    'attestations_made': int(row[6]),
-                    'attestations_missed': int(row[7]),
-                    'blocks_proposed': int(row[8]),
-                    'blocks_missed': int(row[9]),
-                    'avg_sync_performance': float(row[10]) if row[10] not in ['\\N', None, ''] else 0.0,
-                    'latest_epoch': int(row[11]),
-                    'start_epoch': int(row[12]),
-                    'threshold_percentage': float(row[13])
+                    'active_duty_epochs': int(row[3]),
+                    'actual_rewards': int(row[4]),
+                    'theoretical_max_rewards': int(row[5]),
+                    'reward_percentage': float(row[6]),
+                    'attestations_made': int(row[7]),
+                    'attestations_missed': int(row[8]),
+                    'blocks_proposed': int(row[9]),
+                    'blocks_missed': int(row[10]),
+                    'avg_sync_performance': float(row[11]) if row[11] not in ['\\N', None, ''] else 0.0,
+                    'latest_epoch': int(row[12]),
+                    'start_epoch': int(row[13]),
+                    'threshold_percentage': float(row[14])
                 })
         
         logger.info(f"Found {len(results)} validators below {threshold}% reward threshold for 1 day period")
@@ -549,6 +563,10 @@ async def get_below_threshold_extended(
     
     Theoretical maximum attestation rewards = (att_earned_reward + att_missed_reward).
     This represents what a validator could have earned with perfect attestation performance.
+    Only includes epochs where validators were actively supposed to earn rewards (active duty periods).
+    
+    IMPORTANT: Only includes validators that have 100% active duty data coverage for the entire requested period.
+    Validators must have active duty epochs equal to the total requested epochs (days * 225).
     
     Args:
         days: Number of days to analyze (1-31)
@@ -557,6 +575,7 @@ async def get_below_threshold_extended(
         
     Returns:
         List of validators with their attestation reward performance below the specified threshold
+        and complete active duty data coverage for the entire requested time period
     """
     try:
         if not await clickhouse_service.is_available():
@@ -594,38 +613,42 @@ async def get_below_threshold_extended(
         
         # Query to find validators below threshold
         # Calculate theoretical maximum rewards vs actual rewards
+        # Only include epochs where validators were actively supposed to earn rewards
         query = f"""
         WITH validator_rewards AS (
             SELECT 
                 val_id,
                 val_nos_name,
+                -- Count all epochs and active duty epochs separately
                 COUNT(*) as total_epochs,
-                -- Actual attestation rewards earned
-                SUM(COALESCE(att_earned_reward, 0)) as actual_rewards,
-                -- Theoretical maximum attestation rewards (earned + missed)
-                SUM(COALESCE(att_earned_reward, 0) + COALESCE(att_missed_reward, 0)) as theoretical_max_rewards,
-                -- Performance metrics
-                SUM(CASE WHEN att_happened = 1 THEN 1 ELSE 0 END) as attestations_made,
-                SUM(CASE WHEN att_happened = 0 OR att_happened IS NULL THEN 1 ELSE 0 END) as attestations_missed,
-                SUM(CASE WHEN is_proposer = 1 AND block_proposed = 1 THEN 1 ELSE 0 END) as blocks_proposed,
-                SUM(CASE WHEN is_proposer = 1 AND (block_proposed = 0 OR block_proposed IS NULL) THEN 1 ELSE 0 END) as blocks_missed,
-                AVG(CASE WHEN sync_percent IS NOT NULL THEN sync_percent ELSE NULL END) as avg_sync_performance,
-                -- Daily breakdown for most recent day
-                SUM(CASE WHEN epoch > {latest_epoch} - 225 THEN COALESCE(att_earned_reward, 0) ELSE 0 END) as day_1_actual,
-                SUM(CASE WHEN epoch > {latest_epoch} - 225 THEN COALESCE(att_earned_reward, 0) + COALESCE(att_missed_reward, 0) ELSE 0 END) as day_1_theoretical
+                SUM(CASE WHEN val_status IN ('active_ongoing', 'active_slashed') THEN 1 ELSE 0 END) as active_duty_epochs,
+                -- Actual attestation rewards earned (only during active duty)
+                SUM(CASE WHEN val_status IN ('active_ongoing', 'active_slashed') THEN COALESCE(att_earned_reward, 0) ELSE 0 END) as actual_rewards,
+                -- Theoretical maximum attestation rewards (earned + missed, only during active duty)
+                SUM(CASE WHEN val_status IN ('active_ongoing', 'active_slashed') THEN COALESCE(att_earned_reward, 0) + COALESCE(att_missed_reward, 0) ELSE 0 END) as theoretical_max_rewards,
+                -- Performance metrics (only during active duty)
+                SUM(CASE WHEN val_status IN ('active_ongoing', 'active_slashed') AND att_happened = 1 THEN 1 ELSE 0 END) as attestations_made,
+                SUM(CASE WHEN val_status IN ('active_ongoing', 'active_slashed') AND (att_happened = 0 OR att_happened IS NULL) THEN 1 ELSE 0 END) as attestations_missed,
+                SUM(CASE WHEN val_status IN ('active_ongoing', 'active_slashed') AND is_proposer = 1 AND block_proposed = 1 THEN 1 ELSE 0 END) as blocks_proposed,
+                SUM(CASE WHEN val_status IN ('active_ongoing', 'active_slashed') AND is_proposer = 1 AND (block_proposed = 0 OR block_proposed IS NULL) THEN 1 ELSE 0 END) as blocks_missed,
+                AVG(CASE WHEN val_status IN ('active_ongoing', 'active_slashed') AND sync_percent IS NOT NULL THEN sync_percent ELSE NULL END) as avg_sync_performance,
+                -- Daily breakdown for most recent day (only active duty periods)
+                SUM(CASE WHEN epoch > {latest_epoch} - 225 AND val_status IN ('active_ongoing', 'active_slashed') THEN COALESCE(att_earned_reward, 0) ELSE 0 END) as day_1_actual,
+                SUM(CASE WHEN epoch > {latest_epoch} - 225 AND val_status IN ('active_ongoing', 'active_slashed') THEN COALESCE(att_earned_reward, 0) + COALESCE(att_missed_reward, 0) ELSE 0 END) as day_1_theoretical
             FROM validators_summary 
             WHERE epoch >= {start_epoch} 
             AND epoch <= {latest_epoch}
             AND val_nos_name IS NOT NULL
             AND val_status NOT IN ('exited_unslashed', 'active_exiting', 'withdrawal_possible', 'withdrawal_done')
             GROUP BY val_id, val_nos_name
-            HAVING COUNT(*) >= 1  -- Must have at least some data
+            HAVING SUM(CASE WHEN val_status IN ('active_ongoing', 'active_slashed') THEN 1 ELSE 0 END) = {total_epochs}  -- Must have 100% active duty data coverage
         ),
         performance_analysis AS (
             SELECT 
                 val_id,
                 val_nos_name,
                 total_epochs,
+                active_duty_epochs,
                 actual_rewards,
                 theoretical_max_rewards,
                 attestations_made,
@@ -651,6 +674,7 @@ async def get_below_threshold_extended(
             val_nos_name as operator,
             val_id as validator_id,
             total_epochs,
+            active_duty_epochs,
             actual_rewards,
             theoretical_max_rewards,
             reward_percentage,
@@ -677,26 +701,27 @@ async def get_below_threshold_extended(
         # Transform to structured format
         results = []
         for row in raw_data:
-            if len(row) >= 18:
+            if len(row) >= 19:
                 results.append({
                     'operator': row[0],
                     'validator_id': int(row[1]),
                     'total_epochs': int(row[2]),
-                    'actual_rewards': int(row[3]),
-                    'theoretical_max_rewards': int(row[4]),
-                    'reward_percentage': float(row[5]),
-                    'attestations_made': int(row[6]),
-                    'attestations_missed': int(row[7]),
-                    'blocks_proposed': int(row[8]),
-                    'blocks_missed': int(row[9]),
-                    'avg_sync_performance': float(row[10]) if row[10] not in ['\\N', None, ''] else 0.0,
-                    'day_1_actual_rewards': int(row[11]),
-                    'day_1_theoretical_rewards': int(row[12]),
-                    'day_1_percentage': float(row[13]),
-                    'latest_epoch': int(row[14]),
-                    'start_epoch': int(row[15]),
-                    'days_analyzed': int(row[16]),
-                    'threshold_percentage': float(row[17])
+                    'active_duty_epochs': int(row[3]),
+                    'actual_rewards': int(row[4]),
+                    'theoretical_max_rewards': int(row[5]),
+                    'reward_percentage': float(row[6]),
+                    'attestations_made': int(row[7]),
+                    'attestations_missed': int(row[8]),
+                    'blocks_proposed': int(row[9]),
+                    'blocks_missed': int(row[10]),
+                    'avg_sync_performance': float(row[11]) if row[11] not in ['\\N', None, ''] else 0.0,
+                    'day_1_actual_rewards': int(row[12]),
+                    'day_1_theoretical_rewards': int(row[13]),
+                    'day_1_percentage': float(row[14]),
+                    'latest_epoch': int(row[15]),
+                    'start_epoch': int(row[16]),
+                    'days_analyzed': int(row[17]),
+                    'threshold_percentage': float(row[18])
                 })
         
         logger.info(f"Found {len(results)} validators below {threshold}% reward threshold for {days} day(s) period")
