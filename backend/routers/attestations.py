@@ -222,6 +222,44 @@ async def get_operator_epoch_performance(
         )
 
 
+@router.get("/operator-detailed-attestations/{operator}")
+async def get_operator_detailed_attestations(
+    operator: str,
+    epochs: int = Query(225, description="Number of epochs to retrieve", ge=1, le=500)
+) -> Dict[str, Any]:
+    """Get detailed attestation breakdown for a specific operator over the last N epochs"""
+    
+    if not await clickhouse_service.is_available():
+        raise HTTPException(
+            status_code=503, 
+            detail="ClickHouse service is not available"
+        )
+    
+    try:
+        # Convert epochs to slots for hour calculation (1 epoch = ~6.4 minutes = 32 slots)
+        # 1 hour = ~9.375 epochs, so we'll use 10 epochs for 1 hour
+        if epochs == 10:  # 1 hour mode
+            period_name = "1 hour"
+        else:  # Default 1 day mode (225 epochs)
+            period_name = "1 day"
+        
+        result = await clickhouse_service.get_operator_detailed_attestations(operator, epochs)
+        
+        return {
+            "success": True,
+            "data": result,
+            "period": period_name,
+            "source": "clickhouse",
+            "scope": "operator_specific"
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to get operator detailed attestations for {operator}: {e}")
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Database query failed: {str(e)}"
+        )
+
 @router.get("/health")
 async def clickhouse_health() -> Dict[str, Any]:
     """Check ClickHouse connection health and get database info"""

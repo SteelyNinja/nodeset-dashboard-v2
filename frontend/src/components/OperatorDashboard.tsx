@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { apiService } from '../services/api';
 import { analyticsService } from '../services/analytics';
@@ -36,6 +36,9 @@ const OperatorDashboard: React.FC<OperatorDashboardProps> = ({ operatorAddress: 
   const [comprehensiveData, setComprehensiveData] = useState<any>(null);
   const [costData, setCostData] = useState<any>(null);
   const [operatorExitStats, setOperatorExitStats] = useState<any>(null);
+  const [attestationData, setAttestationData] = useState<any>(null);
+  const [attestationLoading, setAttestationLoading] = useState(false);
+  const [attestationPeriod, setAttestationPeriod] = useState<'1day' | '1hour'>('1day');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedDays, setSelectedDays] = useState<number>(7);
@@ -47,6 +50,30 @@ const OperatorDashboard: React.FC<OperatorDashboardProps> = ({ operatorAddress: 
     }
     return address;
   };
+
+  // Load attestation data
+  const loadAttestationData = useCallback(async () => {
+    if (!operatorAddress) return;
+    
+    try {
+      setAttestationLoading(true);
+      const epochs = attestationPeriod === '1hour' ? 10 : 225;
+      const result = await apiService.getOperatorDetailedAttestations(operatorAddress, epochs);
+      setAttestationData(result.data);
+    } catch (err) {
+      console.error('Failed to load attestation data:', err);
+      // Don't set error state here, just log it since this is additional data
+    } finally {
+      setAttestationLoading(false);
+    }
+  }, [operatorAddress, attestationPeriod]);
+
+  // Load attestation data when operator or period changes
+  useEffect(() => {
+    if (operatorAddress) {
+      loadAttestationData();
+    }
+  }, [operatorAddress, attestationPeriod, loadAttestationData]);
 
   // Load operator data
   useEffect(() => {
@@ -968,6 +995,334 @@ const OperatorDashboard: React.FC<OperatorDashboardProps> = ({ operatorAddress: 
           </div>
         </GlassCard>
       </div>
+
+      {/* Live Attestation Breakdown Table */}
+      <GlassCard hoverable={false}>
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h2 className="text-xl font-semibold text-neutral-900 dark:text-white">
+              Live Attestation Breakdown
+            </h2>
+            {attestationData && (
+              <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
+                Epochs {attestationData.start_epoch} - {attestationData.end_epoch} ({attestationData.total_epochs} epochs)
+              </p>
+            )}
+          </div>
+          
+          {/* Attestation Summary Cards */}
+          {!attestationLoading && attestationData?.attestation_data && (() => {
+            const data = attestationData.attestation_data;
+            
+            // Calculate summary statistics
+            const validEpochs = data.filter((epoch: any) => epoch.participation_rate !== null);
+            const epochsWithAttestations = data.filter((epoch: any) => epoch.attestations_made > 0);
+            
+            const avgParticipation = validEpochs.length > 0 
+              ? validEpochs.reduce((sum: number, epoch: any) => sum + epoch.participation_rate, 0) / validEpochs.length 
+              : null;
+              
+            const avgHeadAccuracy = epochsWithAttestations.length > 0
+              ? epochsWithAttestations.reduce((sum: number, epoch: any) => sum + (epoch.head_accuracy || 0), 0) / epochsWithAttestations.length
+              : null;
+              
+            const avgTargetAccuracy = epochsWithAttestations.length > 0
+              ? epochsWithAttestations.reduce((sum: number, epoch: any) => sum + (epoch.target_accuracy || 0), 0) / epochsWithAttestations.length
+              : null;
+              
+            const avgSourceAccuracy = epochsWithAttestations.length > 0
+              ? epochsWithAttestations.reduce((sum: number, epoch: any) => sum + (epoch.source_accuracy || 0), 0) / epochsWithAttestations.length
+              : null;
+              
+            const avgInclusionDelay = epochsWithAttestations.length > 0
+              ? epochsWithAttestations.reduce((sum: number, epoch: any) => sum + (epoch.avg_inclusion_delay || 0), 0) / epochsWithAttestations.length
+              : null;
+
+            const getPerformanceColor = (value: number | null, threshold1: number = 99, threshold2: number = 95) => {
+              if (value === null) return 'text-neutral-500 dark:text-neutral-400';
+              if (value >= threshold1) return 'text-green-600 dark:text-green-400';
+              if (value >= threshold2) return 'text-yellow-600 dark:text-yellow-400';
+              return 'text-red-600 dark:text-red-400';
+            };
+
+            const getDelayColor = (value: number | null) => {
+              if (value === null) return 'text-neutral-500 dark:text-neutral-400';
+              if (value <= 1.5) return 'text-green-600 dark:text-green-400';  // Excellent
+              if (value <= 2.0) return 'text-yellow-600 dark:text-yellow-400'; // Good
+              return 'text-red-600 dark:text-red-400'; // Poor
+            };
+
+            return (
+              <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+                <div className="bg-white/10 dark:bg-white/5 backdrop-blur-sm rounded-lg border border-white/10 dark:border-white/15 p-3 text-center">
+                  <div className="text-xs font-medium text-neutral-600 dark:text-neutral-400 mb-1">Participation</div>
+                  <div className={`text-lg font-bold ${getPerformanceColor(avgParticipation)}`}>
+                    {avgParticipation !== null ? `${avgParticipation.toFixed(1)}%` : 'N/A'}
+                  </div>
+                </div>
+                
+                <div className="bg-white/10 dark:bg-white/5 backdrop-blur-sm rounded-lg border border-white/10 dark:border-white/15 p-3 text-center">
+                  <div className="text-xs font-medium text-neutral-600 dark:text-neutral-400 mb-1">Head Accuracy</div>
+                  <div className={`text-lg font-bold ${getPerformanceColor(avgHeadAccuracy)}`}>
+                    {avgHeadAccuracy !== null ? `${avgHeadAccuracy.toFixed(1)}%` : 'N/A'}
+                  </div>
+                </div>
+                
+                <div className="bg-white/10 dark:bg-white/5 backdrop-blur-sm rounded-lg border border-white/10 dark:border-white/15 p-3 text-center">
+                  <div className="text-xs font-medium text-neutral-600 dark:text-neutral-400 mb-1">Target Accuracy</div>
+                  <div className={`text-lg font-bold ${getPerformanceColor(avgTargetAccuracy)}`}>
+                    {avgTargetAccuracy !== null ? `${avgTargetAccuracy.toFixed(1)}%` : 'N/A'}
+                  </div>
+                </div>
+                
+                <div className="bg-white/10 dark:bg-white/5 backdrop-blur-sm rounded-lg border border-white/10 dark:border-white/15 p-3 text-center">
+                  <div className="text-xs font-medium text-neutral-600 dark:text-neutral-400 mb-1">Source Accuracy</div>
+                  <div className={`text-lg font-bold ${getPerformanceColor(avgSourceAccuracy)}`}>
+                    {avgSourceAccuracy !== null ? `${avgSourceAccuracy.toFixed(1)}%` : 'N/A'}
+                  </div>
+                </div>
+                
+                <div className="bg-white/10 dark:bg-white/5 backdrop-blur-sm rounded-lg border border-white/10 dark:border-white/15 p-3 text-center">
+                  <div className="text-xs font-medium text-neutral-600 dark:text-neutral-400 mb-1">Avg Delay</div>
+                  <div className={`text-lg font-bold ${getDelayColor(avgInclusionDelay)}`}>
+                    {avgInclusionDelay !== null ? `${avgInclusionDelay.toFixed(2)}s` : 'N/A'}
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+          <div className="flex items-center space-x-4">
+            {/* Time Period Toggle */}
+            <div className="flex items-center space-x-2">
+              <GlassButton
+                onClick={() => setAttestationPeriod('1day')}
+                variant={attestationPeriod === '1day' ? "primary" : "secondary"}
+                size="sm"
+                disabled={attestationLoading}
+              >
+                1 Day (225 epochs)
+              </GlassButton>
+              <GlassButton
+                onClick={() => setAttestationPeriod('1hour')}
+                variant={attestationPeriod === '1hour' ? "primary" : "secondary"}
+                size="sm"
+                disabled={attestationLoading}
+              >
+                1 Hour (10 epochs)
+              </GlassButton>
+            </div>
+            <GlassButton size="sm" variant="secondary" disabled={!attestationData}>
+              Export CSV
+            </GlassButton>
+          </div>
+        </div>
+
+        {attestationLoading && (
+          <div className="flex justify-center items-center h-32">
+            <LoadingSpinner size="lg" />
+          </div>
+        )}
+
+        {!attestationLoading && attestationData?.attestation_data && (
+          <>
+            {/* Desktop Table */}
+            <div className="hidden lg:block bg-white/5 dark:bg-white/2 backdrop-blur-sm rounded-xl border border-white/10 dark:border-white/15 shadow-sm overflow-hidden">
+              {/* Sticky Header */}
+              <div className="sticky top-0 z-10 bg-white/10 dark:bg-white/5 backdrop-blur-sm border-b border-white/10 dark:border-white/15">
+                <div className="grid px-4 py-4 font-semibold text-neutral-900 dark:text-neutral-100 text-body-medium" style={{gridTemplateColumns: "1fr 1fr 0.8fr 0.8fr 0.8fr 0.8fr 0.8fr 1fr 1fr", gap: "12px"}}>
+                  <div>Epoch</div>
+                  <div className="text-right">Participation</div>
+                  <div className="text-right">Head</div>
+                  <div className="text-right">Target</div>
+                  <div className="text-right">Source</div>
+                  <div className="text-right">Delay</div>
+                  <div className="text-right">Proposals</div>
+                  <div className="text-right">Rewards</div>
+                  <div className="text-right">Penalties</div>
+                </div>
+              </div>
+              
+              {/* Scrollable Body */}
+              <div style={{ maxHeight: '400px', overflow: 'auto' }}>
+                <div className="divide-y divide-white/5 dark:divide-white/10">
+                  {attestationData.attestation_data.map((epoch: any, index: number) => (
+                    <div 
+                      key={epoch.epoch}
+                      className={`grid px-4 py-3 hover:bg-primary-500/8 dark:hover:bg-primary-500/5 hover:shadow-sm transition-all duration-200 ease-in-out border-b border-white/5 dark:border-white/10 last:border-b-0 text-neutral-800 dark:text-neutral-200 text-body-medium ${
+                        index % 2 === 0 ? 'bg-gray-50/30 dark:bg-gray-800/15' : 'bg-transparent'
+                      }`}
+                      style={{gridTemplateColumns: "1fr 1fr 0.8fr 0.8fr 0.8fr 0.8fr 0.8fr 1fr 1fr", gap: "12px"}}
+                    >
+                      <div className="font-mono">{epoch.epoch}</div>
+                      <div className="text-right">
+                        <div className={`font-medium ${
+                          epoch.participation_rate >= 99 ? 'text-green-600 dark:text-green-400' :
+                          epoch.participation_rate >= 95 ? 'text-yellow-600 dark:text-yellow-400' :
+                          'text-red-600 dark:text-red-400'
+                        }`}>
+                          {epoch.participation_rate !== null ? `${epoch.participation_rate.toFixed(1)}%` : 'N/A'}
+                        </div>
+                        <div className="text-xs text-neutral-500 dark:text-neutral-400">
+                          {epoch.attestations_made}/{epoch.validator_count}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className={`font-medium ${
+                          epoch.head_accuracy >= 99 ? 'text-green-600 dark:text-green-400' :
+                          epoch.head_accuracy >= 95 ? 'text-yellow-600 dark:text-yellow-400' :
+                          epoch.head_accuracy !== null ? 'text-red-600 dark:text-red-400' : 'text-neutral-500'
+                        }`}>
+                          {epoch.head_accuracy !== null ? `${epoch.head_accuracy.toFixed(1)}%` : 'N/A'}
+                        </div>
+                        <div className="text-xs text-neutral-500 dark:text-neutral-400">
+                          {epoch.head_hits}/{epoch.head_hits + epoch.head_misses}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className={`font-medium ${
+                          epoch.target_accuracy >= 99 ? 'text-green-600 dark:text-green-400' :
+                          epoch.target_accuracy >= 95 ? 'text-yellow-600 dark:text-yellow-400' :
+                          epoch.target_accuracy !== null ? 'text-red-600 dark:text-red-400' : 'text-neutral-500'
+                        }`}>
+                          {epoch.target_accuracy !== null ? `${epoch.target_accuracy.toFixed(1)}%` : 'N/A'}
+                        </div>
+                        <div className="text-xs text-neutral-500 dark:text-neutral-400">
+                          {epoch.target_hits}/{epoch.target_hits + epoch.target_misses}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className={`font-medium ${
+                          epoch.source_accuracy >= 99 ? 'text-green-600 dark:text-green-400' :
+                          epoch.source_accuracy >= 95 ? 'text-yellow-600 dark:text-yellow-400' :
+                          epoch.source_accuracy !== null ? 'text-red-600 dark:text-red-400' : 'text-neutral-500'
+                        }`}>
+                          {epoch.source_accuracy !== null ? `${epoch.source_accuracy.toFixed(1)}%` : 'N/A'}
+                        </div>
+                        <div className="text-xs text-neutral-500 dark:text-neutral-400">
+                          {epoch.source_hits}/{epoch.source_hits + epoch.source_misses}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-medium">
+                          {epoch.avg_inclusion_delay !== null ? `${epoch.avg_inclusion_delay.toFixed(2)}s` : 'N/A'}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        {epoch.proposer_duties > 0 ? (
+                          <div>
+                            <div className={`font-medium ${
+                              epoch.blocks_proposed === epoch.proposer_duties ? 'text-green-600 dark:text-green-400' :
+                              epoch.blocks_proposed > 0 ? 'text-yellow-600 dark:text-yellow-400' :
+                              'text-red-600 dark:text-red-400'
+                            }`}>
+                              {epoch.blocks_proposed}/{epoch.proposer_duties}
+                            </div>
+                            <div className="text-xs text-neutral-500 dark:text-neutral-400">
+                              {epoch.proposer_duties > 0 ? `${((epoch.blocks_proposed / epoch.proposer_duties) * 100).toFixed(0)}%` : ''}
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="text-neutral-500 dark:text-neutral-400">-</div>
+                        )}
+                      </div>
+                      <div className="text-right">
+                        <div className="text-green-600 dark:text-green-400 font-mono text-sm">
+                          +{((epoch.att_rewards + epoch.propose_rewards + epoch.sync_rewards) / 1e9).toFixed(6)}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-red-600 dark:text-red-400 font-mono text-sm">
+                          -{((epoch.att_penalties + epoch.propose_penalties + epoch.sync_penalties) / 1e9).toFixed(6)}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Mobile Card Layout */}
+            <div className="lg:hidden space-y-3 max-h-96 overflow-y-auto">
+              {attestationData.attestation_data.map((epoch: any) => (
+                <div 
+                  key={epoch.epoch}
+                  className="bg-white/5 dark:bg-white/2 backdrop-blur-sm rounded-lg border border-white/10 dark:border-white/15 p-4"
+                >
+                  <div className="flex justify-between items-center mb-3">
+                    <div className="text-lg font-bold text-neutral-900 dark:text-white font-mono">
+                      Epoch {epoch.epoch}
+                    </div>
+                    <div className={`text-lg font-bold ${
+                      epoch.participation_rate >= 99 ? 'text-green-600 dark:text-green-400' :
+                      epoch.participation_rate >= 95 ? 'text-yellow-600 dark:text-yellow-400' :
+                      'text-red-600 dark:text-red-400'
+                    }`}>
+                      {epoch.participation_rate !== null ? `${epoch.participation_rate.toFixed(1)}%` : 'N/A'}
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-neutral-600 dark:text-neutral-400">Head:</span>
+                      <span className="text-neutral-900 dark:text-white font-medium">
+                        {epoch.head_accuracy !== null ? `${epoch.head_accuracy.toFixed(1)}%` : 'N/A'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-neutral-600 dark:text-neutral-400">Target:</span>
+                      <span className="text-neutral-900 dark:text-white font-medium">
+                        {epoch.target_accuracy !== null ? `${epoch.target_accuracy.toFixed(1)}%` : 'N/A'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-neutral-600 dark:text-neutral-400">Source:</span>
+                      <span className="text-neutral-900 dark:text-white font-medium">
+                        {epoch.source_accuracy !== null ? `${epoch.source_accuracy.toFixed(1)}%` : 'N/A'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-neutral-600 dark:text-neutral-400">Delay:</span>
+                      <span className="text-neutral-900 dark:text-white font-medium">
+                        {epoch.avg_inclusion_delay !== null ? `${epoch.avg_inclusion_delay.toFixed(2)}s` : 'N/A'}
+                      </span>
+                    </div>
+                    {epoch.proposer_duties > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-neutral-600 dark:text-neutral-400">Proposals:</span>
+                        <span className="text-neutral-900 dark:text-white font-medium">
+                          {epoch.blocks_proposed}/{epoch.proposer_duties}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="mt-3 pt-3 border-t border-white/10 dark:border-white/15 grid grid-cols-2 gap-3 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-neutral-600 dark:text-neutral-400">Rewards:</span>
+                      <span className="text-green-600 dark:text-green-400 font-mono">
+                        +{((epoch.att_rewards + epoch.propose_rewards + epoch.sync_rewards) / 1e9).toFixed(6)} ETH
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-neutral-600 dark:text-neutral-400">Penalties:</span>
+                      <span className="text-red-600 dark:text-red-400 font-mono">
+                        -{((epoch.att_penalties + epoch.propose_penalties + epoch.sync_penalties) / 1e9).toFixed(6)} ETH
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+
+        {!attestationLoading && !attestationData && (
+          <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+            <Icon name="warning" size="lg" className="mx-auto mb-4 opacity-50" />
+            <p>No attestation data available</p>
+          </div>
+        )}
+      </GlassCard>
 
       {/* Recent Performance Table */}
       <GlassCard hoverable={false}>

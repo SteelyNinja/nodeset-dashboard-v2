@@ -302,6 +302,17 @@ class ApiService {
     const response: AxiosResponse<any> = await this.apiClient.get(`/api/outages/validator/${validatorAddress}`);
     return response.data;
   }
+
+  async getOperatorDetailedAttestations(operator: string, epochs: number = 225): Promise<any> {
+    const response: AxiosResponse<any> = await this.apiClient.get(
+      `/api/attestations/operator-detailed-attestations/${operator}`,
+      { 
+        params: { epochs },
+        timeout: 45000 // Longer timeout for detailed queries
+      }
+    );
+    return response.data;
+  }
 }
 
 // Export singleton instance

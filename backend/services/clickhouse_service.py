@@ -879,5 +879,173 @@ class ClickHouseService:
             logger.error(f"Failed to get NodeSet validator details: {e}")
             raise
 
+    async def get_operator_detailed_attestations(self, 
+                                        operator: str,
+                                        epochs: int = 225) -> Dict[str, Any]:
+        """Get detailed attestation data for a specific operator for the last N epochs"""
+        
+        # Get the latest epoch first to determine the range
+        epoch_range_query = "SELECT MAX(epoch) FROM validators_summary"
+        try:
+            epoch_result = await self.execute_query(epoch_range_query)
+            if not epoch_result or not epoch_result[0][0]:
+                raise Exception("Could not determine latest epoch")
+            
+            latest_epoch = int(epoch_result[0][0])
+            start_epoch = max(0, latest_epoch - epochs + 1)
+            
+        except Exception as e:
+            logger.error(f"Failed to get epoch range: {e}")
+            raise
+
+        where_conditions = [
+            f"val_nos_name = '{operator}'",
+            f"epoch >= {start_epoch}",
+            f"epoch <= {latest_epoch}",
+            "val_status NOT IN ('exited_unslashed', 'active_exiting', 'withdrawal_possible', 'withdrawal_done')"
+        ]
+        where_clause = " AND ".join(where_conditions)
+        
+        # Query for detailed attestation data aggregated by epoch
+        query = f"""
+        SELECT 
+            epoch,
+            COUNT(*) as validator_count,
+            
+            -- Participation metrics
+            SUM(CASE WHEN att_happened = 1 THEN 1 ELSE 0 END) as attestations_made,
+            SUM(CASE WHEN att_happened = 0 OR att_happened IS NULL THEN 1 ELSE 0 END) as attestations_missed,
+            ROUND((SUM(CASE WHEN att_happened = 1 THEN 1 ELSE 0 END)*100.0/COUNT(*)), 2) as participation_rate,
+            
+            -- Vote accuracy (only for submitted attestations)
+            SUM(CASE WHEN att_happened = 1 AND att_valid_head = 1 THEN 1 ELSE 0 END) as head_hits,
+            SUM(CASE WHEN att_happened = 1 AND att_valid_head = 0 THEN 1 ELSE 0 END) as head_misses,
+            SUM(CASE WHEN att_happened = 1 AND att_valid_target = 1 THEN 1 ELSE 0 END) as target_hits,
+            SUM(CASE WHEN att_happened = 1 AND att_valid_target = 0 THEN 1 ELSE 0 END) as target_misses,
+            SUM(CASE WHEN att_happened = 1 AND att_valid_source = 1 THEN 1 ELSE 0 END) as source_hits,
+            SUM(CASE WHEN att_happened = 1 AND att_valid_source = 0 THEN 1 ELSE 0 END) as source_misses,
+            
+            -- Accuracy percentages (only for submitted attestations)
+            CASE 
+                WHEN SUM(CASE WHEN att_happened = 1 THEN 1 ELSE 0 END) > 0 
+                THEN ROUND((SUM(CASE WHEN att_happened = 1 AND att_valid_head = 1 THEN 1 ELSE 0 END)*100.0/SUM(CASE WHEN att_happened = 1 THEN 1 ELSE 0 END)), 2)
+                ELSE NULL 
+            END as head_accuracy,
+            CASE 
+                WHEN SUM(CASE WHEN att_happened = 1 THEN 1 ELSE 0 END) > 0 
+                THEN ROUND((SUM(CASE WHEN att_happened = 1 AND att_valid_target = 1 THEN 1 ELSE 0 END)*100.0/SUM(CASE WHEN att_happened = 1 THEN 1 ELSE 0 END)), 2)
+                ELSE NULL 
+            END as target_accuracy,
+            CASE 
+                WHEN SUM(CASE WHEN att_happened = 1 THEN 1 ELSE 0 END) > 0 
+                THEN ROUND((SUM(CASE WHEN att_happened = 1 AND att_valid_source = 1 THEN 1 ELSE 0 END)*100.0/SUM(CASE WHEN att_happened = 1 THEN 1 ELSE 0 END)), 2)
+                ELSE NULL 
+            END as source_accuracy,
+            
+            -- Inclusion delay (only for submitted attestations)
+            CASE 
+                WHEN SUM(CASE WHEN att_happened = 1 AND att_inc_delay IS NOT NULL THEN 1 ELSE 0 END) > 0
+                THEN ROUND(AVG(CASE WHEN att_happened = 1 AND att_inc_delay IS NOT NULL THEN att_inc_delay ELSE NULL END), 2)
+                ELSE NULL 
+            END as avg_inclusion_delay,
+            
+            -- Rewards and penalties
+            SUM(COALESCE(att_earned_reward, 0)) as total_att_rewards,
+            SUM(COALESCE(att_missed_reward, 0)) as total_missed_rewards,
+            SUM(COALESCE(att_penalty, 0)) as total_att_penalties,
+            
+            -- Block proposals
+            SUM(CASE WHEN is_proposer = 1 THEN 1 ELSE 0 END) as proposer_duties,
+            SUM(CASE WHEN is_proposer = 1 AND block_proposed = 1 THEN 1 ELSE 0 END) as blocks_proposed,
+            SUM(CASE WHEN is_proposer = 1 AND (block_proposed = 0 OR block_proposed IS NULL) THEN 1 ELSE 0 END) as blocks_missed,
+            SUM(COALESCE(propose_earned_reward, 0)) as propose_rewards,
+            SUM(COALESCE(propose_penalty, 0)) as propose_penalties,
+            
+            -- Sync committee
+            SUM(CASE WHEN is_sync = 1 THEN 1 ELSE 0 END) as sync_duties,
+            CASE 
+                WHEN SUM(CASE WHEN is_sync = 1 THEN 1 ELSE 0 END) > 0
+                THEN ROUND(AVG(CASE WHEN is_sync = 1 AND sync_percent IS NOT NULL THEN sync_percent ELSE NULL END), 2)
+                ELSE NULL 
+            END as avg_sync_performance,
+            SUM(COALESCE(sync_earned_reward, 0)) as sync_rewards,
+            SUM(COALESCE(sync_penalty, 0)) as sync_penalties
+            
+        FROM validators_summary 
+        WHERE {where_clause}
+        GROUP BY epoch
+        ORDER BY epoch DESC
+        """
+        
+        try:
+            raw_data = await self.execute_query(query)
+            
+            def safe_float(value):
+                return float(value) if value not in ['\\N', None, ''] else None
+            
+            def safe_int(value):
+                return int(value) if value not in ['\\N', None, ''] else 0
+            
+            # Transform to structured format
+            attestation_data = []
+            for row in raw_data:
+                if len(row) >= 25:
+                    attestation_data.append({
+                        'epoch': safe_int(row[0]),
+                        'validator_count': safe_int(row[1]),
+                        
+                        # Participation
+                        'attestations_made': safe_int(row[2]),
+                        'attestations_missed': safe_int(row[3]),
+                        'participation_rate': safe_float(row[4]),
+                        
+                        # Vote accuracy counts
+                        'head_hits': safe_int(row[5]),
+                        'head_misses': safe_int(row[6]),
+                        'target_hits': safe_int(row[7]),
+                        'target_misses': safe_int(row[8]),
+                        'source_hits': safe_int(row[9]),
+                        'source_misses': safe_int(row[10]),
+                        
+                        # Accuracy percentages
+                        'head_accuracy': safe_float(row[11]),
+                        'target_accuracy': safe_float(row[12]),
+                        'source_accuracy': safe_float(row[13]),
+                        
+                        # Inclusion delay
+                        'avg_inclusion_delay': safe_float(row[14]),
+                        
+                        # Rewards
+                        'att_rewards': safe_int(row[15]),
+                        'missed_rewards': safe_int(row[16]),
+                        'att_penalties': safe_int(row[17]),
+                        
+                        # Block proposals
+                        'proposer_duties': safe_int(row[18]),
+                        'blocks_proposed': safe_int(row[19]),
+                        'blocks_missed': safe_int(row[20]),
+                        'propose_rewards': safe_int(row[21]),
+                        'propose_penalties': safe_int(row[22]),
+                        
+                        # Sync committee
+                        'sync_duties': safe_int(row[23]),
+                        'avg_sync_performance': safe_float(row[24]),
+                        'sync_rewards': safe_int(row[25]) if len(row) > 25 else 0,
+                        'sync_penalties': safe_int(row[26]) if len(row) > 26 else 0
+                    })
+            
+            return {
+                'operator': operator,
+                'start_epoch': start_epoch,
+                'end_epoch': latest_epoch,
+                'total_epochs': len(attestation_data),
+                'requested_epochs': epochs,
+                'attestation_data': attestation_data
+            }
+            
+        except Exception as e:
+            logger.error(f"Failed to get operator detailed attestations: {e}")
+            raise
+
 # Global service instance
 clickhouse_service = ClickHouseService()
