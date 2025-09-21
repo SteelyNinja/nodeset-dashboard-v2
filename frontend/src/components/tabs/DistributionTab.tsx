@@ -270,25 +270,25 @@ const DistributionTab: React.FC = () => {
         {/* Cap Analysis */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
           <GlassCard elevation="floating" className="p-4">
-            <div className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-wider">Validators to Cap</div>
+            <div className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-wider">Validators to Max</div>
             <div className="text-3xl font-extrabold text-gray-900 dark:text-white mb-1 tracking-tight">{distributionStats.validatorsToCapLevel.toLocaleString()}</div>
             <div className="text-xs font-medium text-gray-500 dark:text-gray-400">Total needed to reach cap level</div>
           </GlassCard>
           
           <GlassCard elevation="floating" className="p-4">
-            <div className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-wider">ETH to Cap</div>
+            <div className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-wider">ETH to Max</div>
             <div className="text-3xl font-extrabold text-gray-900 dark:text-white mb-1 tracking-tight">{distributionStats.ethToCapLevel.toLocaleString()}</div>
             <div className="text-xs font-medium text-gray-500 dark:text-gray-400">@ 32 ETH per validator</div>
           </GlassCard>
           
           <GlassCard elevation="floating" className="p-4">
-            <div className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-wider">Operators at Cap</div>
+            <div className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-wider">Operators at Max</div>
             <div className="text-3xl font-extrabold text-gray-900 dark:text-white mb-1 tracking-tight">{distributionStats.operatorsAtCapPercentage.toFixed(1)}%</div>
             <div className="text-xs font-medium text-gray-500 dark:text-gray-400">{distributionStats.operatorsAtCapCount} operators</div>
           </GlassCard>
           
           <GlassCard elevation="floating" className="p-4">
-            <div className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-wider">Operators at 75%+ of Cap</div>
+            <div className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-wider">Operators at 75%+ of Max</div>
             <div className="text-3xl font-extrabold text-gray-900 dark:text-white mb-1 tracking-tight">{distributionStats.operatorsNearCapPercentage.toFixed(1)}%</div>
             <div className="text-xs font-medium text-gray-500 dark:text-gray-400">{distributionStats.operatorsNearCapCount} ops (≥75% of cap)</div>
           </GlassCard>
