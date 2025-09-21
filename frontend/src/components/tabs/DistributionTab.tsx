@@ -272,7 +272,7 @@ const DistributionTab: React.FC = () => {
           <GlassCard elevation="floating" className="p-4">
             <div className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-wider">Validators to Max</div>
             <div className="text-3xl font-extrabold text-gray-900 dark:text-white mb-1 tracking-tight">{distributionStats.validatorsToCapLevel.toLocaleString()}</div>
-            <div className="text-xs font-medium text-gray-500 dark:text-gray-400">Total needed to reach cap level</div>
+            <div className="text-xs font-medium text-gray-500 dark:text-gray-400">Total needed to reach max level</div>
           </GlassCard>
           
           <GlassCard elevation="floating" className="p-4">
@@ -290,7 +290,7 @@ const DistributionTab: React.FC = () => {
           <GlassCard elevation="floating" className="p-4">
             <div className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-wider">Operators at 75%+ of Max</div>
             <div className="text-3xl font-extrabold text-gray-900 dark:text-white mb-1 tracking-tight">{distributionStats.operatorsNearCapPercentage.toFixed(1)}%</div>
-            <div className="text-xs font-medium text-gray-500 dark:text-gray-400">{distributionStats.operatorsNearCapCount} ops (≥75% of cap)</div>
+            <div className="text-xs font-medium text-gray-500 dark:text-gray-400">{distributionStats.operatorsNearCapCount} ops (≥75% of max)</div>
           </GlassCard>
         </div>
       </div>
