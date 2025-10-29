@@ -29,7 +29,7 @@ class Settings:
     CLICKHOUSE_USER: str = os.getenv("CLICKHOUSE_USER", "default")
     CLICKHOUSE_DATABASE: str = os.getenv("CLICKHOUSE_DATABASE", "default")
     CLICKHOUSE_ENABLED: bool = os.getenv("CLICKHOUSE_ENABLED", "true").lower() == "true"
-    CLICKHOUSE_TIMEOUT: int = int(os.getenv("CLICKHOUSE_TIMEOUT", "120"))
+    CLICKHOUSE_TIMEOUT: int = int(os.getenv("CLICKHOUSE_TIMEOUT", "300"))
     
     # Cache Configuration
     CACHE_TTL_SECONDS: int = int(os.getenv("CACHE_TTL_SECONDS", "900"))  # 15 minutes
