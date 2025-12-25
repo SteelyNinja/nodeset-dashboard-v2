@@ -162,12 +162,12 @@ function MainDashboard() {
                   className="block hover:opacity-80 transition-opacity duration-200"
                 >
                   <img
-                    src="/Nodeset_light_mode.png?v=4"
+                    src="/Nodeset_light_mode.png?v=5"
                     alt="NodeSet Protocol"
                     className="h-16 w-auto dark:hidden cursor-pointer"
                   />
                   <img
-                    src="/Nodeset_dark_mode.png?v=4"
+                    src="/Nodeset_dark_mode.png?v=5"
                     alt="NodeSet Protocol"
                     className="h-16 w-auto hidden dark:block cursor-pointer"
                   />
@@ -246,12 +246,12 @@ function MainDashboard() {
                 className="block hover:opacity-80 transition-opacity duration-200"
               >
                 <img
-                  src="/Nodeset_light_mode.png?v=4"
+                  src="/Nodeset_light_mode.png?v=5"
                   alt="NodeSet Protocol"
                   className="h-24 w-auto dark:hidden cursor-pointer"
                 />
                 <img
-                  src="/Nodeset_dark_mode.png?v=4"
+                  src="/Nodeset_dark_mode.png?v=5"
                   alt="NodeSet Protocol"
                   className="h-24 w-auto hidden dark:block cursor-pointer"
                 />
