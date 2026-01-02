@@ -201,7 +201,7 @@ async def get_operator_sync_committee(operator: str) -> Dict[str, Any]:
 @router.get("/operator/{operator}/comprehensive")
 async def get_operator_comprehensive_analytics(
     operator: str,
-    days: Optional[int] = Query(None, description="Limit daily performance to last N days", ge=1, le=90)
+    days: Optional[int] = Query(None, description="Limit daily performance to last N days", ge=1, le=180)
 ) -> Dict[str, Any]:
     """Get comprehensive enhanced analytics for a specific operator"""
     try:

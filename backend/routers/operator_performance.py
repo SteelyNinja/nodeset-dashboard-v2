@@ -380,7 +380,7 @@ async def get_all_operators() -> Dict[str, Any]:
 
 @router.get("/operators/summary")
 async def get_operators_summary(
-    days: Optional[int] = Query(None, description="Limit to last N days", ge=1, le=90)
+    days: Optional[int] = Query(None, description="Limit to last N days", ge=1, le=180)
 ) -> Dict[str, Any]:
     """Get summary performance metrics for all operators"""
     try:
@@ -415,7 +415,7 @@ async def get_operators_summary_previous_day() -> Dict[str, Any]:
 @router.get("/operator/{operator}")
 async def get_operator_performance(
     operator: str,
-    days: Optional[int] = Query(None, description="Limit to last N days", ge=1, le=90)
+    days: Optional[int] = Query(None, description="Limit to last N days", ge=1, le=180)
 ) -> Dict[str, Any]:
     """Get daily performance data for a specific operator"""
     try:
@@ -439,7 +439,7 @@ async def get_operator_performance(
 
 @router.get("/trends")
 async def get_performance_trends(
-    days: int = Query(30, description="Number of days to analyze", ge=1, le=90)
+    days: int = Query(30, description="Number of days to analyze", ge=1, le=180)
 ) -> Dict[str, Any]:
     """Get aggregated performance trends across all operators"""
     try:
@@ -457,7 +457,7 @@ async def get_performance_trends(
 @router.get("/operator/{operator}/chart-data")
 async def get_operator_chart_data(
     operator: str,
-    days: Optional[int] = Query(30, description="Number of days for chart", ge=1, le=90)
+    days: Optional[int] = Query(30, description="Number of days for chart", ge=1, le=180)
 ) -> Dict[str, Any]:
     """Get operator performance data optimized for charting"""
     try:
@@ -508,7 +508,7 @@ async def get_operator_chart_data(
 @router.get("/operator/{operator}/rank-history")
 async def get_operator_rank_history(
     operator: str,
-    days: Optional[int] = Query(30, description="Number of days for rank history", ge=1, le=90)
+    days: Optional[int] = Query(30, description="Number of days for rank history", ge=1, le=180)
 ) -> Dict[str, Any]:
     """Get daily rank history for a specific operator"""
     try:

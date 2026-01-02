@@ -739,7 +739,7 @@ const OperatorDashboard: React.FC<OperatorDashboardProps> = ({ operatorAddress: 
             Performance & Rank Trends
           </h2>
           <div className="flex space-x-2">
-            {[7, 30, 90].map(days => (
+            {[7, 30, 90, 180].map(days => (
               <GlassButton
                 key={days}
                 onClick={() => setSelectedDays(days)}
