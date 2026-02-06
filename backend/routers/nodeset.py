@@ -39,49 +39,20 @@ async def get_validators_down(
         start_epoch = latest_epoch - 2  # 3 epochs total: latest, latest-1, latest-2
         
         # Query to find validators that missed attestations in all 3 epochs
-        # Exclude exited validators by checking their status in the latest epoch
+        # Single-pass aggregation for better performance
         query = f"""
-        WITH validator_epochs AS (
-            SELECT 
-                val_id,
-                val_nos_name,
-                epoch,
-                val_status,
-                CASE WHEN att_happened = 0 OR att_happened IS NULL THEN 1 ELSE 0 END as missed_attestation,
-                -- Track if validator was actually supposed to attest (active status)
-                CASE WHEN val_status IN ('active_ongoing', 'active_slashed') THEN 1 ELSE 0 END as should_attest
-            FROM validators_summary 
-            WHERE epoch >= {start_epoch} 
-            AND epoch <= {latest_epoch}
-            AND val_nos_name IS NOT NULL
-        ),
-        active_validators AS (
-            SELECT DISTINCT val_id
-            FROM validator_epochs
-            WHERE epoch = {latest_epoch}
-            AND val_status NOT IN ('exited_unslashed', 'active_exiting', 'withdrawal_possible', 'withdrawal_done')
-        ),
-        consecutive_misses AS (
-            SELECT 
-                ve.val_id,
-                ve.val_nos_name,
-                COUNT(*) as total_epochs,
-                SUM(ve.missed_attestation) as missed_epochs,
-                SUM(ve.should_attest) as active_epochs,
-                -- Only count epochs where validator was active
-                SUM(CASE WHEN ve.should_attest = 1 AND ve.missed_attestation = 1 THEN 1 ELSE 0 END) as active_missed_epochs
-            FROM validator_epochs ve
-            INNER JOIN active_validators av ON ve.val_id = av.val_id
-            GROUP BY ve.val_id, ve.val_nos_name
-            -- Require: full 3 epochs of data, all active epochs, and all active epochs missed attestations
-            HAVING COUNT(*) = 3 AND SUM(ve.should_attest) = 3 AND SUM(CASE WHEN ve.should_attest = 1 AND ve.missed_attestation = 1 THEN 1 ELSE 0 END) = 3
-        )
         SELECT 
             val_nos_name as operator,
             val_id as validator_id,
             {latest_epoch} as latest_epoch,
             {start_epoch} as start_epoch
-        FROM consecutive_misses
+        FROM validators_summary
+        PREWHERE epoch BETWEEN {start_epoch} AND {latest_epoch}
+        WHERE val_nos_name IS NOT NULL
+        AND val_status IN ('active_ongoing', 'active_slashed')
+        GROUP BY val_id, val_nos_name
+        HAVING COUNT(*) = 3
+           AND SUM((att_happened = 0) OR isNull(att_happened)) = 3
         ORDER BY val_nos_name, val_id
         LIMIT {limit}
         """
@@ -185,50 +156,21 @@ async def get_validators_down_extended(
         start_epoch = latest_epoch - epochs_back + 1
         
         # Build query to find validators that missed attestations in all specified epochs
-        # Exclude exited validators by checking their status in the latest epoch
+        # Single-pass aggregation for better performance
         query = f"""
-        WITH validator_epochs AS (
-            SELECT 
-                val_id,
-                val_nos_name,
-                epoch,
-                val_status,
-                CASE WHEN att_happened = 0 OR att_happened IS NULL THEN 1 ELSE 0 END as missed_attestation,
-                -- Track if validator was actually supposed to attest (active status)
-                CASE WHEN val_status IN ('active_ongoing', 'active_slashed') THEN 1 ELSE 0 END as should_attest
-            FROM validators_summary 
-            WHERE epoch >= {start_epoch} 
-            AND epoch <= {latest_epoch}
-            AND val_nos_name IS NOT NULL
-        ),
-        active_validators AS (
-            SELECT DISTINCT val_id
-            FROM validator_epochs
-            WHERE epoch = {latest_epoch}
-            AND val_status NOT IN ('exited_unslashed', 'active_exiting', 'withdrawal_possible', 'withdrawal_done')
-        ),
-        consecutive_misses AS (
-            SELECT 
-                ve.val_id,
-                ve.val_nos_name,
-                COUNT(*) as total_epochs,
-                SUM(ve.missed_attestation) as missed_epochs,
-                SUM(ve.should_attest) as active_epochs,
-                -- Only count epochs where validator was active
-                SUM(CASE WHEN ve.should_attest = 1 AND ve.missed_attestation = 1 THEN 1 ELSE 0 END) as active_missed_epochs
-            FROM validator_epochs ve
-            INNER JOIN active_validators av ON ve.val_id = av.val_id
-            GROUP BY ve.val_id, ve.val_nos_name
-            -- Require: full epoch coverage, all active epochs, and all active epochs missed attestations
-            HAVING COUNT(*) = {epochs_back} AND SUM(ve.should_attest) = {epochs_back} AND SUM(CASE WHEN ve.should_attest = 1 AND ve.missed_attestation = 1 THEN 1 ELSE 0 END) = {epochs_back}
-        )
         SELECT 
             val_nos_name as operator,
             val_id as validator_id,
             {latest_epoch} as latest_epoch,
             {start_epoch} as start_epoch,
             {epochs_back} as consecutive_misses
-        FROM consecutive_misses
+        FROM validators_summary
+        PREWHERE epoch BETWEEN {start_epoch} AND {latest_epoch}
+        WHERE val_nos_name IS NOT NULL
+        AND val_status IN ('active_ongoing', 'active_slashed')
+        GROUP BY val_id, val_nos_name
+        HAVING COUNT(*) = {epochs_back}
+           AND SUM((att_happened = 0) OR isNull(att_happened)) = {epochs_back}
         ORDER BY val_nos_name, val_id
         LIMIT {limit}
         """
@@ -277,62 +219,41 @@ async def get_validators_down_summary() -> Dict[str, Any]:
         latest_epoch = int(epoch_data[0][0])
         start_epoch = latest_epoch - 2  # 3 epochs total
         
-        # Get summary statistics for 3 consecutive epochs
+        # Get summary statistics for 3 consecutive epochs (single-pass aggregates)
         query = f"""
         WITH latest_epoch_stats AS (
             SELECT 
                 COUNT(*) as total_validators,
-                SUM(CASE WHEN att_happened = 0 OR att_happened IS NULL THEN 1 ELSE 0 END) as missed_latest,
+                SUM((att_happened = 0) OR isNull(att_happened)) as missed_latest,
                 COUNT(DISTINCT val_nos_name) as total_operators
             FROM validators_summary 
-            WHERE epoch = {latest_epoch} AND val_nos_name IS NOT NULL
-            AND val_status NOT IN ('exited_unslashed', 'active_exiting', 'withdrawal_possible', 'withdrawal_done')
+            PREWHERE epoch = {latest_epoch}
+            WHERE epoch = {latest_epoch}
+            AND val_nos_name IS NOT NULL
+            AND val_status IN ('active_ongoing', 'active_slashed')
         ),
         three_epoch_consecutive AS (
             SELECT COUNT(*) as consecutive_down_3
             FROM (
-                WITH validator_epochs AS (
-                    SELECT 
-                        val_id,
-                        val_nos_name,
-                        epoch,
-                        val_status,
-                        CASE WHEN att_happened = 0 OR att_happened IS NULL THEN 1 ELSE 0 END as missed_attestation
-                    FROM validators_summary 
-                    WHERE epoch >= {start_epoch} 
-                    AND epoch <= {latest_epoch}
-                    AND val_nos_name IS NOT NULL
-                ),
-                active_validators AS (
-                    SELECT DISTINCT val_id
-                    FROM validator_epochs
-                    WHERE epoch = {latest_epoch}
-                    AND val_status NOT IN ('exited_unslashed', 'active_exiting', 'withdrawal_possible', 'withdrawal_done')
-                ),
-                consecutive_misses AS (
-                    SELECT 
-                        ve.val_id,
-                        ve.val_nos_name,
-                        COUNT(*) as total_epochs,
-                        SUM(ve.missed_attestation) as missed_epochs
-                    FROM validator_epochs ve
-                    INNER JOIN active_validators av ON ve.val_id = av.val_id
-                    GROUP BY ve.val_id, ve.val_nos_name
-                    HAVING COUNT(*) = 3 AND SUM(ve.missed_attestation) = 3
-                )
-                SELECT val_id FROM consecutive_misses
+                SELECT val_id
+                FROM validators_summary
+                PREWHERE epoch BETWEEN {start_epoch} AND {latest_epoch}
+                WHERE val_nos_name IS NOT NULL
+                AND val_status IN ('active_ongoing', 'active_slashed')
+                GROUP BY val_id, val_nos_name
+                HAVING COUNT(*) = 3
+                   AND SUM((att_happened = 0) OR isNull(att_happened)) = 3
             ) as consecutive
         ),
         epoch_breakdown AS (
             SELECT 
                 epoch,
                 COUNT(*) as total_validators_epoch,
-                SUM(CASE WHEN att_happened = 0 OR att_happened IS NULL THEN 1 ELSE 0 END) as missed_epoch
+                SUM((att_happened = 0) OR isNull(att_happened)) as missed_epoch
             FROM validators_summary 
-            WHERE epoch >= {start_epoch} 
-            AND epoch <= {latest_epoch}
-            AND val_nos_name IS NOT NULL
-            AND val_status NOT IN ('exited_unslashed', 'active_exiting', 'withdrawal_possible', 'withdrawal_done')
+            PREWHERE epoch BETWEEN {start_epoch} AND {latest_epoch}
+            WHERE val_nos_name IS NOT NULL
+            AND val_status IN ('active_ongoing', 'active_slashed')
             GROUP BY epoch
             ORDER BY epoch DESC
         )
@@ -1772,4 +1693,3 @@ async def get_theoretical_performance_all_extended(
     except Exception as e:
         logger.error(f"Failed to get comprehensive theoretical performance extended: {e}")
         raise HTTPException(status_code=500, detail=f"Database query failed: {str(e)}")
-
