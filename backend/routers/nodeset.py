@@ -533,116 +533,137 @@ async def get_below_threshold_extended(
             days = max(1, int(epochs_available / 225))  # Ensure days is an integer, minimum 1
             logger.info(f"Using {epochs_available} epochs ({days_actual} days actual) instead of requested due to insufficient data")
         
-        # Query to find validators below threshold
-        # Calculate theoretical maximum rewards vs actual rewards
-        # Only include epochs where validators were actively supposed to earn rewards
-        query = f"""
+        # Phase 1: lightweight scan to identify candidate validators below threshold.
+        candidate_query = f"""
         WITH validator_rewards AS (
-            SELECT 
+            SELECT
                 val_id,
-                val_nos_name,
-                COUNT() as total_epochs,
+                any(val_nos_name) as operator,
                 COUNT() as active_duty_epochs,
                 SUM(COALESCE(att_earned_reward, 0)) as actual_rewards,
                 SUM(COALESCE(att_earned_reward, 0) + COALESCE(att_missed_reward, 0)) as theoretical_max_rewards,
-                SUM(att_happened = 1) as attestations_made,
-                SUM((att_happened = 0) OR isNull(att_happened)) as attestations_missed,
-                SUM((is_proposer = 1) AND (block_proposed = 1)) as blocks_proposed,
-                SUM((is_proposer = 1) AND ((block_proposed = 0) OR isNull(block_proposed))) as blocks_missed,
-                AVG(sync_percent) as avg_sync_performance,
-                SUM(if(epoch > {latest_epoch} - 225, COALESCE(att_earned_reward, 0), 0)) as day_1_actual,
-                SUM(if(epoch > {latest_epoch} - 225, COALESCE(att_earned_reward, 0) + COALESCE(att_missed_reward, 0), 0)) as day_1_theoretical
-            FROM validators_summary 
+                if(theoretical_max_rewards > 0, (actual_rewards * 100.0 / theoretical_max_rewards), 0.0) as reward_percentage
+            FROM validators_summary
             PREWHERE epoch BETWEEN {start_epoch} AND {latest_epoch}
             WHERE val_status IN ('active_ongoing', 'active_slashed')
+            AND val_nos_id IS NOT NULL
             AND val_nos_name IS NOT NULL
-            GROUP BY val_id, val_nos_name
-            HAVING COUNT() = {total_epochs}  -- Must have 100% active duty data coverage
-        ),
-        performance_analysis AS (
-            SELECT 
-                val_id,
-                val_nos_name,
-                total_epochs,
-                active_duty_epochs,
-                actual_rewards,
-                theoretical_max_rewards,
-                attestations_made,
-                attestations_missed,
-                blocks_proposed,
-                blocks_missed,
-                avg_sync_performance,
-                day_1_actual,
-                day_1_theoretical,
-                -- Calculate reward percentage
-                CASE 
-                    WHEN theoretical_max_rewards > 0 THEN (actual_rewards * 100.0 / theoretical_max_rewards)
-                    ELSE 0.0
-                END as reward_percentage,
-                -- Calculate day 1 percentage
-                CASE 
-                    WHEN day_1_theoretical > 0 THEN (day_1_actual * 100.0 / day_1_theoretical)
-                    ELSE 0.0
-                END as day_1_percentage
-            FROM validator_rewards
+            GROUP BY val_id
+            HAVING active_duty_epochs = {total_epochs}
         )
-        SELECT 
-            val_nos_name as operator,
+        SELECT
+            operator,
             val_id as validator_id,
-            total_epochs,
             active_duty_epochs,
             actual_rewards,
             theoretical_max_rewards,
-            reward_percentage,
-            attestations_made,
-            attestations_missed,
-            blocks_proposed,
-            blocks_missed,
-            avg_sync_performance,
-            day_1_actual,
-            day_1_theoretical,
-            day_1_percentage,
-            {latest_epoch} as latest_epoch,
-            {start_epoch} as start_epoch,
-            {days} as days_analyzed,
-            {threshold} as threshold_percentage
-        FROM performance_analysis
+            reward_percentage
+        FROM validator_rewards
         WHERE reward_percentage < {threshold}
-        ORDER BY reward_percentage ASC, val_nos_name, val_id
+        ORDER BY reward_percentage ASC, operator, validator_id
         LIMIT {limit}
         """
-        
-        raw_data = await clickhouse_service.execute_query(
-            query,
+
+        candidate_rows = await clickhouse_service.execute_query(
+            candidate_query,
             client_timeout=80,
-            max_execution_time=75
+            max_execution_time=75,
+            settings={"max_threads": 6}
         )
-        
-        # Transform to structured format
-        results = []
-        for row in raw_data:
-            if len(row) >= 19:
-                results.append({
+
+        if not candidate_rows:
+            return []
+
+        candidate_results: List[Dict[str, Any]] = []
+        validator_ids: List[int] = []
+        for row in candidate_rows:
+            if len(row) >= 6:
+                validator_id = int(row[1])
+                validator_ids.append(validator_id)
+                candidate_results.append({
                     'operator': row[0],
-                    'validator_id': int(row[1]),
-                    'total_epochs': int(row[2]),
-                    'active_duty_epochs': int(row[3]),
-                    'actual_rewards': int(row[4]),
-                    'theoretical_max_rewards': int(row[5]),
-                    'reward_percentage': float(row[6]),
-                    'attestations_made': int(row[7]),
-                    'attestations_missed': int(row[8]),
-                    'blocks_proposed': int(row[9]),
-                    'blocks_missed': int(row[10]),
-                    'avg_sync_performance': float(row[11]) if row[11] not in ['\\N', None, ''] else 0.0,
-                    'day_1_actual_rewards': int(row[12]),
-                    'day_1_theoretical_rewards': int(row[13]),
-                    'day_1_percentage': float(row[14]),
-                    'latest_epoch': int(row[15]),
-                    'start_epoch': int(row[16]),
-                    'days_analyzed': int(row[17]),
-                    'threshold_percentage': float(row[18])
+                    'validator_id': validator_id,
+                    'total_epochs': total_epochs,
+                    'active_duty_epochs': int(row[2]),
+                    'actual_rewards': int(row[3]),
+                    'theoretical_max_rewards': int(row[4]),
+                    'reward_percentage': float(row[5]),
                 })
+
+        # Phase 2: compute detailed metrics only for selected validators.
+        validators_clause = ",".join(str(validator_id) for validator_id in validator_ids)
+        details_query = f"""
+        SELECT
+            val_id as validator_id,
+            SUM(att_happened = 1) as attestations_made,
+            SUM((is_proposer = 1) AND (block_proposed = 1)) as blocks_proposed,
+            SUM(is_proposer = 1) as proposer_slots,
+            AVG(sync_percent) as avg_sync_performance,
+            SUM(if(epoch > {latest_epoch} - 225, COALESCE(att_earned_reward, 0), 0)) as day_1_actual,
+            SUM(if(epoch > {latest_epoch} - 225, COALESCE(att_earned_reward, 0) + COALESCE(att_missed_reward, 0), 0)) as day_1_theoretical
+        FROM validators_summary
+        PREWHERE epoch BETWEEN {start_epoch} AND {latest_epoch}
+        WHERE val_status IN ('active_ongoing', 'active_slashed')
+        AND val_nos_id IS NOT NULL
+        AND val_nos_name IS NOT NULL
+        AND val_id IN ({validators_clause})
+        GROUP BY val_id
+        """
+
+        detail_rows = await clickhouse_service.execute_query(
+            details_query,
+            client_timeout=40,
+            max_execution_time=35,
+            settings={"max_threads": 4}
+        )
+
+        detail_map: Dict[int, Dict[str, Any]] = {}
+        for row in detail_rows:
+            if len(row) >= 7:
+                detail_map[int(row[0])] = {
+                    "attestations_made": int(row[1]),
+                    "blocks_proposed": int(row[2]),
+                    "proposer_slots": int(row[3]),
+                    "avg_sync_performance": float(row[4]) if row[4] not in ['\\N', None, ''] else 0.0,
+                    "day_1_actual": int(row[5]),
+                    "day_1_theoretical": int(row[6]),
+                }
+
+        # Merge candidate metrics with details while keeping response shape stable.
+        results = []
+        for candidate in candidate_results:
+            validator_id = candidate["validator_id"]
+            details = detail_map.get(validator_id, {})
+            attestations_made = details.get("attestations_made", 0)
+            attestations_missed = max(candidate["active_duty_epochs"] - attestations_made, 0)
+            blocks_proposed = details.get("blocks_proposed", 0)
+            proposer_slots = details.get("proposer_slots", 0)
+            blocks_missed = max(proposer_slots - blocks_proposed, 0)
+            day_1_actual = details.get("day_1_actual", 0)
+            day_1_theoretical = details.get("day_1_theoretical", 0)
+            day_1_percentage = (day_1_actual * 100.0 / day_1_theoretical) if day_1_theoretical > 0 else 0.0
+
+            results.append({
+                'operator': candidate['operator'],
+                'validator_id': validator_id,
+                'total_epochs': candidate['total_epochs'],
+                'active_duty_epochs': candidate['active_duty_epochs'],
+                'actual_rewards': candidate['actual_rewards'],
+                'theoretical_max_rewards': candidate['theoretical_max_rewards'],
+                'reward_percentage': candidate['reward_percentage'],
+                'attestations_made': attestations_made,
+                'attestations_missed': attestations_missed,
+                'blocks_proposed': blocks_proposed,
+                'blocks_missed': blocks_missed,
+                'avg_sync_performance': details.get("avg_sync_performance", 0.0),
+                'day_1_actual_rewards': day_1_actual,
+                'day_1_theoretical_rewards': day_1_theoretical,
+                'day_1_percentage': day_1_percentage,
+                'latest_epoch': latest_epoch,
+                'start_epoch': start_epoch,
+                'days_analyzed': days,
+                'threshold_percentage': threshold
+            })
         
         logger.info(f"Found {len(results)} validators below {threshold}% reward threshold for {days} day(s) period")
         return results

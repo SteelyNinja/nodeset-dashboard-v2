@@ -68,7 +68,8 @@ class ClickHouseService:
         query: str,
         *,
         client_timeout: Optional[int] = None,
-        max_execution_time: Optional[int] = None
+        max_execution_time: Optional[int] = None,
+        settings: Optional[Dict[str, Any]] = None
     ) -> List[List[str]]:
         """Execute ClickHouse query via HTTP interface.
 
@@ -76,6 +77,7 @@ class ClickHouseService:
             query: SQL query string.
             client_timeout: Optional per-request HTTP timeout in seconds.
             max_execution_time: Optional ClickHouse max execution time in seconds.
+            settings: Optional ClickHouse query settings passed as URL params.
         """
         if not self.enabled:
             logger.warning("ClickHouse is disabled")
@@ -88,6 +90,10 @@ class ClickHouseService:
             query_params = {'query': query}
             if max_execution_time is not None:
                 query_params['max_execution_time'] = str(max_execution_time)
+            if settings:
+                for key, value in settings.items():
+                    if value is not None:
+                        query_params[key] = str(value)
 
             request_timeout = aiohttp.ClientTimeout(total=client_timeout) if client_timeout is not None else None
             async with session.get(
