@@ -5,6 +5,7 @@ ClickHouse HTTP client service for Ethereum validator data
 import aiohttp
 import asyncio
 import logging
+import time
 from typing import List, Dict, Any, Optional
 from urllib.parse import quote
 from config import settings
@@ -20,6 +21,15 @@ class ClickHouseService:
         self.enabled = settings.CLICKHOUSE_ENABLED
         self._session = None
         self._connector = None
+        self._availability_cache: Dict[str, Any] = {
+            "status": None,
+            "checked_at": 0.0,
+        }
+        self._latest_nodeset_epoch_cache: Dict[str, Any] = {
+            "value": None,
+            "checked_at": 0.0,
+        }
+        self._latest_nodeset_epoch_lock = asyncio.Lock()
         
     async def get_session(self) -> aiohttp.ClientSession:
         """Get or create aiohttp session with connection pooling"""
@@ -51,7 +61,14 @@ class ClickHouseService:
         """Check if ClickHouse is available"""
         if not self.enabled:
             return False
-            
+
+        now = time.time()
+        if (
+            self._availability_cache["status"] is not None
+            and (now - self._availability_cache["checked_at"]) < 10
+        ):
+            return bool(self._availability_cache["status"])
+
         try:
             session = await self.get_session()
             async with session.get(
@@ -59,9 +76,81 @@ class ClickHouseService:
                 params={'query': 'SELECT 1'},
                 timeout=aiohttp.ClientTimeout(total=5)
             ) as response:
-                return response.status == 200
+                is_healthy = response.status == 200
+                self._availability_cache["status"] = is_healthy
+                self._availability_cache["checked_at"] = time.time()
+                return is_healthy
         except Exception:
+            self._availability_cache["status"] = False
+            self._availability_cache["checked_at"] = time.time()
             return False
+
+    async def get_latest_nodeset_epoch(self) -> int:
+        """Get the latest NodeSet epoch using a cached partition-aware lookup."""
+        now = time.time()
+        if (
+            self._latest_nodeset_epoch_cache["value"] is not None
+            and (now - self._latest_nodeset_epoch_cache["checked_at"]) < 30
+        ):
+            return int(self._latest_nodeset_epoch_cache["value"])
+
+        async with self._latest_nodeset_epoch_lock:
+            now = time.time()
+            if (
+                self._latest_nodeset_epoch_cache["value"] is not None
+                and (now - self._latest_nodeset_epoch_cache["checked_at"]) < 30
+            ):
+                return int(self._latest_nodeset_epoch_cache["value"])
+
+            try:
+                partitions_query = """
+                SELECT max(toInt64(partition))
+                FROM system.parts
+                WHERE active
+                  AND database = currentDatabase()
+                  AND table = 'validators_summary'
+                """
+                partition_rows = await self.execute_query(
+                    partitions_query,
+                    client_timeout=10,
+                    max_execution_time=8,
+                    settings={"max_threads": 2}
+                )
+
+                if partition_rows and partition_rows[0][0] not in [None, '\\N', '']:
+                    max_partition = int(partition_rows[0][0])
+                    latest_epoch_rows = await self.execute_query(
+                        f"""
+                        SELECT MAX(epoch)
+                        FROM validators_summary
+                        PREWHERE intDiv(epoch, 225) = {max_partition}
+                        WHERE val_nos_id IS NOT NULL
+                        """,
+                        client_timeout=15,
+                        max_execution_time=12,
+                        settings={"max_threads": 2}
+                    )
+                    if latest_epoch_rows and latest_epoch_rows[0][0] not in [None, '\\N', '']:
+                        latest_epoch = int(latest_epoch_rows[0][0])
+                        self._latest_nodeset_epoch_cache["value"] = latest_epoch
+                        self._latest_nodeset_epoch_cache["checked_at"] = time.time()
+                        return latest_epoch
+            except Exception as fast_lookup_error:
+                logger.warning(f"Fast latest epoch lookup failed, falling back to direct query: {fast_lookup_error}")
+
+            fallback_rows = await self.execute_query(
+                "SELECT MAX(epoch) FROM validators_summary WHERE val_nos_id IS NOT NULL",
+                client_timeout=20,
+                max_execution_time=15,
+                settings={"max_threads": 2}
+            )
+            if not fallback_rows or fallback_rows[0][0] in [None, '\\N', '']:
+                raise ValueError("Could not determine latest NodeSet epoch")
+
+            latest_epoch = int(fallback_rows[0][0])
+            self._latest_nodeset_epoch_cache["value"] = latest_epoch
+            self._latest_nodeset_epoch_cache["checked_at"] = time.time()
+            return latest_epoch
     
     async def execute_query(
         self,
@@ -916,25 +1005,17 @@ class ClickHouseService:
                                         operator: str,
                                         epochs: int = 225) -> Dict[str, Any]:
         """Get detailed attestation data for a specific operator for the last N epochs"""
-        
-        # Get the latest epoch first to determine the range
-        epoch_range_query = "SELECT MAX(epoch) FROM validators_summary"
+
         try:
-            epoch_result = await self.execute_query(epoch_range_query)
-            if not epoch_result or not epoch_result[0][0]:
-                raise Exception("Could not determine latest epoch")
-            
-            latest_epoch = int(epoch_result[0][0])
+            latest_epoch = await self.get_latest_nodeset_epoch()
             start_epoch = max(0, latest_epoch - epochs + 1)
-            
         except Exception as e:
             logger.error(f"Failed to get epoch range: {e}")
             raise
 
+        escaped_operator = operator.replace("\\", "\\\\").replace("'", "\\'")
         where_conditions = [
-            f"val_nos_name = '{operator}'",
-            f"epoch >= {start_epoch}",
-            f"epoch <= {latest_epoch}",
+            f"val_nos_name = '{escaped_operator}'",
             "val_status NOT IN ('exited_unslashed', 'active_exiting', 'withdrawal_possible', 'withdrawal_done')"
         ]
         where_clause = " AND ".join(where_conditions)
@@ -943,75 +1024,81 @@ class ClickHouseService:
         query = f"""
         SELECT 
             epoch,
-            COUNT(*) as validator_count,
+            count() as validator_count,
             
             -- Participation metrics
-            SUM(CASE WHEN att_happened = 1 THEN 1 ELSE 0 END) as attestations_made,
-            SUM(CASE WHEN att_happened = 0 OR att_happened IS NULL THEN 1 ELSE 0 END) as attestations_missed,
-            ROUND((SUM(CASE WHEN att_happened = 1 THEN 1 ELSE 0 END)*100.0/COUNT(*)), 2) as participation_rate,
+            countIf(att_happened = 1) as attestations_made,
+            countIf((att_happened = 0) OR isNull(att_happened)) as attestations_missed,
+            round(if(count() > 0, (countIf(att_happened = 1) * 100.0 / count()), 0), 2) as participation_rate,
             
             -- Vote accuracy (only for submitted attestations)
-            SUM(CASE WHEN att_happened = 1 AND att_valid_head = 1 THEN 1 ELSE 0 END) as head_hits,
-            SUM(CASE WHEN att_happened = 1 AND att_valid_head = 0 THEN 1 ELSE 0 END) as head_misses,
-            SUM(CASE WHEN att_happened = 1 AND att_valid_target = 1 THEN 1 ELSE 0 END) as target_hits,
-            SUM(CASE WHEN att_happened = 1 AND att_valid_target = 0 THEN 1 ELSE 0 END) as target_misses,
-            SUM(CASE WHEN att_happened = 1 AND att_valid_source = 1 THEN 1 ELSE 0 END) as source_hits,
-            SUM(CASE WHEN att_happened = 1 AND att_valid_source = 0 THEN 1 ELSE 0 END) as source_misses,
+            countIf(att_happened = 1 AND att_valid_head = 1) as head_hits,
+            countIf(att_happened = 1 AND att_valid_head = 0) as head_misses,
+            countIf(att_happened = 1 AND att_valid_target = 1) as target_hits,
+            countIf(att_happened = 1 AND att_valid_target = 0) as target_misses,
+            countIf(att_happened = 1 AND att_valid_source = 1) as source_hits,
+            countIf(att_happened = 1 AND att_valid_source = 0) as source_misses,
             
             -- Accuracy percentages (only for submitted attestations)
-            CASE 
-                WHEN SUM(CASE WHEN att_happened = 1 THEN 1 ELSE 0 END) > 0 
-                THEN ROUND((SUM(CASE WHEN att_happened = 1 AND att_valid_head = 1 THEN 1 ELSE 0 END)*100.0/SUM(CASE WHEN att_happened = 1 THEN 1 ELSE 0 END)), 2)
-                ELSE NULL 
-            END as head_accuracy,
-            CASE 
-                WHEN SUM(CASE WHEN att_happened = 1 THEN 1 ELSE 0 END) > 0 
-                THEN ROUND((SUM(CASE WHEN att_happened = 1 AND att_valid_target = 1 THEN 1 ELSE 0 END)*100.0/SUM(CASE WHEN att_happened = 1 THEN 1 ELSE 0 END)), 2)
-                ELSE NULL 
-            END as target_accuracy,
-            CASE 
-                WHEN SUM(CASE WHEN att_happened = 1 THEN 1 ELSE 0 END) > 0 
-                THEN ROUND((SUM(CASE WHEN att_happened = 1 AND att_valid_source = 1 THEN 1 ELSE 0 END)*100.0/SUM(CASE WHEN att_happened = 1 THEN 1 ELSE 0 END)), 2)
-                ELSE NULL 
-            END as source_accuracy,
+            if(
+                countIf(att_happened = 1) > 0,
+                round((countIf(att_happened = 1 AND att_valid_head = 1) * 100.0 / countIf(att_happened = 1)), 2),
+                NULL
+            ) as head_accuracy,
+            if(
+                countIf(att_happened = 1) > 0,
+                round((countIf(att_happened = 1 AND att_valid_target = 1) * 100.0 / countIf(att_happened = 1)), 2),
+                NULL
+            ) as target_accuracy,
+            if(
+                countIf(att_happened = 1) > 0,
+                round((countIf(att_happened = 1 AND att_valid_source = 1) * 100.0 / countIf(att_happened = 1)), 2),
+                NULL
+            ) as source_accuracy,
             
             -- Inclusion delay (only for submitted attestations)
-            CASE 
-                WHEN SUM(CASE WHEN att_happened = 1 AND att_inc_delay IS NOT NULL THEN 1 ELSE 0 END) > 0
-                THEN ROUND(AVG(CASE WHEN att_happened = 1 AND att_inc_delay IS NOT NULL THEN att_inc_delay ELSE NULL END), 2)
-                ELSE NULL 
-            END as avg_inclusion_delay,
+            if(
+                countIf(att_happened = 1 AND isNotNull(att_inc_delay)) > 0,
+                round(avgIf(att_inc_delay, att_happened = 1 AND isNotNull(att_inc_delay)), 2),
+                NULL
+            ) as avg_inclusion_delay,
             
             -- Rewards and penalties
-            SUM(COALESCE(att_earned_reward, 0)) as total_att_rewards,
-            SUM(COALESCE(att_missed_reward, 0)) as total_missed_rewards,
-            SUM(COALESCE(att_penalty, 0)) as total_att_penalties,
+            sum(COALESCE(att_earned_reward, 0)) as total_att_rewards,
+            sum(COALESCE(att_missed_reward, 0)) as total_missed_rewards,
+            sum(COALESCE(att_penalty, 0)) as total_att_penalties,
             
             -- Block proposals
-            SUM(CASE WHEN is_proposer = 1 THEN 1 ELSE 0 END) as proposer_duties,
-            SUM(CASE WHEN is_proposer = 1 AND block_proposed = 1 THEN 1 ELSE 0 END) as blocks_proposed,
-            SUM(CASE WHEN is_proposer = 1 AND (block_proposed = 0 OR block_proposed IS NULL) THEN 1 ELSE 0 END) as blocks_missed,
-            SUM(COALESCE(propose_earned_reward, 0)) as propose_rewards,
-            SUM(COALESCE(propose_penalty, 0)) as propose_penalties,
+            countIf(is_proposer = 1) as proposer_duties,
+            countIf(is_proposer = 1 AND block_proposed = 1) as blocks_proposed,
+            countIf(is_proposer = 1 AND ((block_proposed = 0) OR isNull(block_proposed))) as blocks_missed,
+            sum(COALESCE(propose_earned_reward, 0)) as propose_rewards,
+            sum(COALESCE(propose_penalty, 0)) as propose_penalties,
             
             -- Sync committee
-            SUM(CASE WHEN is_sync = 1 THEN 1 ELSE 0 END) as sync_duties,
-            CASE 
-                WHEN SUM(CASE WHEN is_sync = 1 THEN 1 ELSE 0 END) > 0
-                THEN ROUND(AVG(CASE WHEN is_sync = 1 AND sync_percent IS NOT NULL THEN sync_percent ELSE NULL END), 2)
-                ELSE NULL 
-            END as avg_sync_performance,
-            SUM(COALESCE(sync_earned_reward, 0)) as sync_rewards,
-            SUM(COALESCE(sync_penalty, 0)) as sync_penalties
+            countIf(is_sync = 1) as sync_duties,
+            if(
+                countIf(is_sync = 1 AND isNotNull(sync_percent)) > 0,
+                round(avgIf(sync_percent, is_sync = 1 AND isNotNull(sync_percent)), 2),
+                NULL
+            ) as avg_sync_performance,
+            sum(COALESCE(sync_earned_reward, 0)) as sync_rewards,
+            sum(COALESCE(sync_penalty, 0)) as sync_penalties
             
         FROM validators_summary 
+        PREWHERE epoch BETWEEN {start_epoch} AND {latest_epoch}
         WHERE {where_clause}
         GROUP BY epoch
         ORDER BY epoch DESC
         """
         
         try:
-            raw_data = await self.execute_query(query)
+            raw_data = await self.execute_query(
+                query,
+                client_timeout=25,
+                max_execution_time=20,
+                settings={"max_threads": 4}
+            )
             
             def safe_float(value):
                 return float(value) if value not in ['\\N', None, ''] else None
