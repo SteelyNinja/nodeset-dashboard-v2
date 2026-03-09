@@ -264,7 +264,7 @@ async def _query_below_threshold_extended_from_rollup(
 
 @router.get("/validators_down")
 async def get_validators_down(
-    limit: int = Query(100, description="Maximum number of validators to return")
+    limit: int = Query(100, description="Maximum number of validators to return", ge=1, le=99999)
 ) -> Union[List[Dict[str, Any]], Dict[str, Any]]:
     """
     Get NodeSet validators that have missed attestations for the last 3 epochs in a row.
@@ -277,36 +277,38 @@ async def get_validators_down(
         if not await clickhouse_service.is_available():
             raise HTTPException(status_code=503, detail="ClickHouse service unavailable")
         
-        # Get the latest epoch first
-        epoch_query = "SELECT MAX(epoch) FROM validators_summary WHERE val_nos_name IS NOT NULL"
-        epoch_data = await clickhouse_service.execute_query(epoch_query)
-        
-        if not epoch_data or not epoch_data[0][0]:
+        epoch_bounds = await _get_nodeset_epoch_bounds()
+        if not epoch_bounds:
             raise HTTPException(status_code=404, detail="No epoch data found")
-        
-        latest_epoch = int(epoch_data[0][0])
+
+        latest_epoch = int(epoch_bounds["latest_epoch"])
         start_epoch = latest_epoch - 2  # 3 epochs total: latest, latest-1, latest-2
         
         # Query to find validators that missed attestations in all 3 epochs
         # Single-pass aggregation for better performance
         query = f"""
         SELECT 
-            val_nos_name as operator,
+            any(val_nos_name) as operator,
             val_id as validator_id,
             {latest_epoch} as latest_epoch,
             {start_epoch} as start_epoch
         FROM validators_summary
         PREWHERE epoch BETWEEN {start_epoch} AND {latest_epoch}
-        WHERE val_nos_name IS NOT NULL
-        AND val_status IN ('active_ongoing', 'active_slashed')
-        GROUP BY val_id, val_nos_name
-        HAVING COUNT(*) = 3
-           AND SUM((att_happened = 0) OR isNull(att_happened)) = 3
-        ORDER BY val_nos_name, val_id
+            AND val_status IN ('active_ongoing', 'active_slashed')
+            AND val_nos_id IS NOT NULL
+        GROUP BY val_id
+        HAVING COUNT() = 3
+           AND countIf(att_happened = 1) = 0
+        ORDER BY operator, val_id
         LIMIT {limit}
         """
         
-        raw_data = await clickhouse_service.execute_query(query)
+        raw_data = await clickhouse_service.execute_query(
+            query,
+            client_timeout=30,
+            max_execution_time=25,
+            settings={"max_threads": 4}
+        )
         
         # Transform to structured format
         results = []
@@ -323,6 +325,8 @@ async def get_validators_down(
         logger.info(f"Found {len(results)} validators with 3 consecutive missed attestations")
         return results
         
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Failed to get validators down: {e}")
         raise HTTPException(status_code=500, detail=f"Database query failed: {str(e)}")
@@ -330,7 +334,7 @@ async def get_validators_down(
 @router.get("/validators_down/extended")
 async def get_validators_down_extended(
     epochs_back: int = Query(2, description="Number of consecutive epochs to check", ge=2, le=10),
-    limit: int = Query(100, description="Maximum number of validators to return"),
+    limit: int = Query(100, description="Maximum number of validators to return", ge=1, le=99999),
     test_operator: Optional[str] = Query(None, description="Operator address for test data generation")
 ) -> Union[List[Dict[str, Any]], Dict[str, Any]]:
     """
@@ -347,32 +351,34 @@ async def get_validators_down_extended(
     """
     try:
         # If test_operator is provided, return mock test data
-        if test_operator:
+        if isinstance(test_operator, str) and test_operator.strip():
             if not await clickhouse_service.is_available():
                 raise HTTPException(status_code=503, detail="ClickHouse service unavailable for test data")
             
-            # Get current epoch for realistic test data
-            epoch_query = "SELECT MAX(epoch) FROM validators_summary WHERE val_nos_name IS NOT NULL"
-            epoch_data = await clickhouse_service.execute_query(epoch_query)
-            
-            if not epoch_data or not epoch_data[0][0]:
+            epoch_bounds = await _get_nodeset_epoch_bounds()
+            if not epoch_bounds:
                 raise HTTPException(status_code=404, detail="No epoch data found for test data")
-            
-            latest_epoch = int(epoch_data[0][0])
+
+            latest_epoch = int(epoch_bounds["latest_epoch"])
             start_epoch = latest_epoch - epochs_back + 1
             
             # Get real validator IDs for the test operator
             validator_query = f"""
             SELECT DISTINCT val_id
             FROM validators_summary 
+            PREWHERE epoch = {latest_epoch}
             WHERE val_nos_name = '{test_operator}'
-            AND epoch = {latest_epoch}
-            AND val_status NOT IN ('exited_unslashed', 'active_exiting', 'withdrawal_possible', 'withdrawal_done')
+            AND val_status IN ('active_ongoing', 'active_slashed')
             ORDER BY val_id
             LIMIT {limit}
             """
             
-            validator_data = await clickhouse_service.execute_query(validator_query)
+            validator_data = await clickhouse_service.execute_query(
+                validator_query,
+                client_timeout=20,
+                max_execution_time=15,
+                settings={"max_threads": 2}
+            )
             
             if not validator_data:
                 raise HTTPException(status_code=404, detail=f"No active validators found for operator {test_operator}")
@@ -394,37 +400,39 @@ async def get_validators_down_extended(
         if not await clickhouse_service.is_available():
             raise HTTPException(status_code=503, detail="ClickHouse service unavailable")
         
-        # Get the latest epoch first
-        epoch_query = "SELECT MAX(epoch) FROM validators_summary WHERE val_nos_name IS NOT NULL"
-        epoch_data = await clickhouse_service.execute_query(epoch_query)
-        
-        if not epoch_data or not epoch_data[0][0]:
+        epoch_bounds = await _get_nodeset_epoch_bounds()
+        if not epoch_bounds:
             raise HTTPException(status_code=404, detail="No epoch data found")
-        
-        latest_epoch = int(epoch_data[0][0])
+
+        latest_epoch = int(epoch_bounds["latest_epoch"])
         start_epoch = latest_epoch - epochs_back + 1
         
         # Build query to find validators that missed attestations in all specified epochs
         # Single-pass aggregation for better performance
         query = f"""
         SELECT 
-            val_nos_name as operator,
+            any(val_nos_name) as operator,
             val_id as validator_id,
             {latest_epoch} as latest_epoch,
             {start_epoch} as start_epoch,
             {epochs_back} as consecutive_misses
         FROM validators_summary
         PREWHERE epoch BETWEEN {start_epoch} AND {latest_epoch}
-        WHERE val_nos_name IS NOT NULL
-        AND val_status IN ('active_ongoing', 'active_slashed')
-        GROUP BY val_id, val_nos_name
-        HAVING COUNT(*) = {epochs_back}
-           AND SUM((att_happened = 0) OR isNull(att_happened)) = {epochs_back}
-        ORDER BY val_nos_name, val_id
+            AND val_status IN ('active_ongoing', 'active_slashed')
+            AND val_nos_id IS NOT NULL
+        GROUP BY val_id
+        HAVING COUNT() = {epochs_back}
+           AND countIf(att_happened = 1) = 0
+        ORDER BY operator, val_id
         LIMIT {limit}
         """
         
-        raw_data = await clickhouse_service.execute_query(query)
+        raw_data = await clickhouse_service.execute_query(
+            query,
+            client_timeout=30,
+            max_execution_time=25,
+            settings={"max_threads": 4}
+        )
         
         # Transform to structured format
         results = []
@@ -441,6 +449,8 @@ async def get_validators_down_extended(
         logger.info(f"Found {len(results)} validators with {epochs_back} consecutive missed attestations")
         return results
         
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Failed to get validators down extended: {e}")
         raise HTTPException(status_code=500, detail=f"Database query failed: {str(e)}")
