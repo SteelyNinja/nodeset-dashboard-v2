@@ -468,70 +468,67 @@ async def get_validators_down_summary() -> Dict[str, Any]:
         if not await clickhouse_service.is_available():
             raise HTTPException(status_code=503, detail="ClickHouse service unavailable")
         
-        # Get the latest epoch first
-        epoch_query = "SELECT MAX(epoch) FROM validators_summary WHERE val_nos_name IS NOT NULL"
-        epoch_data = await clickhouse_service.execute_query(epoch_query)
-        
-        if not epoch_data or not epoch_data[0][0]:
+        epoch_bounds = await _get_nodeset_epoch_bounds()
+        if not epoch_bounds:
             raise HTTPException(status_code=404, detail="No epoch data found")
-        
-        latest_epoch = int(epoch_data[0][0])
+
+        latest_epoch = int(epoch_bounds["latest_epoch"])
         start_epoch = latest_epoch - 2  # 3 epochs total
         
-        # Get summary statistics for 3 consecutive epochs (single-pass aggregates)
+        # Summary for 3 consecutive epochs using one base scan.
         query = f"""
-        WITH latest_epoch_stats AS (
-            SELECT 
-                COUNT(*) as total_validators,
-                SUM((att_happened = 0) OR isNull(att_happened)) as missed_latest,
-                COUNT(DISTINCT val_nos_name) as total_operators
-            FROM validators_summary 
-            PREWHERE epoch = {latest_epoch}
-            WHERE epoch = {latest_epoch}
-            AND val_nos_name IS NOT NULL
-            AND val_status IN ('active_ongoing', 'active_slashed')
-        ),
-        three_epoch_consecutive AS (
-            SELECT COUNT(*) as consecutive_down_3
-            FROM (
-                SELECT val_id
-                FROM validators_summary
-                PREWHERE epoch BETWEEN {start_epoch} AND {latest_epoch}
-                WHERE val_nos_name IS NOT NULL
-                AND val_status IN ('active_ongoing', 'active_slashed')
-                GROUP BY val_id, val_nos_name
-                HAVING COUNT(*) = 3
-                   AND SUM((att_happened = 0) OR isNull(att_happened)) = 3
-            ) as consecutive
-        ),
-        epoch_breakdown AS (
+        WITH base AS (
             SELECT 
                 epoch,
-                COUNT(*) as total_validators_epoch,
-                SUM((att_happened = 0) OR isNull(att_happened)) as missed_epoch
-            FROM validators_summary 
+                val_id,
+                val_nos_name,
+                att_happened
+            FROM validators_summary
             PREWHERE epoch BETWEEN {start_epoch} AND {latest_epoch}
+                AND val_status IN ('active_ongoing', 'active_slashed')
+                AND val_nos_id IS NOT NULL
             WHERE val_nos_name IS NOT NULL
-            AND val_status IN ('active_ongoing', 'active_slashed')
-            GROUP BY epoch
-            ORDER BY epoch DESC
+        ),
+        epoch_stats AS (
+            SELECT
+                countIf(epoch = {latest_epoch}) as total_validators,
+                uniqExactIf(val_nos_name, epoch = {latest_epoch}) as total_operators,
+                sumIf((att_happened = 0) OR isNull(att_happened), epoch = {latest_epoch}) as missed_latest,
+                sumIf((att_happened = 0) OR isNull(att_happened), epoch = {latest_epoch - 1}) as missed_epoch_minus_1,
+                sumIf((att_happened = 0) OR isNull(att_happened), epoch = {latest_epoch - 2}) as missed_epoch_minus_2
+            FROM base
+        ),
+        three_epoch_consecutive AS (
+            SELECT
+                COUNT(*) as consecutive_down_3
+            FROM (
+                SELECT val_id
+                FROM base
+                GROUP BY val_id
+                HAVING COUNT() = 3
+                   AND countIf(att_happened = 1) = 0
+            )
         )
         SELECT 
-            l.total_validators,
-            l.total_operators,
-            l.missed_latest,
+            e.total_validators,
+            e.total_operators,
+            e.missed_latest,
             c.consecutive_down_3,
             {latest_epoch} as latest_epoch,
             {start_epoch} as start_epoch,
-            -- Get breakdown for each epoch
-            (SELECT missed_epoch FROM epoch_breakdown WHERE epoch = {latest_epoch}) as missed_epoch_latest,
-            (SELECT missed_epoch FROM epoch_breakdown WHERE epoch = {latest_epoch - 1}) as missed_epoch_minus_1,
-            (SELECT missed_epoch FROM epoch_breakdown WHERE epoch = {latest_epoch - 2}) as missed_epoch_minus_2
-        FROM latest_epoch_stats l
+            e.missed_latest as missed_epoch_latest,
+            e.missed_epoch_minus_1,
+            e.missed_epoch_minus_2
+        FROM epoch_stats e
         CROSS JOIN three_epoch_consecutive c
         """
         
-        raw_data = await clickhouse_service.execute_query(query)
+        raw_data = await clickhouse_service.execute_query(
+            query,
+            client_timeout=30,
+            max_execution_time=25,
+            settings={"max_threads": 4}
+        )
         
         if not raw_data or len(raw_data[0]) < 9:
             raise HTTPException(status_code=404, detail="No summary data found")
@@ -565,6 +562,8 @@ async def get_validators_down_summary() -> Dict[str, Any]:
         logger.info(f"Generated validators down summary for 3 consecutive epochs {start_epoch}-{latest_epoch}")
         return result
         
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Failed to get validators down summary: {e}")
         raise HTTPException(status_code=500, detail=f"Database query failed: {str(e)}")
