@@ -7,6 +7,7 @@ Endpoints for NodeSet-specific validator operations and monitoring
 from fastapi import APIRouter, HTTPException, Query
 from typing import List, Dict, Any, Optional, Union
 import logging
+import asyncio
 from services.clickhouse_service import clickhouse_service
 
 logger = logging.getLogger(__name__)
@@ -476,7 +477,7 @@ async def get_below_threshold(
 async def get_below_threshold_extended(
     days: int = Query(1, description="Number of days to analyze (1-31)", ge=1, le=31),
     threshold: float = Query(97.0, description="Reward percentage threshold (90-99%)", ge=90.0, le=99.0),
-    limit: int = Query(100, description="Maximum number of validators to return")
+    limit: int = Query(100, description="Maximum number of validators to return", ge=1, le=1000)
 ) -> Union[List[Dict[str, Any]], Dict[str, Any]]:
     """
     Get NodeSet validators that are below the specified attestation reward percentage threshold over a configurable time period.
@@ -540,29 +541,23 @@ async def get_below_threshold_extended(
             SELECT 
                 val_id,
                 val_nos_name,
-                -- Count all epochs and active duty epochs separately
-                COUNT(*) as total_epochs,
-                SUM(CASE WHEN val_status IN ('active_ongoing', 'active_slashed') THEN 1 ELSE 0 END) as active_duty_epochs,
-                -- Actual attestation rewards earned (only during active duty)
-                SUM(CASE WHEN val_status IN ('active_ongoing', 'active_slashed') THEN COALESCE(att_earned_reward, 0) ELSE 0 END) as actual_rewards,
-                -- Theoretical maximum attestation rewards (earned + missed, only during active duty)
-                SUM(CASE WHEN val_status IN ('active_ongoing', 'active_slashed') THEN COALESCE(att_earned_reward, 0) + COALESCE(att_missed_reward, 0) ELSE 0 END) as theoretical_max_rewards,
-                -- Performance metrics (only during active duty)
-                SUM(CASE WHEN val_status IN ('active_ongoing', 'active_slashed') AND att_happened = 1 THEN 1 ELSE 0 END) as attestations_made,
-                SUM(CASE WHEN val_status IN ('active_ongoing', 'active_slashed') AND (att_happened = 0 OR att_happened IS NULL) THEN 1 ELSE 0 END) as attestations_missed,
-                SUM(CASE WHEN val_status IN ('active_ongoing', 'active_slashed') AND is_proposer = 1 AND block_proposed = 1 THEN 1 ELSE 0 END) as blocks_proposed,
-                SUM(CASE WHEN val_status IN ('active_ongoing', 'active_slashed') AND is_proposer = 1 AND (block_proposed = 0 OR block_proposed IS NULL) THEN 1 ELSE 0 END) as blocks_missed,
-                AVG(CASE WHEN val_status IN ('active_ongoing', 'active_slashed') AND sync_percent IS NOT NULL THEN sync_percent ELSE NULL END) as avg_sync_performance,
-                -- Daily breakdown for most recent day (only active duty periods)
-                SUM(CASE WHEN epoch > {latest_epoch} - 225 AND val_status IN ('active_ongoing', 'active_slashed') THEN COALESCE(att_earned_reward, 0) ELSE 0 END) as day_1_actual,
-                SUM(CASE WHEN epoch > {latest_epoch} - 225 AND val_status IN ('active_ongoing', 'active_slashed') THEN COALESCE(att_earned_reward, 0) + COALESCE(att_missed_reward, 0) ELSE 0 END) as day_1_theoretical
+                COUNT() as total_epochs,
+                COUNT() as active_duty_epochs,
+                SUM(COALESCE(att_earned_reward, 0)) as actual_rewards,
+                SUM(COALESCE(att_earned_reward, 0) + COALESCE(att_missed_reward, 0)) as theoretical_max_rewards,
+                SUM(att_happened = 1) as attestations_made,
+                SUM((att_happened = 0) OR isNull(att_happened)) as attestations_missed,
+                SUM((is_proposer = 1) AND (block_proposed = 1)) as blocks_proposed,
+                SUM((is_proposer = 1) AND ((block_proposed = 0) OR isNull(block_proposed))) as blocks_missed,
+                AVG(sync_percent) as avg_sync_performance,
+                SUM(if(epoch > {latest_epoch} - 225, COALESCE(att_earned_reward, 0), 0)) as day_1_actual,
+                SUM(if(epoch > {latest_epoch} - 225, COALESCE(att_earned_reward, 0) + COALESCE(att_missed_reward, 0), 0)) as day_1_theoretical
             FROM validators_summary 
-            WHERE epoch >= {start_epoch} 
-            AND epoch <= {latest_epoch}
+            PREWHERE epoch BETWEEN {start_epoch} AND {latest_epoch}
+            WHERE val_status IN ('active_ongoing', 'active_slashed')
             AND val_nos_name IS NOT NULL
-            AND val_status NOT IN ('exited_unslashed', 'active_exiting', 'withdrawal_possible', 'withdrawal_done')
             GROUP BY val_id, val_nos_name
-            HAVING SUM(CASE WHEN val_status IN ('active_ongoing', 'active_slashed') THEN 1 ELSE 0 END) = {total_epochs}  -- Must have 100% active duty data coverage
+            HAVING COUNT() = {total_epochs}  -- Must have 100% active duty data coverage
         ),
         performance_analysis AS (
             SELECT 
@@ -617,7 +612,11 @@ async def get_below_threshold_extended(
         LIMIT {limit}
         """
         
-        raw_data = await clickhouse_service.execute_query(query)
+        raw_data = await clickhouse_service.execute_query(
+            query,
+            client_timeout=80,
+            max_execution_time=75
+        )
         
         # Transform to structured format
         results = []
@@ -648,7 +647,21 @@ async def get_below_threshold_extended(
         logger.info(f"Found {len(results)} validators below {threshold}% reward threshold for {days} day(s) period")
         return results
         
+    except HTTPException:
+        raise
+    except asyncio.TimeoutError:
+        logger.warning("below_threshold_extended query timed out (days=%s, threshold=%s, limit=%s)", days, threshold, limit)
+        raise HTTPException(
+            status_code=504,
+            detail="Query exceeded execution time. Reduce days or limit and retry."
+        )
     except Exception as e:
+        if "TIMEOUT_EXCEEDED" in str(e):
+            logger.warning("ClickHouse max_execution_time exceeded for below_threshold_extended")
+            raise HTTPException(
+                status_code=504,
+                detail="Query exceeded execution time. Reduce days or limit and retry."
+            )
         logger.error(f"Failed to get below threshold validators extended: {e}")
         raise HTTPException(status_code=500, detail=f"Database query failed: {str(e)}")
 
