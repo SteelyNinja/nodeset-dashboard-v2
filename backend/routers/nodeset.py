@@ -725,7 +725,7 @@ async def get_below_threshold(
 async def get_below_threshold_extended(
     days: int = Query(1, description="Number of days to analyze (1-31)", ge=1, le=31),
     threshold: float = Query(97.0, description="Reward percentage threshold (90-99%)", ge=90.0, le=99.0),
-    limit: int = Query(100, description="Maximum number of validators to return", ge=1, le=1000)
+    limit: int = Query(100, description="Maximum number of validators to return", ge=1, le=99999)
 ) -> Union[List[Dict[str, Any]], Dict[str, Any]]:
     """
     Get NodeSet validators that are below the specified attestation reward percentage threshold over a configurable time period.
