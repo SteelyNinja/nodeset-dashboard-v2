@@ -101,7 +101,16 @@ class ClickHouseService:
                 params=query_params,
                 timeout=request_timeout
             ) as response:
-                response.raise_for_status()
+                if response.status >= 400:
+                    error_text = await response.text()
+                    raise aiohttp.ClientResponseError(
+                        request_info=response.request_info,
+                        history=response.history,
+                        status=response.status,
+                        message=error_text[:1000],
+                        headers=response.headers
+                    )
+
                 text = await response.text()
                 
                 # Parse TSV response (ClickHouse default)

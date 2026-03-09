@@ -8,11 +8,259 @@ from fastapi import APIRouter, HTTPException, Query
 from typing import List, Dict, Any, Optional, Union
 import logging
 import asyncio
+import time
 from services.clickhouse_service import clickhouse_service
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+_EPOCH_CACHE_TTL_SECONDS = 30
+_nodeset_epoch_cache: Dict[str, Any] = {
+    "latest_epoch": None,
+    "min_epoch": None,
+    "updated_at": 0.0
+}
+_nodeset_epoch_cache_lock = asyncio.Lock()
+_rollup_table_cache: Dict[str, Any] = {"available": None, "checked_at": 0.0}
+
+async def _has_daily_rollup_table() -> bool:
+    """Check whether the daily rollup table exists (cached)."""
+    now = time.time()
+    if _rollup_table_cache["available"] is not None and (now - _rollup_table_cache["checked_at"]) < 300:
+        return bool(_rollup_table_cache["available"])
+
+    try:
+        table_exists_rows = await clickhouse_service.execute_query(
+            "EXISTS TABLE validators_daily_attestation_rollup",
+            client_timeout=5,
+            max_execution_time=3,
+            settings={"max_threads": 1}
+        )
+        available = bool(table_exists_rows and table_exists_rows[0] and str(table_exists_rows[0][0]) == "1")
+    except Exception:
+        available = False
+
+    _rollup_table_cache["available"] = available
+    _rollup_table_cache["checked_at"] = time.time()
+    return available
+
+async def _get_nodeset_epoch_bounds() -> Optional[Dict[str, int]]:
+    """Return cached latest/min NodeSet epochs using a fast partition-based lookup."""
+    now = time.time()
+    if (
+        _nodeset_epoch_cache["latest_epoch"] is not None
+        and _nodeset_epoch_cache["min_epoch"] is not None
+        and (now - _nodeset_epoch_cache["updated_at"]) < _EPOCH_CACHE_TTL_SECONDS
+    ):
+        return {
+            "latest_epoch": int(_nodeset_epoch_cache["latest_epoch"]),
+            "min_epoch": int(_nodeset_epoch_cache["min_epoch"])
+        }
+
+    async with _nodeset_epoch_cache_lock:
+        now = time.time()
+        if (
+            _nodeset_epoch_cache["latest_epoch"] is not None
+            and _nodeset_epoch_cache["min_epoch"] is not None
+            and (now - _nodeset_epoch_cache["updated_at"]) < _EPOCH_CACHE_TTL_SECONDS
+        ):
+            return {
+                "latest_epoch": int(_nodeset_epoch_cache["latest_epoch"]),
+                "min_epoch": int(_nodeset_epoch_cache["min_epoch"])
+            }
+
+        try:
+            # Fast metadata scan: find partition bounds first.
+            partitions_query = """
+            SELECT
+                min(toInt64(partition)) as min_partition,
+                max(toInt64(partition)) as max_partition
+            FROM system.parts
+            WHERE active
+              AND database = currentDatabase()
+              AND table = 'validators_summary'
+            """
+            partition_rows = await clickhouse_service.execute_query(
+                partitions_query,
+                client_timeout=10,
+                max_execution_time=8,
+                settings={"max_threads": 2}
+            )
+
+            if partition_rows and len(partition_rows[0]) >= 2:
+                min_partition = int(partition_rows[0][0])
+                max_partition = int(partition_rows[0][1])
+
+                max_epoch_query = f"""
+                SELECT MAX(epoch)
+                FROM validators_summary
+                PREWHERE intDiv(epoch, 225) = {max_partition}
+                WHERE val_nos_id IS NOT NULL
+                """
+                min_epoch_query = f"""
+                SELECT MIN(epoch)
+                FROM validators_summary
+                PREWHERE intDiv(epoch, 225) = {min_partition}
+                WHERE val_nos_id IS NOT NULL
+                """
+
+                max_epoch_rows = await clickhouse_service.execute_query(
+                    max_epoch_query,
+                    client_timeout=15,
+                    max_execution_time=12,
+                    settings={"max_threads": 2}
+                )
+                min_epoch_rows = await clickhouse_service.execute_query(
+                    min_epoch_query,
+                    client_timeout=15,
+                    max_execution_time=12,
+                    settings={"max_threads": 2}
+                )
+
+                if (
+                    max_epoch_rows and max_epoch_rows[0][0] not in [None, '\\N', '']
+                    and min_epoch_rows and min_epoch_rows[0][0] not in [None, '\\N', '']
+                ):
+                    latest_epoch = int(max_epoch_rows[0][0])
+                    min_epoch = int(min_epoch_rows[0][0])
+                    _nodeset_epoch_cache["latest_epoch"] = latest_epoch
+                    _nodeset_epoch_cache["min_epoch"] = min_epoch
+                    _nodeset_epoch_cache["updated_at"] = time.time()
+                    return {"latest_epoch": latest_epoch, "min_epoch": min_epoch}
+        except Exception as fast_lookup_error:
+            logger.warning(f"Fast epoch lookup failed, falling back to direct query: {fast_lookup_error}")
+
+        # Fallback path (kept for resiliency).
+        latest_rows = await clickhouse_service.execute_query(
+            "SELECT MAX(epoch) FROM validators_summary WHERE val_nos_name IS NOT NULL",
+            client_timeout=20,
+            max_execution_time=15,
+            settings={"max_threads": 2}
+        )
+        min_rows = await clickhouse_service.execute_query(
+            "SELECT MIN(epoch) FROM validators_summary WHERE val_nos_name IS NOT NULL",
+            client_timeout=20,
+            max_execution_time=15,
+            settings={"max_threads": 2}
+        )
+        if not latest_rows or not latest_rows[0][0] or not min_rows or not min_rows[0][0]:
+            return None
+
+        latest_epoch = int(latest_rows[0][0])
+        min_epoch = int(min_rows[0][0])
+        _nodeset_epoch_cache["latest_epoch"] = latest_epoch
+        _nodeset_epoch_cache["min_epoch"] = min_epoch
+        _nodeset_epoch_cache["updated_at"] = time.time()
+        return {"latest_epoch": latest_epoch, "min_epoch": min_epoch}
+
+async def _query_below_threshold_extended_from_rollup(
+    start_epoch: int,
+    latest_epoch: int,
+    total_epochs: int,
+    days: int,
+    threshold: float,
+    limit: int
+) -> List[Dict[str, Any]]:
+    """Serve below-threshold query from pre-aggregated daily rollup data."""
+    start_partition = start_epoch // 225
+    latest_partition = latest_epoch // 225
+
+    rollup_query = f"""
+    WITH validator_rollup AS (
+        SELECT
+            val_id,
+            anyLast(val_nos_name) as operator,
+            SUM(active_duty_epochs) as active_duty_epochs,
+            SUM(actual_rewards) as actual_rewards,
+            SUM(theoretical_max_rewards) as theoretical_max_rewards,
+            SUM(attestations_made) as attestations_made,
+            SUM(blocks_proposed) as blocks_proposed,
+            SUM(proposer_slots) as proposer_slots,
+            SUM(sync_percent_sum) as sync_percent_sum,
+            SUM(sync_percent_count) as sync_percent_count,
+            SUM(if(day_partition = {latest_partition}, actual_rewards, 0)) as day_1_actual,
+            SUM(if(day_partition = {latest_partition}, theoretical_max_rewards, 0)) as day_1_theoretical
+        FROM validators_daily_attestation_rollup
+        PREWHERE day_partition BETWEEN {start_partition} AND {latest_partition}
+        WHERE val_nos_id IS NOT NULL
+          AND val_nos_name IS NOT NULL
+        GROUP BY val_id
+        HAVING active_duty_epochs = {total_epochs}
+    ),
+    scored AS (
+        SELECT
+            operator,
+            val_id as validator_id,
+            active_duty_epochs,
+            actual_rewards,
+            theoretical_max_rewards,
+            attestations_made,
+            blocks_proposed,
+            proposer_slots,
+            sync_percent_sum,
+            sync_percent_count,
+            day_1_actual,
+            day_1_theoretical,
+            if(theoretical_max_rewards > 0, (actual_rewards * 100.0 / theoretical_max_rewards), 0.0) as reward_percentage,
+            if(day_1_theoretical > 0, (day_1_actual * 100.0 / day_1_theoretical), 0.0) as day_1_percentage,
+            if(sync_percent_count > 0, (sync_percent_sum / sync_percent_count), 0.0) as avg_sync_performance
+        FROM validator_rollup
+    )
+    SELECT
+        operator,
+        validator_id,
+        active_duty_epochs,
+        actual_rewards,
+        theoretical_max_rewards,
+        reward_percentage,
+        attestations_made,
+        (active_duty_epochs - attestations_made) as attestations_missed,
+        blocks_proposed,
+        (proposer_slots - blocks_proposed) as blocks_missed,
+        avg_sync_performance,
+        day_1_actual,
+        day_1_theoretical,
+        day_1_percentage
+    FROM scored
+    WHERE reward_percentage < {threshold}
+    ORDER BY reward_percentage ASC, operator, validator_id
+    LIMIT {limit}
+    """
+
+    raw_data = await clickhouse_service.execute_query(
+        rollup_query,
+        client_timeout=25,
+        max_execution_time=20,
+        settings={"max_threads": 4}
+    )
+
+    results: List[Dict[str, Any]] = []
+    for row in raw_data:
+        if len(row) >= 14:
+            results.append({
+                'operator': row[0],
+                'validator_id': int(row[1]),
+                'total_epochs': total_epochs,
+                'active_duty_epochs': int(row[2]),
+                'actual_rewards': int(row[3]),
+                'theoretical_max_rewards': int(row[4]),
+                'reward_percentage': float(row[5]),
+                'attestations_made': int(row[6]),
+                'attestations_missed': int(row[7]),
+                'blocks_proposed': int(row[8]),
+                'blocks_missed': int(row[9]),
+                'avg_sync_performance': float(row[10]) if row[10] not in ['\\N', None, ''] else 0.0,
+                'day_1_actual_rewards': int(row[11]),
+                'day_1_theoretical_rewards': int(row[12]),
+                'day_1_percentage': float(row[13]),
+                'latest_epoch': latest_epoch,
+                'start_epoch': start_epoch,
+                'days_analyzed': days,
+                'threshold_percentage': threshold
+            })
+
+    return results
 
 @router.get("/validators_down")
 async def get_validators_down(
@@ -503,25 +751,17 @@ async def get_below_threshold_extended(
         if not await clickhouse_service.is_available():
             raise HTTPException(status_code=503, detail="ClickHouse service unavailable")
         
-        # Get the latest epoch first
-        epoch_query = "SELECT MAX(epoch) FROM validators_summary WHERE val_nos_name IS NOT NULL"
-        epoch_data = await clickhouse_service.execute_query(epoch_query)
-        
-        if not epoch_data or not epoch_data[0][0]:
+        # Get cached epoch bounds using a fast partition-based lookup.
+        epoch_bounds = await _get_nodeset_epoch_bounds()
+        if not epoch_bounds:
             raise HTTPException(status_code=404, detail="No epoch data found")
-        
-        latest_epoch = int(epoch_data[0][0])
+
+        latest_epoch = int(epoch_bounds["latest_epoch"])
         total_epochs = days * 225  # 225 epochs per day
         start_epoch = latest_epoch - total_epochs + 1
-        
+
         # Check if we have sufficient data availability
-        min_epoch_query = "SELECT MIN(epoch) FROM validators_summary WHERE val_nos_name IS NOT NULL"
-        min_epoch_data = await clickhouse_service.execute_query(min_epoch_query)
-        
-        if not min_epoch_data or not min_epoch_data[0][0]:
-            raise HTTPException(status_code=404, detail="No minimum epoch data found")
-        
-        min_available_epoch = int(min_epoch_data[0][0])
+        min_available_epoch = int(epoch_bounds["min_epoch"])
         
         # Check if we have enough historical data, if not use available data
         if start_epoch < min_available_epoch:
@@ -532,27 +772,43 @@ async def get_below_threshold_extended(
             days_actual = round(epochs_available / 225, 2)
             days = max(1, int(epochs_available / 225))  # Ensure days is an integer, minimum 1
             logger.info(f"Using {epochs_available} epochs ({days_actual} days actual) instead of requested due to insufficient data")
+
+        # Preferred fast path: use pre-aggregated daily rollup table when available.
+        if await _has_daily_rollup_table():
+            try:
+                rollup_results = await _query_below_threshold_extended_from_rollup(
+                    start_epoch=start_epoch,
+                    latest_epoch=latest_epoch,
+                    total_epochs=total_epochs,
+                    days=days,
+                    threshold=threshold,
+                    limit=limit
+                )
+                logger.info(
+                    "Served below_threshold_extended from daily rollup table (%s results)",
+                    len(rollup_results)
+                )
+                return rollup_results
+            except Exception as rollup_error:
+                logger.warning(f"Daily rollup query failed, falling back to raw query: {rollup_error}")
         
         # Phase 1: lightweight scan to identify candidate validators below threshold.
         candidate_query = f"""
         WITH validator_rewards AS (
             SELECT
                 val_id,
-                any(val_nos_name) as operator,
                 COUNT() as active_duty_epochs,
                 SUM(COALESCE(att_earned_reward, 0)) as actual_rewards,
                 SUM(COALESCE(att_earned_reward, 0) + COALESCE(att_missed_reward, 0)) as theoretical_max_rewards,
                 if(theoretical_max_rewards > 0, (actual_rewards * 100.0 / theoretical_max_rewards), 0.0) as reward_percentage
             FROM validators_summary
             PREWHERE epoch BETWEEN {start_epoch} AND {latest_epoch}
-            WHERE val_status IN ('active_ongoing', 'active_slashed')
-            AND val_nos_id IS NOT NULL
-            AND val_nos_name IS NOT NULL
+                AND val_status IN ('active_ongoing', 'active_slashed')
+                AND val_nos_id IS NOT NULL
             GROUP BY val_id
             HAVING active_duty_epochs = {total_epochs}
         )
         SELECT
-            operator,
             val_id as validator_id,
             active_duty_epochs,
             actual_rewards,
@@ -560,7 +816,7 @@ async def get_below_threshold_extended(
             reward_percentage
         FROM validator_rewards
         WHERE reward_percentage < {threshold}
-        ORDER BY reward_percentage ASC, operator, validator_id
+        ORDER BY reward_percentage ASC, validator_id
         LIMIT {limit}
         """
 
@@ -577,17 +833,17 @@ async def get_below_threshold_extended(
         candidate_results: List[Dict[str, Any]] = []
         validator_ids: List[int] = []
         for row in candidate_rows:
-            if len(row) >= 6:
-                validator_id = int(row[1])
+            if len(row) >= 5:
+                validator_id = int(row[0])
                 validator_ids.append(validator_id)
                 candidate_results.append({
-                    'operator': row[0],
+                    'operator': None,
                     'validator_id': validator_id,
                     'total_epochs': total_epochs,
-                    'active_duty_epochs': int(row[2]),
-                    'actual_rewards': int(row[3]),
-                    'theoretical_max_rewards': int(row[4]),
-                    'reward_percentage': float(row[5]),
+                    'active_duty_epochs': int(row[1]),
+                    'actual_rewards': int(row[2]),
+                    'theoretical_max_rewards': int(row[3]),
+                    'reward_percentage': float(row[4]),
                 })
 
         # Phase 2: compute detailed metrics only for selected validators.
@@ -595,6 +851,7 @@ async def get_below_threshold_extended(
         details_query = f"""
         SELECT
             val_id as validator_id,
+            any(val_nos_name) as operator,
             SUM(att_happened = 1) as attestations_made,
             SUM((is_proposer = 1) AND (block_proposed = 1)) as blocks_proposed,
             SUM(is_proposer = 1) as proposer_slots,
@@ -603,10 +860,10 @@ async def get_below_threshold_extended(
             SUM(if(epoch > {latest_epoch} - 225, COALESCE(att_earned_reward, 0) + COALESCE(att_missed_reward, 0), 0)) as day_1_theoretical
         FROM validators_summary
         PREWHERE epoch BETWEEN {start_epoch} AND {latest_epoch}
-        WHERE val_status IN ('active_ongoing', 'active_slashed')
-        AND val_nos_id IS NOT NULL
-        AND val_nos_name IS NOT NULL
-        AND val_id IN ({validators_clause})
+            AND val_id IN ({validators_clause})
+            AND val_status IN ('active_ongoing', 'active_slashed')
+            AND val_nos_id IS NOT NULL
+            AND val_nos_name IS NOT NULL
         GROUP BY val_id
         """
 
@@ -619,14 +876,15 @@ async def get_below_threshold_extended(
 
         detail_map: Dict[int, Dict[str, Any]] = {}
         for row in detail_rows:
-            if len(row) >= 7:
+            if len(row) >= 8:
                 detail_map[int(row[0])] = {
-                    "attestations_made": int(row[1]),
-                    "blocks_proposed": int(row[2]),
-                    "proposer_slots": int(row[3]),
-                    "avg_sync_performance": float(row[4]) if row[4] not in ['\\N', None, ''] else 0.0,
-                    "day_1_actual": int(row[5]),
-                    "day_1_theoretical": int(row[6]),
+                    "operator": row[1],
+                    "attestations_made": int(row[2]),
+                    "blocks_proposed": int(row[3]),
+                    "proposer_slots": int(row[4]),
+                    "avg_sync_performance": float(row[5]) if row[5] not in ['\\N', None, ''] else 0.0,
+                    "day_1_actual": int(row[6]),
+                    "day_1_theoretical": int(row[7]),
                 }
 
         # Merge candidate metrics with details while keeping response shape stable.
@@ -644,7 +902,7 @@ async def get_below_threshold_extended(
             day_1_percentage = (day_1_actual * 100.0 / day_1_theoretical) if day_1_theoretical > 0 else 0.0
 
             results.append({
-                'operator': candidate['operator'],
+                'operator': details.get("operator", candidate['operator']),
                 'validator_id': validator_id,
                 'total_epochs': candidate['total_epochs'],
                 'active_duty_epochs': candidate['active_duty_epochs'],
@@ -664,6 +922,8 @@ async def get_below_threshold_extended(
                 'days_analyzed': days,
                 'threshold_percentage': threshold
             })
+
+        results.sort(key=lambda row: (row['reward_percentage'], row['operator'] or '', row['validator_id']))
         
         logger.info(f"Found {len(results)} validators below {threshold}% reward threshold for {days} day(s) period")
         return results
@@ -677,11 +937,24 @@ async def get_below_threshold_extended(
             detail="Query exceeded execution time. Reduce days or limit and retry."
         )
     except Exception as e:
-        if "TIMEOUT_EXCEEDED" in str(e):
+        error_message = str(e)
+        if "TIMEOUT_EXCEEDED" in error_message:
             logger.warning("ClickHouse max_execution_time exceeded for below_threshold_extended")
             raise HTTPException(
                 status_code=504,
                 detail="Query exceeded execution time. Reduce days or limit and retry."
+            )
+        if "TOO_SLOW" in error_message or "Estimated query execution time" in error_message:
+            logger.warning("ClickHouse rejected below_threshold_extended as TOO_SLOW")
+            raise HTTPException(
+                status_code=504,
+                detail="Query is too large for real-time execution. Reduce days or use pre-aggregated daily data."
+            )
+        if "MEMORY_LIMIT_EXCEEDED" in error_message or "Memory limit" in error_message:
+            logger.warning("ClickHouse memory limit exceeded for below_threshold_extended")
+            raise HTTPException(
+                status_code=503,
+                detail="Query exceeded database memory limits. Reduce days and retry."
             )
         logger.error(f"Failed to get below threshold validators extended: {e}")
         raise HTTPException(status_code=500, detail=f"Database query failed: {str(e)}")
