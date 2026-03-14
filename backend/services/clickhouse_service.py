@@ -7,10 +7,13 @@ import asyncio
 import logging
 import time
 from typing import List, Dict, Any, Optional
-from urllib.parse import quote
 from config import settings
+from data_loader_api import load_validator_data
 
 logger = logging.getLogger(__name__)
+
+MAINNET_GENESIS_TIME = 1606824023
+OPERATOR_VALIDATOR_CACHE_TTL_SECONDS = 300
 
 class ClickHouseService:
     """Async HTTP client for ClickHouse database"""
@@ -30,6 +33,7 @@ class ClickHouseService:
             "checked_at": 0.0,
         }
         self._latest_nodeset_epoch_lock = asyncio.Lock()
+        self._operator_validator_ids_cache: Dict[str, Dict[str, Any]] = {}
         
     async def get_session(self) -> aiohttp.ClientSession:
         """Get or create aiohttp session with connection pooling"""
@@ -214,6 +218,70 @@ class ClickHouseService:
         except Exception as e:
             logger.error(f"Unexpected error in ClickHouse query: {e}")
             raise
+
+    def _get_current_mainnet_epoch(self) -> int:
+        """Calculate the current mainnet epoch locally to avoid expensive MAX(epoch) lookups."""
+        return max(0, int((time.time() - MAINNET_GENESIS_TIME) // (12 * 32)))
+
+    def _get_operator_validator_ids(self, operator: str) -> List[int]:
+        """Resolve current validator IDs for an operator from the NodeSet tracker cache."""
+        normalized_operator = (operator or "").strip().lower()
+        if not normalized_operator:
+            return []
+
+        validator_data, _ = load_validator_data()
+        if not validator_data:
+            return []
+
+        source_last_updated = str(validator_data.get("last_updated") or "")
+        cached = self._operator_validator_ids_cache.get(normalized_operator)
+        now = time.time()
+        if (
+            cached
+            and cached.get("source_last_updated") == source_last_updated
+            and (now - float(cached.get("checked_at", 0.0))) < OPERATOR_VALIDATOR_CACHE_TTL_SECONDS
+        ):
+            return list(cached.get("validator_ids", []))
+
+        validator_pubkeys = validator_data.get("validator_pubkeys") or {}
+        validator_indices = validator_data.get("validator_indices") or {}
+
+        matched_pubkeys: List[str] = []
+        for operator_key, pubkeys in validator_pubkeys.items():
+            if str(operator_key).strip().lower() != normalized_operator:
+                continue
+            if isinstance(pubkeys, list):
+                matched_pubkeys = [str(pubkey).strip().lower() for pubkey in pubkeys if str(pubkey).strip()]
+            break
+
+        if not matched_pubkeys:
+            self._operator_validator_ids_cache[normalized_operator] = {
+                "validator_ids": [],
+                "source_last_updated": source_last_updated,
+                "checked_at": now,
+            }
+            return []
+
+        normalized_validator_indices = {
+            str(pubkey).strip().lower(): value
+            for pubkey, value in validator_indices.items()
+        }
+
+        validator_ids = sorted(
+            {
+                int(value)
+                for pubkey in matched_pubkeys
+                for value in [normalized_validator_indices.get(pubkey)]
+                if value is not None and str(value) not in ["", "\\N"]
+            }
+        )
+
+        self._operator_validator_ids_cache[normalized_operator] = {
+            "validator_ids": validator_ids,
+            "source_last_updated": source_last_updated,
+            "checked_at": now,
+        }
+        return validator_ids
     
     def _parse_tsv_response(self, tsv_data: str) -> List[List[str]]:
         """Parse TSV response into list of lists"""
@@ -1007,18 +1075,26 @@ class ClickHouseService:
         """Get detailed attestation data for a specific operator for the last N epochs"""
 
         try:
-            latest_epoch = await self.get_latest_nodeset_epoch()
-            start_epoch = max(0, latest_epoch - epochs + 1)
+            latest_epoch = self._get_current_mainnet_epoch()
+            query_limit = max(1, int(epochs))
+            epoch_window = max(query_limit * 8, 64)
+            start_epoch = max(0, latest_epoch - epoch_window + 1)
         except Exception as e:
             logger.error(f"Failed to get epoch range: {e}")
             raise
 
-        escaped_operator = operator.replace("\\", "\\\\").replace("'", "\\'")
-        where_conditions = [
-            f"val_nos_name = '{escaped_operator}'",
-            "val_status NOT IN ('exited_unslashed', 'active_exiting', 'withdrawal_possible', 'withdrawal_done')"
-        ]
-        where_clause = " AND ".join(where_conditions)
+        validator_ids = self._get_operator_validator_ids(operator)
+        if not validator_ids:
+            return {
+                'operator': operator,
+                'start_epoch': start_epoch,
+                'end_epoch': latest_epoch,
+                'total_epochs': 0,
+                'requested_epochs': epochs,
+                'attestation_data': []
+            }
+
+        validator_ids_sql = ", ".join(str(validator_id) for validator_id in validator_ids)
         
         # Query for detailed attestation data aggregated by epoch
         query = f"""
@@ -1087,9 +1163,10 @@ class ClickHouseService:
             
         FROM validators_summary 
         PREWHERE epoch BETWEEN {start_epoch} AND {latest_epoch}
-        WHERE {where_clause}
+        WHERE val_id IN ({validator_ids_sql})
         GROUP BY epoch
         ORDER BY epoch DESC
+        LIMIT {query_limit}
         """
         
         try:
@@ -1153,11 +1230,14 @@ class ClickHouseService:
                         'sync_rewards': safe_int(row[25]) if len(row) > 25 else 0,
                         'sync_penalties': safe_int(row[26]) if len(row) > 26 else 0
                     })
+
+            actual_start_epoch = attestation_data[-1]['epoch'] if attestation_data else None
+            actual_end_epoch = attestation_data[0]['epoch'] if attestation_data else None
             
             return {
                 'operator': operator,
-                'start_epoch': start_epoch,
-                'end_epoch': latest_epoch,
+                'start_epoch': actual_start_epoch,
+                'end_epoch': actual_end_epoch,
                 'total_epochs': len(attestation_data),
                 'requested_epochs': epochs,
                 'attestation_data': attestation_data
