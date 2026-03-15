@@ -1101,11 +1101,16 @@ class ClickHouseService:
         SELECT 
             epoch,
             count() as validator_count,
+            countIf(val_status = 'active_ongoing') as active_validator_count,
             
             -- Participation metrics
-            countIf(att_happened = 1) as attestations_made,
-            countIf((att_happened = 0) OR isNull(att_happened)) as attestations_missed,
-            round(if(count() > 0, (countIf(att_happened = 1) * 100.0 / count()), 0), 2) as participation_rate,
+            countIf(val_status = 'active_ongoing' AND att_happened = 1) as attestations_made,
+            countIf(val_status = 'active_ongoing' AND ((att_happened = 0) OR isNull(att_happened))) as attestations_missed,
+            if(
+                countIf(val_status = 'active_ongoing') > 0,
+                round((countIf(val_status = 'active_ongoing' AND att_happened = 1) * 100.0 / countIf(val_status = 'active_ongoing')), 2),
+                NULL
+            ) as participation_rate,
             
             -- Vote accuracy (only for submitted attestations)
             countIf(att_happened = 1 AND att_valid_head = 1) as head_hits,
@@ -1186,49 +1191,50 @@ class ClickHouseService:
             # Transform to structured format
             attestation_data = []
             for row in raw_data:
-                if len(row) >= 25:
+                if len(row) >= 26:
                     attestation_data.append({
                         'epoch': safe_int(row[0]),
                         'validator_count': safe_int(row[1]),
+                        'active_validator_count': safe_int(row[2]),
                         
                         # Participation
-                        'attestations_made': safe_int(row[2]),
-                        'attestations_missed': safe_int(row[3]),
-                        'participation_rate': safe_float(row[4]),
+                        'attestations_made': safe_int(row[3]),
+                        'attestations_missed': safe_int(row[4]),
+                        'participation_rate': safe_float(row[5]),
                         
                         # Vote accuracy counts
-                        'head_hits': safe_int(row[5]),
-                        'head_misses': safe_int(row[6]),
-                        'target_hits': safe_int(row[7]),
-                        'target_misses': safe_int(row[8]),
-                        'source_hits': safe_int(row[9]),
-                        'source_misses': safe_int(row[10]),
+                        'head_hits': safe_int(row[6]),
+                        'head_misses': safe_int(row[7]),
+                        'target_hits': safe_int(row[8]),
+                        'target_misses': safe_int(row[9]),
+                        'source_hits': safe_int(row[10]),
+                        'source_misses': safe_int(row[11]),
                         
                         # Accuracy percentages
-                        'head_accuracy': safe_float(row[11]),
-                        'target_accuracy': safe_float(row[12]),
-                        'source_accuracy': safe_float(row[13]),
+                        'head_accuracy': safe_float(row[12]),
+                        'target_accuracy': safe_float(row[13]),
+                        'source_accuracy': safe_float(row[14]),
                         
                         # Inclusion delay
-                        'avg_inclusion_delay': safe_float(row[14]),
+                        'avg_inclusion_delay': safe_float(row[15]),
                         
                         # Rewards
-                        'att_rewards': safe_int(row[15]),
-                        'missed_rewards': safe_int(row[16]),
-                        'att_penalties': safe_int(row[17]),
+                        'att_rewards': safe_int(row[16]),
+                        'missed_rewards': safe_int(row[17]),
+                        'att_penalties': safe_int(row[18]),
                         
                         # Block proposals
-                        'proposer_duties': safe_int(row[18]),
-                        'blocks_proposed': safe_int(row[19]),
-                        'blocks_missed': safe_int(row[20]),
-                        'propose_rewards': safe_int(row[21]),
-                        'propose_penalties': safe_int(row[22]),
+                        'proposer_duties': safe_int(row[19]),
+                        'blocks_proposed': safe_int(row[20]),
+                        'blocks_missed': safe_int(row[21]),
+                        'propose_rewards': safe_int(row[22]),
+                        'propose_penalties': safe_int(row[23]),
                         
                         # Sync committee
-                        'sync_duties': safe_int(row[23]),
-                        'avg_sync_performance': safe_float(row[24]),
-                        'sync_rewards': safe_int(row[25]) if len(row) > 25 else 0,
-                        'sync_penalties': safe_int(row[26]) if len(row) > 26 else 0
+                        'sync_duties': safe_int(row[24]),
+                        'avg_sync_performance': safe_float(row[25]),
+                        'sync_rewards': safe_int(row[26]) if len(row) > 26 else 0,
+                        'sync_penalties': safe_int(row[27]) if len(row) > 27 else 0
                     })
 
             actual_start_epoch = attestation_data[-1]['epoch'] if attestation_data else None

@@ -1156,6 +1156,7 @@ const OperatorDashboard: React.FC<OperatorDashboardProps> = ({ operatorAddress: 
                       <div className="font-mono">{epoch.epoch}</div>
                       <div className="text-right">
                         <div className={`font-medium ${
+                          epoch.participation_rate === null ? 'text-neutral-500 dark:text-neutral-400' :
                           epoch.participation_rate >= 99 ? 'text-green-600 dark:text-green-400' :
                           epoch.participation_rate >= 95 ? 'text-yellow-600 dark:text-yellow-400' :
                           'text-red-600 dark:text-red-400'
@@ -1163,7 +1164,9 @@ const OperatorDashboard: React.FC<OperatorDashboardProps> = ({ operatorAddress: 
                           {epoch.participation_rate !== null ? `${epoch.participation_rate.toFixed(1)}%` : 'N/A'}
                         </div>
                         <div className="text-xs text-neutral-500 dark:text-neutral-400">
-                          {epoch.attestations_made}/{epoch.validator_count}
+                          {epoch.active_validator_count > 0
+                            ? `${epoch.attestations_made}/${epoch.active_validator_count}`
+                            : 'No active validators'}
                         </div>
                       </div>
                       <div className="text-right">
@@ -1253,6 +1256,7 @@ const OperatorDashboard: React.FC<OperatorDashboardProps> = ({ operatorAddress: 
                       Epoch {epoch.epoch}
                     </div>
                     <div className={`text-lg font-bold ${
+                      epoch.participation_rate === null ? 'text-neutral-500 dark:text-neutral-400' :
                       epoch.participation_rate >= 99 ? 'text-green-600 dark:text-green-400' :
                       epoch.participation_rate >= 95 ? 'text-yellow-600 dark:text-yellow-400' :
                       'text-red-600 dark:text-red-400'
@@ -1262,6 +1266,14 @@ const OperatorDashboard: React.FC<OperatorDashboardProps> = ({ operatorAddress: 
                   </div>
                   
                   <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-neutral-600 dark:text-neutral-400">Participation:</span>
+                      <span className="text-neutral-900 dark:text-white font-medium">
+                        {epoch.active_validator_count > 0
+                          ? `${epoch.attestations_made}/${epoch.active_validator_count}`
+                          : 'No active'}
+                      </span>
+                    </div>
                     <div className="flex justify-between">
                       <span className="text-neutral-600 dark:text-neutral-400">Head:</span>
                       <span className="text-neutral-900 dark:text-white font-medium">
